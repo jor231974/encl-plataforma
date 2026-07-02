@@ -9,8 +9,8 @@ import json
 import uuid
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'encl-secret-key-2026-mexico'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///encl.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'encl-secret-key-2026-mexico')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///encl.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -1101,4 +1101,5 @@ if __name__ == '__main__':
         db.create_all()
     import webbrowser
     webbrowser.open('http://127.0.0.1:5000')
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    debug_mode = os.environ.get('FLASK_DEBUG', '1') == '1'
+    app.run(debug=debug_mode, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
