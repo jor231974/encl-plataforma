@@ -1,0 +1,118 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}
+<div class="nav-section">Administración</div>
+<a href="{{ url_for('admin_dashboard') }}" class="active"><i class="fas fa-home"></i>Dashboard</a>
+<a href="{{ url_for('admin_usuarios') }}"><i class="fas fa-users"></i>Usuarios</a>
+<a href="{{ url_for('admin_cursos') }}"><i class="fas fa-book-open"></i>Cursos</a>
+<a href="{{ url_for('admin_categorias') }}"><i class="fas fa-tags"></i>Categorías</a>
+<a href="{{ url_for('admin_territorial') }}"><i class="fas fa-map"></i>Sistema Territorial</a>
+<a href="{{ url_for('admin_inscripciones') }}"><i class="fas fa-user-graduate"></i>Inscripciones</a>
+<a href="{{ url_for('admin_examenes') }}"><i class="fas fa-tasks"></i>Exámenes</a>
+<a href="{{ url_for('admin_certificados') }}"><i class="fas fa-certificate"></i>Certificados</a>
+<a href="{{ url_for('admin_patrocinadores') }}"><i class="fas fa-handshake"></i>Patrocinadores</a>
+<a href="{{ url_for('admin_pagos') }}"><i class="fas fa-credit-card"></i>Pagos</a>
+<a href="{{ url_for('admin_imagenes') }}"><i class="fas fa-images"></i>Imágenes</a>
+<a href="{{ url_for('admin_reportes') }}"><i class="fas fa-chart-bar"></i>Reportes</a>
+<a href="{{ url_for('admin_cms') }}"><i class="fas fa-paint-brush"></i>CMS</a>
+{% endblock %}
+
+{% block page_title %}Dashboard Administrativo{% endblock %}
+{% block page_subtitle %}Panel ejecutivo - {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Alumnos</h6><div class="card-icon stat-card-primary"><i class="fas fa-user-graduate"></i></div></div>
+            <div class="card-value">{{ total_alumnos }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Instructores</h6><div class="card-icon stat-card-success"><i class="fas fa-chalkboard-teacher"></i></div></div>
+            <div class="card-value">{{ total_instructores }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Cursos</h6><div class="card-icon stat-card-info"><i class="fas fa-book-open"></i></div></div>
+            <div class="card-value">{{ total_cursos }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Certificados</h6><div class="card-icon stat-card-warning"><i class="fas fa-certificate"></i></div></div>
+            <div class="card-value">{{ total_certificados }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="admin-widget">
+            <div class="widget-title"><i class="fas fa-chart-pie me-2"></i>Cursos por Categoría</div>
+            <canvas id="chartCategorias" data-chart="true" data-chart-type="doughnut"
+                data-labels='{{ cursos_por_categoria|map(attribute=0)|list|tojson }}'
+                data-values='{{ cursos_por_categoria|map(attribute=1)|list|tojson }}'
+                style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="admin-widget">
+            <div class="widget-title"><i class="fas fa-chart-line me-2"></i>Inscripciones por Mes</div>
+            <canvas id="chartInscripciones" data-chart="true" data-chart-type="line"
+                data-labels='{{ inscripciones_por_mes|map(attribute=0)|list|tojson }}'
+                data-values='{{ inscripciones_por_mes|map(attribute=1)|list|tojson }}'
+                style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="admin-widget">
+            <div class="widget-title"><i class="fas fa-history me-2"></i>Inscripciones recientes</div>
+            <div class="table-responsive">
+                <table class="table table-encl">
+                    <thead><tr><th>Alumno</th><th>Curso</th><th>Fecha</th><th>Progreso</th></tr></thead>
+                    <tbody>
+                        {% for insc in inscripciones_recientes %}
+                        <tr>
+                            <td>{{ insc.alumno.nombre if insc.alumno else '?' }} {{ insc.alumno.apellidos if insc.alumno else '' }}</td>
+                            <td>{{ insc.curso.titulo[:30] if insc.curso else '' }}</td>
+                            <td>{{ insc.fecha_inscripcion.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress-encl" style="width: 50px;"><div class="progress-bar-encl" style="width: {{ insc.progreso }}%;"></div></div>
+                                    <small>{{ insc.progreso|int }}%</small>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="admin-widget">
+            <div class="widget-title"><i class="fas fa-user-plus me-2"></i>Últimos usuarios registrados</div>
+            <div class="table-responsive">
+                <table class="table table-encl">
+                    <thead><tr><th>Usuario</th><th>Email</th><th>Rol</th><th>Registro</th></tr></thead>
+                    <tbody>
+                        {% for user in ultimos_usuarios %}
+                        <tr>
+                            <td>{{ user.nombre }} {{ user.apellidos }}</td>
+                            <td>{{ user.email }}</td>
+                            <td><span class="badge bg-{{ 'danger' if user.role == 'admin' else 'success' if user.role == 'alumno' else 'info' }}">{{ user.role|capitalize }}</span></td>
+                            <td>{{ user.fecha_registro.strftime('%d/%m/%Y') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

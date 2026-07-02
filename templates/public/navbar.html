@@ -1,0 +1,59 @@
+<nav class="navbar navbar-expand-xl navbar-encl fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('public_index') }}">
+            {% if get_config('site_logo') %}
+            <img src="{{ get_config('site_logo') }}" style="height: 40px;" alt="Logo">
+            {% else %}
+            <i class="fas fa-graduation-cap" style="font-size: 2rem; color: var(--accent);"></i>
+            <div class="brand-text">
+                <span>ENCL</span>
+                <small>Educación Nacional</small>
+            </div>
+            {% endif %}
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <i class="fas fa-bars text-white"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'public_index' }}" href="{{ url_for('public_index') }}">Inicio</a></li>
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ['public_cursos', 'public_curso_detalle', 'public_curso_ingles'] }}" href="#" role="button" data-bs-toggle="dropdown">Cursos</a>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('public_cursos') }}">Todos los cursos</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ url_for('public_curso_ingles') }}"><i class="fas fa-language me-2" style="color:var(--accent)"></i><strong>Curso de Inglés</strong></a></li>
+                  </ul>
+                </li>
+                <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'public_instructores' }}" href="{{ url_for('public_instructores') }}">Instructores</a></li>
+                <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'public_patrocinadores' }}" href="{{ url_for('public_patrocinadores') }}">Patrocinadores</a></li>
+                <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'public_nosotros' }}" href="{{ url_for('public_nosotros') }}">Nosotros</a></li>
+                <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'public_contacto' }}" href="{{ url_for('public_contacto') }}">Contacto</a></li>
+            </ul>
+            <div class="d-flex align-items-center gap-2">
+                {% if current_user.is_authenticated %}
+                <div class="dropdown">
+                    <button class="btn btn-acceso dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-1"></i>{{ current_user.nombre.split()[0] }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% if current_user.role == 'superadmin' %}
+                        <li><a class="dropdown-item" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-crown me-2" style="color:gold"></i>Super Admin</a></li>
+                        {% elif current_user.role == 'admin' %}
+                        <li><a class="dropdown-item" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-shield-alt me-2"></i>Admin</a></li>
+                        {% elif current_user.role == 'instructor' %}
+                        <li><a class="dropdown-item" href="{{ url_for('instructor_dashboard') }}"><i class="fas fa-chalkboard-teacher me-2"></i>Instructor</a></li>
+                        {% else %}
+                        <li><a class="dropdown-item" href="{{ url_for('alumno_dashboard') }}"><i class="fas fa-user-graduate me-2"></i>Mi Portal</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('public_logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a></li>
+                    </ul>
+                </div>
+                {% else %}
+                <a href="{{ url_for('public_login') }}" class="btn btn-acceso"><i class="fas fa-sign-in-alt me-1"></i>Acceder</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,34 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'admin/sidebar.html' %}{% endblock %}
+{% block page_title %}Inscripciones{% endblock %}
+{% block page_subtitle %}Administra las inscripciones a cursos{% endblock %}
+
+{% block content %}
+<div class="dashboard-card">
+    <h5 style="font-weight: 700; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-user-graduate me-2"></i>Todas las inscripciones</h5>
+    <div class="table-responsive">
+        <table class="table table-encl">
+            <thead><tr><th>Alumno</th><th>Curso</th><th>Fecha inscripción</th><th>Progreso</th><th>Completado</th><th>Calificación</th></tr></thead>
+            <tbody>
+                {% for insc in inscripciones %}
+                <tr>
+                    <td><strong>{{ insc.alumno.nombre if insc.alumno else '' }} {{ insc.alumno.apellidos if insc.alumno else '' }}</strong></td>
+                    <td>{{ insc.curso.titulo if insc.curso else '' }}</td>
+                    <td>{{ insc.fecha_inscripcion.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress-encl" style="width: 60px;"><div class="progress-bar-encl" style="width: {{ insc.progreso }}%;"></div></div>
+                            <small>{{ insc.progreso|int }}%</small>
+                        </div>
+                    </td>
+                    <td>{% if insc.completado %}<span class="badge bg-success"><i class="fas fa-check"></i></span>{% else %}<span class="badge bg-warning text-dark"><i class="fas fa-clock"></i></span>{% endif %}</td>
+                    <td>{{ insc.calificacion_final|round(1) if insc.calificacion_final else '-' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted">No hay inscripciones</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

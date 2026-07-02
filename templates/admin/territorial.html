@@ -1,0 +1,128 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'admin/sidebar.html' %}{% endblock %}
+{% block page_title %}Sistema Territorial{% endblock %}
+{% block page_subtitle %}Administra estados, municipios, distritos y grupos{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="dashboard-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 style="font-weight: 700; color: var(--primary); margin: 0;"><i class="fas fa-map me-2"></i>Estados</h5>
+                <button class="btn btn-encl btn-encl-success btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalEstado"><i class="fas fa-plus"></i></button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-encl">
+                    <thead><tr><th>Estado</th><th>Municipios</th></tr></thead>
+                    <tbody>
+                        {% for est in estados %}
+                        <tr><td><strong>{{ est.nombre }}</strong></td><td>{{ est.municipios|length }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="dashboard-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 style="font-weight: 700; color: var(--primary); margin: 0;"><i class="fas fa-city me-2"></i>Municipios</h5>
+                <button class="btn btn-encl btn-encl-success btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalMunicipio"><i class="fas fa-plus"></i></button>
+            </div>
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-encl">
+                    <thead><tr><th>Municipio</th><th>Estado</th><th>Distritos</th></tr></thead>
+                    <tbody>
+                        {% for est in estados %}
+                        {% for muni in est.municipios %}
+                        <tr><td>{{ muni.nombre }}</td><td>{{ est.nombre }}</td><td>{{ muni.distritos|length }}</td></tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales -->
+<div class="modal fade modal-encl" id="modalEstado"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Nuevo estado</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form method="POST" action="{{ url_for('admin_crear_estado') }}">
+            <div class="mb-3"><label class="form-label">Nombre del estado</label><input type="text" class="form-control" name="nombre" required></div>
+            <button type="submit" class="btn btn-encl btn-encl-primary w-100">Crear</button>
+        </form>
+    </div>
+</div></div></div>
+
+<div class="modal fade modal-encl" id="modalMunicipio"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Nuevo municipio</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form method="POST" action="{{ url_for('admin_crear_municipio') }}">
+            <div class="mb-3"><label class="form-label">Nombre</label><input type="text" class="form-control" name="nombre" required></div>
+            <div class="mb-3"><label class="form-label">Estado</label><select class="form-select" name="estado_id">{% for e in estados %}<option value="{{ e.id }}">{{ e.nombre }}</option>{% endfor %}</select></div>
+            <button type="submit" class="btn btn-encl btn-encl-primary w-100">Crear</button>
+        </form>
+    </div>
+</div></div></div>
+
+<div class="modal fade modal-encl" id="modalDistrito"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Nuevo distrito</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form method="POST" action="{{ url_for('admin_crear_distrito') }}">
+            <div class="mb-3"><label class="form-label">Nombre</label><input type="text" class="form-control" name="nombre" required></div>
+            <div class="mb-3"><label class="form-label">Código</label><input type="text" class="form-control" name="codigo"></div>
+            <div class="mb-3"><label class="form-label">Municipio</label><select class="form-select" name="municipio_id">{% for est in estados %}{% for m in est.municipios %}<option value="{{ m.id }}">{{ est.nombre }} - {{ m.nombre }}</option>{% endfor %}{% endfor %}</select></div>
+            <button type="submit" class="btn btn-encl btn-encl-primary w-100">Crear</button>
+        </form>
+    </div>
+</div></div></div>
+
+<div class="modal fade modal-encl" id="modalGrupo"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Nuevo grupo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form method="POST" action="{{ url_for('admin_crear_grupo') }}">
+            <div class="mb-3"><label class="form-label">Nombre</label><input type="text" class="form-control" name="nombre" required></div>
+            <div class="mb-3"><label class="form-label">Código</label><input type="text" class="form-control" name="codigo"></div>
+            <div class="mb-3"><label class="form-label">Distrito</label><select class="form-select" name="distrito_id">
+                {% for est in estados %}{% for m in est.municipios %}{% for d in m.distritos %}<option value="{{ d.id }}">{{ d.codigo }} - {{ d.nombre }}</option>{% endfor %}{% endfor %}{% endfor %}
+            </select></div>
+            <button type="submit" class="btn btn-encl btn-encl-primary w-100">Crear</button>
+        </form>
+    </div>
+</div></div></div>
+
+<div class="d-flex gap-2 mb-4">
+    <button class="btn btn-encl btn-encl-primary" data-bs-toggle="modal" data-bs-target="#modalDistrito"><i class="fas fa-plus me-2"></i>Nuevo distrito</button>
+    <button class="btn btn-encl btn-encl-primary" data-bs-toggle="modal" data-bs-target="#modalGrupo"><i class="fas fa-plus me-2"></i>Nuevo grupo</button>
+</div>
+
+<div class="row g-4">
+    {% for est in estados %}
+    <div class="col-md-6 col-lg-4">
+        <div class="dashboard-card">
+            <h6 style="font-weight: 700; color: var(--primary);"><i class="fas fa-map-marker-alt me-2"></i>{{ est.nombre }}</h6>
+            <hr>
+            {% for muni in est.municipios %}
+            <div class="mb-2">
+                <strong><i class="fas fa-city me-1" style="color: var(--accent);"></i>{{ muni.nombre }}</strong>
+                <div class="ms-3 mt-1">
+                    {% for dist in muni.distritos %}
+                    <div style="font-size: 0.85rem; margin-bottom: 0.3rem;">
+                        <i class="fas fa-layer-group me-1" style="color: var(--secondary);"></i>{{ dist.nombre }} ({{ dist.codigo }})
+                        <div class="ms-4">
+                            {% for grupo in dist.grupos %}
+                            <span class="badge bg-light text-dark me-1">{{ grupo.nombre }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% block content %}
+<!-- HERO -->
+<section class="hero-section">
+    <div class="hero-bg-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+    <div class="container hero-content">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <div class="badge-hero"><i class="fas fa-award me-2"></i>Institución Nacional de Capacitación</div>
+                <h1>{{ hero_title|default('ESCUELA NACIONAL DE<br>CAPACITACIÓN <span>Y CURSOS EN LÍNEA</span>')|safe }}</h1>
+                <p>{{ hero_subtitle|default('Transformando personas, fortaleciendo comunidades y desarrollando talento para el futuro.') }}</p>
+                <div class="hero-buttons">
+                    <a href="{{ url_for('public_cursos') }}" class="btn btn-primary"><i class="fas fa-play me-2"></i>Comenzar ahora</a>
+                    <a href="{{ url_for('public_cursos') }}" class="btn btn-outline-light"><i class="fas fa-book me-2"></i>Ver cursos</a>
+                    <a href="{{ url_for('public_login') }}" class="btn btn-outline-light"><i class="fas fa-sign-in-alt me-2"></i>Iniciar sesión</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item"><h3><span class="stat-counter" data-target="{{ total_cursos }}">0</span>+</h3><p>Cursos</p></div>
+                    <div class="stat-item"><h3><span class="stat-counter" data-target="{{ total_alumnos }}">0</span>+</h3><p>Alumnos</p></div>
+                    <div class="stat-item"><h3><span class="stat-counter" data-target="{{ total_instructores }}">0</span>+</h3><p>Instructores</p></div>
+                    <div class="stat-item"><h3><span class="stat-counter" data-target="32">0</span></h3><p>Estados</p></div>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block">
+                <div style="position: relative;">
+                    <div style="width: 100%; height: 400px; background: linear-gradient(135deg, rgba(0,200,83,0.1), rgba(26,35,126,0.1)); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-size: 8rem; color: rgba(255,255,255,0.15);">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div style="position: absolute; bottom: -20px; left: -20px; background: var(--gradient-accent); border-radius: var(--radius-md); padding: 1.5rem; color: #fff; box-shadow: var(--shadow-lg);">
+                        <h4 style="font-weight: 900; margin: 0;">100%</h4>
+                        <small>En línea</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="categories-section">
+    <div class="container">
+        <div class="section-header animate-on-scroll">
+            <div class="section-badge">Áreas de Conocimiento</div>
+            <h2>Explora nuestras categorías</h2>
+            <p>Formación profesional en las áreas más demandadas del mercado laboral</p>
+        </div>
+        <div class="row g-4">
+            {% for cat in categorias %}
+            <div class="col-lg-3 col-md-4 col-6 animate-on-scroll">
+                <a href="{{ url_for('public_cursos', categoria=cat.id) }}" style="text-decoration: none;">
+                    <div class="category-card">
+                        <div class="icon-wrapper"><i class="fas {{ cat.icono }}"></i></div>
+                        <h5>{{ cat.nombre }}</h5>
+                        <p>{{ cat.cursos|length }} cursos</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-3 col-6">
+                <div class="stat-card animate-on-scroll">
+                    <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+                    <h3><span class="stat-counter" data-target="{{ total_cursos }}">0</span>+</h3>
+                    <p>Cursos Profesionales</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card animate-on-scroll">
+                    <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                    <h3><span class="stat-counter" data-target="{{ total_alumnos }}">0</span>+</h3>
+                    <p>Alumnos Capacitados</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card animate-on-scroll">
+                    <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                    <h3><span class="stat-counter" data-target="{{ total_instructores }}">0</span>+</h3>
+                    <p>Instructores Certificados</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card animate-on-scroll">
+                    <div class="stat-icon"><i class="fas fa-certificate"></i></div>
+                    <h3><span class="stat-counter" data-target="500">0</span>+</h3>
+                    <p>Certificaciones Emitidas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- COURSES -->
+<section class="courses-section" id="cursos">
+    <div class="container">
+        <div class="section-header animate-on-scroll">
+            <div class="section-badge">Catálogo Académico</div>
+            <h2>Cursos destacados</h2>
+            <p>Programas de capacitación diseñados para tu desarrollo profesional</p>
+        </div>
+        <div class="row g-4">
+            {% for curso in cursos[:8] %}
+            <div class="col-lg-3 col-md-6 animate-on-scroll">
+                <div class="course-card">
+                    <div class="card-img">
+                        <i class="fas {{ curso.categoria.icono if curso.categoria else 'fa-book' }}"></i>
+                        <div class="overlay"></div>
+                        <span class="badge-level">{{ curso.nivel }}</span>
+                        <div class="card-price {% if curso.precio == 0 %}free{% endif %}">
+                            {% if curso.precio == 0 %}<i class="fas fa-star me-1"></i>Gratis{% else %}${{ '{:,.0f}'.format(curso.precio) }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-category">{{ curso.categoria.nombre if curso.categoria else '' }}</div>
+                        <h5>{{ curso.titulo }}</h5>
+                        <p>{{ curso.descripcion_corta[:100] }}{% if curso.descripcion_corta and curso.descripcion_corta|length > 100 %}...{% endif %}</p>
+                        <div class="card-meta">
+                            <span><i class="far fa-clock"></i> {{ curso.duracion_horas|int }}h</span>
+                            {% if curso.slug == 'ingles-basico' %}
+                            <a href="{{ url_for('public_curso_ingles') }}" class="btn btn-encl btn-encl-primary btn-encl-sm">Ver curso <i class="fas fa-external-link-alt ms-1"></i></a>
+                            {% else %}
+                            <a href="{{ url_for('public_curso_detalle', slug=curso.slug) }}" class="btn btn-encl btn-encl-primary btn-encl-sm">Ver curso</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4 animate-on-scroll">
+            <a href="{{ url_for('public_cursos') }}" class="btn btn-encl btn-encl-primary" style="padding: 0.8rem 2.5rem;">Ver todos los cursos <i class="fas fa-arrow-right ms-2"></i></a>
+        </div>
+    </div>
+</section>
+
+<!-- INSTRUCTORS -->
+<section class="instructors-section">
+    <div class="container">
+        <div class="section-header animate-on-scroll">
+            <div class="section-badge">Equipo Académico</div>
+            <h2>Nuestros instructores</h2>
+            <p>Profesionales certificados con amplia experiencia en cada área</p>
+        </div>
+        <div class="row g-4">
+            {% for instr in instructores[:4] %}
+            <div class="col-lg-3 col-md-6 animate-on-scroll">
+                <div class="instructor-card">
+                    <div class="instructor-avatar">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h5>{{ instr.nombre }} {{ instr.apellidos }}</h5>
+                    <p><i class="fas fa-chalkboard-teacher me-1" style="color: var(--accent);"></i> Instructor certificado</p>
+                    <small class="text-muted">{{ instr.cursos_impartidos|length }} cursos</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- SPONSORS -->
+<section class="sponsors-section">
+    <div class="container">
+        <div class="section-header animate-on-scroll">
+            <div class="section-badge">Aliados Estratégicos</div>
+            <h2>Patrocinadores</h2>
+            <p>Organizaciones comprometidas con la educación y el desarrollo de México</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            {% for pat in patrocinadores %}
+            <div class="col-lg-2 col-md-3 col-6 animate-on-scroll">
+                <div class="sponsor-card">
+                    <div class="sponsor-logo"><i class="fas fa-handshake"></i></div>
+                    <h6>{{ pat.nombre }}</h6>
+                    <p>"{{ pat.lema[:50] }}"</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}

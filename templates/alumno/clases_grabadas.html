@@ -1,0 +1,36 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'alumno/sidebar.html' %}{% endblock %}
+{% block page_title %}Clases Grabadas{% endblock %}
+{% block page_subtitle %}Biblioteca de clases disponibles{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    {% for clase in clases %}
+    <div class="col-lg-4 col-md-6">
+        <div class="dashboard-card">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, rgba(26,35,126,0.1), rgba(0,200,83,0.1)); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--primary);">
+                    <i class="fas fa-play-circle"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1" style="font-weight: 700;">{{ clase.titulo }}</h6>
+                    <small class="text-muted">{{ clase.curso.titulo if clase.curso else '' }}</small>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mb-3">
+                <span class="badge bg-primary"><i class="far fa-clock me-1"></i>{{ clase.duracion_minutos }} min</span>
+                <span class="badge bg-secondary"><i class="fas fa-tag me-1"></i>{{ clase.curso.nivel if clase.curso else '' }}</span>
+            </div>
+            <p class="small text-muted">{{ clase.fecha_creacion.strftime('%d/%m/%Y') if clase.fecha_creacion else '' }}</p>
+            <button class="btn btn-encl btn-encl-primary btn-encl-sm" onclick="alert('Reproduciendo: {{ clase.titulo }}')"><i class="fas fa-play me-1"></i>Ver clase</button>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <i class="fas fa-film" style="font-size: 4rem; color: var(--gray-300);"></i>
+        <h4 class="mt-3 text-muted">No hay clases grabadas disponibles</h4>
+        <p>Las clases se mostrarán aquí una vez que estén disponibles.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'admin/sidebar.html' %}{% endblock %}
+{% block page_title %}Gestión de Imágenes{% endblock %}
+{% block page_subtitle %}Administra las imágenes del sitio (sliders, banners, etc.){% endblock %}
+{% block content %}
+<div class="dashboard-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="font-weight: 700; color: var(--primary); margin: 0;"><i class="fas fa-images me-2"></i>Todas las imágenes</h5>
+        <button class="btn btn-encl btn-encl-success" data-bs-toggle="modal" data-bs-target="#modalCrearImagen"><i class="fas fa-plus me-2"></i>Agregar imagen</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-encl">
+            <thead><tr><th>Vista previa</th><th>Sección</th><th>Título</th><th>Orden</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>
+                {% for img in imagenes %}
+                <tr>
+                    <td><img src="{{ img.url }}" style="width: 80px; height: 50px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://via.placeholder.com/80x50?text=Sin+imagen'"></td>
+                    <td><span class="badge bg-info">{{ img.seccion }}</span></td>
+                    <td>{{ img.titulo or '-' }}</td>
+                    <td>{{ img.orden }}</td>
+                    <td>
+                        <a href="{{ url_for('admin_toggle_imagen', img_id=img.id) }}" class="badge {{ 'bg-success' if img.activo else 'bg-danger' }} text-decoration-none">
+                            {{ 'Activo' if img.activo else 'Inactivo' }}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin_eliminar_imagen', img_id=img.id) }}" class="btn btn-encl btn-encl-danger btn-encl-sm" onclick="return confirm('¿Eliminar imagen?')"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No hay imágenes registradas</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade modal-encl" id="modalCrearImagen">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Agregar imagen</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <form method="POST" action="{{ url_for('admin_crear_imagen') }}" enctype="multipart/form-data" class="form-encl row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Sección</label>
+                    <select class="form-select" name="seccion" required>
+                        <option value="">Seleccionar</option>
+                        <option value="hero">Hero (Slider principal)</option>
+                        <option value="banner">Banners</option>
+                        <option value="logo">Logos</option>
+                        <option value="curso">Cursos</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Orden</label>
+                    <input type="number" class="form-control" name="orden" value="0">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Título</label>
+                    <input type="text" class="form-control" name="titulo">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Descripción</label>
+                    <textarea class="form-control" name="descripcion" rows="2"></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Archivo de imagen</label>
+                    <input type="file" class="form-control" name="archivo" accept="image/*" required>
+                </div>
+                <div class="col-12"><button type="submit" class="btn btn-encl btn-encl-primary w-100"><i class="fas fa-upload me-2"></i>Subir imagen</button></div>
+            </form>
+        </div>
+    </div></div>
+</div>
+{% endblock %}

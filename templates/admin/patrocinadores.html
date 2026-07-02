@@ -1,0 +1,75 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'admin/sidebar.html' %}{% endblock %}
+{% block page_title %}Gestión de Patrocinadores{% endblock %}
+{% block page_subtitle %}Administra los aliados estratégicos{% endblock %}
+
+{% block content %}
+<div class="dashboard-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="font-weight: 700; color: var(--primary); margin: 0;"><i class="fas fa-handshake me-2"></i>Patrocinadores</h5>
+        <button class="btn btn-encl btn-encl-success" data-bs-toggle="modal" data-bs-target="#modalCrear"><i class="fas fa-plus me-2"></i>Nuevo patrocinador</button>
+    </div>
+    <div class="row g-4">
+        {% for pat in patrocinadores %}
+        <div class="col-lg-4 col-md-6">
+            <div class="dashboard-card">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--primary); overflow: hidden; background: var(--gray-100);">
+                        {% if pat.logo %}
+                        <img src="{{ pat.logo }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        <i class="fas fa-handshake"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h6 class="mb-0" style="font-weight: 700;">{{ pat.nombre }}</h6>
+                        <small class="text-muted">{{ pat.cargo }}</small>
+                    </div>
+                </div>
+                <p style="font-size: 0.85rem; font-style: italic;">"{{ pat.lema }}"</p>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-encl btn-encl-primary btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalEditar{{ pat.id }}"><i class="fas fa-edit me-1"></i>Editar</button>
+                    <a href="{{ url_for('admin_eliminar_patrocinador', pat_id=pat.id) }}" class="btn btn-encl btn-encl-danger btn-encl-sm" onclick="return confirm('¿Eliminar patrocinador?')"><i class="fas fa-trash me-1"></i>Eliminar</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal fade modal-encl" id="modalCrear"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Nuevo patrocinador</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form method="POST" action="{{ url_for('admin_crear_patrocinador') }}" enctype="multipart/form-data">
+            <div class="mb-3"><label class="form-label">Nombre</label><input type="text" class="form-control" name="nombre" required></div>
+            <div class="mb-3"><label class="form-label">Logo</label><input type="file" class="form-control" name="logo" accept="image/*"></div>
+            <div class="mb-3"><label class="form-label">Cargo</label><input type="text" class="form-control" name="cargo"></div>
+            <div class="mb-3"><label class="form-label">Lema</label><textarea class="form-control" name="lema" rows="2"></textarea></div>
+            <button type="submit" class="btn btn-encl btn-encl-primary w-100">Crear</button>
+        </form>
+    </div>
+</div></div></div>
+
+{% for pat in patrocinadores %}
+<div class="modal fade modal-encl" id="modalEditar{{ pat.id }}"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Editar: {{ pat.nombre }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form method="POST" action="{{ url_for('admin_editar_patrocinador', pat_id=pat.id) }}" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label">Nombre</label>
+                <input type="text" class="form-control" name="nombre" value="{{ pat.nombre }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Logo</label>
+                {% if pat.logo %}<div class="mb-1"><img src="{{ pat.logo }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;"></div>{% endif %}
+                <input type="file" class="form-control" name="logo" accept="image/*">
+            </div>
+            <div class="mb-3"><label class="form-label">Cargo</label><input type="text" class="form-control" name="cargo" value="{{ pat.cargo }}"></div>
+            <div class="mb-3"><label class="form-label">Lema</label><textarea class="form-control" name="lema" rows="2">{{ pat.lema }}</textarea></div>
+            <div class="mb-3 form-check form-switch"><input class="form-check-input" type="checkbox" name="activo" value="1" {{ 'checked' if pat.activo }}><label class="form-check-label">Activo</label></div>
+            <button type="submit" class="btn btn-encl btn-encl-primary w-100">Guardar</button>
+        </form>
+    </div>
+</div></div></div>
+{% endfor %}
+{% endblock %}

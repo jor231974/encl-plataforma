@@ -1,0 +1,87 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'admin/sidebar.html' %}{% endblock %}
+{% block page_title %}Gestión de Usuarios{% endblock %}
+{% block page_subtitle %}Administra alumnos, instructores y administradores{% endblock %}
+
+{% block content %}
+<div class="dashboard-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="font-weight: 700; color: var(--primary); margin: 0;"><i class="fas fa-users me-2"></i>Todos los usuarios</h5>
+        <button class="btn btn-encl btn-encl-success" data-bs-toggle="modal" data-bs-target="#modalCrearUsuario"><i class="fas fa-plus me-2"></i>Nuevo usuario</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-encl">
+            <thead>
+                <tr><th>Nombre</th><th>Usuario</th><th>Email</th><th>Rol</th><th>Estado</th><th>Territorial</th><th>Acciones</th></tr>
+            </thead>
+            <tbody>
+                {% for user in usuarios %}
+                <tr>
+                    <td><strong>{{ user.nombre }} {{ user.apellidos }}</strong></td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td><span class="badge bg-{{ 'danger' if user.role == 'admin' else 'success' if user.role == 'alumno' else 'info' }}">{{ user.role|capitalize }}</span></td>
+                    <td>
+                        {% if user.activo %}
+                        <a href="{{ url_for('admin_toggle_usuario', user_id=user.id) }}" class="badge bg-success text-decoration-none" onclick="return confirm('¿Desactivar este usuario?')">Activo</a>
+                        {% else %}
+                        <a href="{{ url_for('admin_toggle_usuario', user_id=user.id) }}" class="badge bg-danger text-decoration-none" onclick="return confirm('¿Activar este usuario?')">Inactivo</a>
+                        {% endif %}
+                    </td>
+                    <td><small>{{ user.estado.nombre if user.estado else '-' }} / {{ user.grupo.nombre if user.grupo else '-' }}</small></td>
+                    <td>
+                        <button class="btn btn-encl btn-encl-primary btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalEditar{{ user.id }}"><i class="fas fa-edit"></i></button>
+                        <a href="{{ url_for('admin_eliminar_usuario', user_id=user.id) }}" class="btn btn-encl btn-encl-danger btn-encl-sm" onclick="return confirm('¿Eliminar usuario?')"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Crear -->
+<div class="modal fade modal-encl" id="modalCrearUsuario">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Crear usuario</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <form method="POST" action="{{ url_for('admin_crear_usuario') }}" class="form-encl row g-3">
+                <div class="col-md-6"><label class="form-label">Nombre</label><input type="text" class="form-control" name="nombre" required></div>
+                <div class="col-md-6"><label class="form-label">Apellidos</label><input type="text" class="form-control" name="apellidos" required></div>
+                <div class="col-md-6"><label class="form-label">Usuario</label><input type="text" class="form-control" name="username" required></div>
+                <div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control" name="email" required></div>
+                <div class="col-md-6"><label class="form-label">Contraseña</label><input type="password" class="form-control" name="password" required></div>
+                <div class="col-md-6"><label class="form-label">Rol</label><select class="form-select" name="role"><option value="alumno">Alumno</option><option value="instructor">Instructor</option><option value="admin">Admin</option></select></div>
+                <div class="col-md-6"><label class="form-label">Estado</label><select class="form-select" name="estado_id" id="create_estado_id"><option value="">Seleccionar</option>{% for e in estados %}<option value="{{ e.id }}">{{ e.nombre }}</option>{% endfor %}</select></div>
+                <div class="col-md-6"><label class="form-label">Grupo</label><select class="form-select" name="grupo_id"><option value="">Seleccionar</option>{% for g in grupos %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select></div>
+                <div class="col-12"><button type="submit" class="btn btn-encl btn-encl-primary w-100">Crear usuario</button></div>
+            </form>
+        </div>
+    </div></div>
+</div>
+
+{% for user in usuarios %}
+<div class="modal fade modal-encl" id="modalEditar{{ user.id }}">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Editar: {{ user.nombre }} {{ user.apellidos }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <form method="POST" action="{{ url_for('admin_editar_usuario', user_id=user.id) }}" class="form-encl row g-3">
+                <div class="col-md-6"><label class="form-label">Nombre</label><input type="text" class="form-control" name="nombre" value="{{ user.nombre }}" required></div>
+                <div class="col-md-6"><label class="form-label">Apellidos</label><input type="text" class="form-control" name="apellidos" value="{{ user.apellidos }}" required></div>
+                <div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control" name="email" value="{{ user.email }}" required></div>
+                <div class="col-md-6"><label class="form-label">Rol</label><select class="form-select" name="role"><option value="alumno" {{ 'selected' if user.role == 'alumno' }}>Alumno</option><option value="instructor" {{ 'selected' if user.role == 'instructor' }}>Instructor</option><option value="admin" {{ 'selected' if user.role == 'admin' }}>Admin</option></select></div>
+                <div class="col-md-6"><label class="form-label">Estado</label><select class="form-select" name="estado_id"><option value="">Sin estado</option>{% for e in estados %}<option value="{{ e.id }}" {{ 'selected' if user.estado_id == e.id }}>{{ e.nombre }}</option>{% endfor %}</select></div>
+                <div class="col-md-6"><label class="form-label">Nueva contraseña</label><input type="password" class="form-control" name="password" placeholder="Dejar vacío para mantener"></div>
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="activo" value="1" {{ 'checked' if user.activo }} id="activo{{ user.id }}">
+                        <label class="form-check-label" for="activo{{ user.id }}">Usuario activo</label>
+                    </div>
+                </div>
+                <div class="col-12"><button type="submit" class="btn btn-encl btn-encl-primary w-100">Guardar cambios</button></div>
+            </form>
+        </div>
+    </div></div>
+</div>
+{% endfor %}
+{% endblock %}

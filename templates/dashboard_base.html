@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title|default('Dashboard') }} - {{ site_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- SIDEBAR -->
+        <div class="dashboard-sidebar" id="dashboardSidebar">
+            <div class="sidebar-header">
+                <a href="{{ url_for('public_index') }}" class="text-white text-decoration-none">
+                    <h5><i class="fas fa-graduation-cap me-2" style="color: var(--accent);"></i>ENCL</h5>
+                    <small>{% if current_user.role == 'superadmin' %}Super Administración{% elif current_user.role == 'admin' %}Administración{% elif current_user.role == 'instructor' %}Instructor{% else %}Alumno{% endif %}</small>
+                </a>
+            </div>
+            <div class="sidebar-user">
+                <div class="avatar">{{ current_user.nombre[0] }}{{ current_user.apellidos[0] if current_user.apellidos else '' }}</div>
+                <div class="user-info">
+                    <strong style="font-size: 0.85rem;">{{ current_user.nombre }} {{ current_user.apellidos }}</strong>
+                    <small>{{ current_user.email }}</small>
+                </div>
+            </div>
+            <div class="sidebar-nav">
+                {% block sidebar_menu %}{% endblock %}
+            </div>
+        </div>
+
+        <!-- MAIN -->
+        <div class="dashboard-main">
+            <div class="dashboard-header">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="sidebar-toggle" onclick="document.getElementById('dashboardSidebar').classList.toggle('open')">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="page-title">
+                        <h4>{% block page_title %}{% endblock %}</h4>
+                        <small>{% block page_subtitle %}{% endblock %}</small>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <a href="{{ url_for('public_index') }}" class="btn btn-encl btn-encl-primary btn-encl-sm" target="_blank"><i class="fas fa-external-link-alt me-1"></i>Ver sitio</a>
+                    <a href="{{ url_for('public_logout') }}" class="btn btn-encl btn-encl-danger btn-encl-sm"><i class="fas fa-sign-out-alt me-1"></i>Salir</a>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div style="padding: 1rem 2rem 0;">
+                    {% for category, message in messages %}
+                    <div class="alert alert-auto-dismiss alert-encl alert-encl-{{ 'success' if category == 'success' else 'error' if category == 'error' else 'info' }} d-flex align-items-center justify-content-between" role="alert">
+                        <span><i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' if category == 'error' else 'info-circle' }} me-2"></i>{{ message }}</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="dashboard-content">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

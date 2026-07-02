@@ -1,0 +1,152 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'instructor/sidebar.html' %}{% endblock %}
+{% block page_title %}{{ curso.titulo }}{% endblock %}
+{% block page_subtitle %}Gestión completa del curso{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Alumnos</h6><div class="card-icon stat-card-primary"><i class="fas fa-users"></i></div></div>
+            <div class="card-value">{{ inscripciones|length }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Clases</h6><div class="card-icon stat-card-success"><i class="fas fa-video"></i></div></div>
+            <div class="card-value">{{ clases|length }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Exámenes</h6><div class="card-icon stat-card-warning"><i class="fas fa-tasks"></i></div></div>
+            <div class="card-value">{{ examenes|length }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Completados</h6><div class="card-icon stat-card-info"><i class="fas fa-check-circle"></i></div></div>
+            <div class="card-value">{{ inscripciones|selectattr('completado', 'equalto', true)|list|length }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="dashboard-card">
+            <h5 style="font-weight: 700; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-video me-2"></i>Clases del curso</h5>
+            <div class="table-responsive">
+                <table class="table table-encl">
+                    <thead><tr><th>Título</th><th>Tipo</th><th>Duración</th></tr></thead>
+                    <tbody>
+                        {% for clase in clases %}
+                        <tr>
+                            <td>{{ clase.titulo }}</td>
+                            <td><span class="badge bg-{{ 'danger' if clase.tipo == 'vivo' else 'primary' }}">{{ 'En vivo' if clase.tipo == 'vivo' else 'Grabada' }}</span></td>
+                            <td>{{ clase.duracion_minutos }} min</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted">Sin clases</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <hr>
+            <h6 style="font-weight: 600; margin-bottom: 1rem;">Agregar nueva clase</h6>
+            <form method="POST" action="{{ url_for('instructor_nueva_clase') }}">
+                <input type="hidden" name="curso_id" value="{{ curso.id }}">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" name="titulo" placeholder="Título de la clase" required>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="tipo">
+                            <option value="grabada">Grabada</option>
+                            <option value="vivo">En vivo</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="datetime-local" class="form-control" name="fecha_programada">
+                    </div>
+                    <div class="col-md-9">
+                        <input type="text" class="form-control" name="url_reunion" placeholder="URL de reunión (opcional)">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-encl btn-encl-primary w-100"><i class="fas fa-plus"></i> Crear</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="dashboard-card">
+            <h5 style="font-weight: 700; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-users me-2"></i>Alumnos inscritos</h5>
+            <div class="table-responsive">
+                <table class="table table-encl">
+                    <thead><tr><th>Alumno</th><th>Progreso</th><th>Estado</th></tr></thead>
+                    <tbody>
+                        {% for insc in inscripciones %}
+                        <tr>
+                            <td>
+                                <div class="student-list-item">
+                                    <div class="student-avatar">{{ insc.alumno.nombre[0] if insc.alumno else '?' }}</div>
+                                    <div>
+                                        <strong>{{ insc.alumno.nombre if insc.alumno else 'Desconocido' }} {{ insc.alumno.apellidos if insc.alumno else '' }}</strong>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress-encl" style="width: 60px;"><div class="progress-bar-encl" style="width: {{ insc.progreso }}%;"></div></div>
+                                    <small>{{ insc.progreso|int }}%</small>
+                                </div>
+                            </td>
+                            <td>{% if insc.completado %}<span class="badge bg-success">Completado</span>{% else %}<span class="badge bg-primary">En curso</span>{% endif %}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted">Sin alumnos inscritos</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-lg-6">
+        <div class="dashboard-card">
+            <h5 style="font-weight: 700; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-tasks me-2"></i>Exámenes</h5>
+            <div class="table-responsive">
+                <table class="table table-encl">
+                    <thead><tr><th>Título</th><th>Preguntas</th><th>Calificación mínima</th></tr></thead>
+                    <tbody>
+                        {% for ex in examenes %}
+                        <tr>
+                            <td>{{ ex.titulo }}</td>
+                            <td>{{ ex.preguntas|length }}</td>
+                            <td>{{ ex.calificacion_minima }}/10</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted">Sin exámenes</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="dashboard-card">
+            <h5 style="font-weight: 700; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-info-circle me-2"></i>Información del curso</h5>
+            <p><strong>Categoría:</strong> {{ curso.categoria.nombre if curso.categoria else '' }}</p>
+            <p><strong>Nivel:</strong> {{ curso.nivel }}</p>
+            <p><strong>Duración:</strong> {{ curso.duracion_horas|int }} horas</p>
+            <p><strong>Precio:</strong> {% if curso.precio == 0 %}Gratis{% else %}${{ '{:,.0f}'.format(curso.precio) }}{% endif %}</p>
+            <p><strong>Certificado:</strong> {% if curso.tiene_certificado %}Sí{% else %}No{% endif %}</p>
+            <p><strong>Descripción:</strong> {{ curso.descripcion_corta }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

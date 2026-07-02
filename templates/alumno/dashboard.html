@@ -1,0 +1,154 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}
+<div class="nav-section">Navegación</div>
+<a href="{{ url_for('alumno_dashboard') }}" class="active"><i class="fas fa-home"></i>Inicio</a>
+<a href="{{ url_for('alumno_cursos') }}"><i class="fas fa-book-open"></i>Mis cursos</a>
+<a href="{{ url_for('alumno_calendario') }}"><i class="fas fa-calendar-alt"></i>Calendario</a>
+<a href="{{ url_for('alumno_clases_vivo') }}"><i class="fas fa-video"></i>Clases en vivo</a>
+<a href="{{ url_for('alumno_clases_grabadas') }}"><i class="fas fa-play-circle"></i>Clases grabadas</a>
+<a href="{{ url_for('alumno_material') }}"><i class="fas fa-file-alt"></i>Material de estudio</a>
+<a href="{{ url_for('alumno_examenes') }}"><i class="fas fa-tasks"></i>Exámenes</a>
+<a href="{{ url_for('alumno_certificados') }}"><i class="fas fa-certificate"></i>Certificados</a>
+<a href="{{ url_for('alumno_mensajes') }}"><i class="fas fa-envelope"></i>Mensajes {% if mensajes_no_leidos %}<span class="badge bg-danger ms-auto">{{ mensajes_no_leidos }}</span>{% endif %}</a>
+<a href="{{ url_for('alumno_perfil') }}"><i class="fas fa-user-cog"></i>Perfil</a>
+{% endblock %}
+
+{% block page_title %}Panel del Alumno{% endblock %}
+{% block page_subtitle %}Bienvenido a tu portal de aprendizaje{% endblock %}
+
+{% block content %}
+<!-- TERRITORIAL BADGE -->
+{% if territorial %}
+<div class="d-flex flex-wrap gap-2 mb-4">
+    {% if territorial.estado %}<span class="territorial-badge"><i class="fas fa-map-marker-alt"></i>{{ territorial.estado }}</span>{% endif %}
+    {% if territorial.municipio %}<span class="territorial-badge"><i class="fas fa-city"></i>{{ territorial.municipio }}</span>{% endif %}
+    {% if territorial.distrito %}<span class="territorial-badge"><i class="fas fa-layer-group"></i>{{ territorial.distrito }}</span>{% endif %}
+    {% if territorial.grupo %}<span class="territorial-badge"><i class="fas fa-users"></i>{{ territorial.grupo }}</span>{% endif %}
+    <span class="territorial-badge"><i class="fas fa-chart-line"></i>Nivel: {{ current_user.nivel }}</span>
+    <span class="territorial-badge"><i class="fas fa-tachometer-alt"></i>Progreso: {{ current_user.progreso_general|int }}%</span>
+</div>
+{% endif %}
+
+<!-- STATS ROW -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash">
+                <h6>Cursos activos</h6>
+                <div class="card-icon stat-card-primary"><i class="fas fa-book-open"></i></div>
+            </div>
+            <div class="card-value">{{ cursos_activos|length }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash">
+                <h6>Cursos completados</h6>
+                <div class="card-icon stat-card-success"><i class="fas fa-check-circle"></i></div>
+            </div>
+            <div class="card-value">{{ cursos_completados|length }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash">
+                <h6>Certificados</h6>
+                <div class="card-icon stat-card-warning"><i class="fas fa-certificate"></i></div>
+            </div>
+            <div class="card-value">{{ certificados|length }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash">
+                <h6>Mensajes</h6>
+                <div class="card-icon stat-card-info"><i class="fas fa-envelope"></i></div>
+            </div>
+            <div class="card-value">{{ mensajes_no_leidos }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- NEXT CLASS & PROGRESS -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="next-class-card h-100">
+            <h6><i class="fas fa-video me-2"></i>Próxima clase en vivo</h6>
+            {% if proximas_clases %}
+            <h4 class="mt-2">{{ proximas_clases[0].titulo }}</h4>
+            <p><i class="far fa-calendar me-2"></i>{{ proximas_clases[0].fecha_programada.strftime('%d/%m/%Y %H:%M') if proximas_clases[0].fecha_programada else 'Próximamente' }}</p>
+            <p><i class="fas fa-book me-2"></i>{{ proximas_clases[0].curso.titulo if proximas_clases[0].curso else '' }}</p>
+            {% else %}
+            <h4 class="mt-2">No hay clases próximas</h4>
+            <p>Tus clases en vivo aparecerán aquí cuando sean programadas.</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="dashboard-card h-100">
+            <h6 style="font-weight: 700; color: var(--primary);"><i class="fas fa-chart-line me-2"></i>Mi progreso general</h6>
+            <div class="text-center py-4">
+                <div style="font-size: 4rem; font-weight: 900; color: var(--primary);">{{ current_user.progreso_general|int }}<small style="font-size: 1.5rem;">%</small></div>
+                <div class="progress-encl mt-3" style="height: 12px;">
+                    <div class="progress-bar-encl" style="width: {{ current_user.progreso_general }}%;"></div>
+                </div>
+                <p class="mt-2 text-muted" style="font-size: 0.85rem;">Completa tus cursos para mejorar tu progreso</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- COURSES IN PROGRESS -->
+<div class="dashboard-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="font-weight: 700; color: var(--primary); margin: 0;"><i class="fas fa-book-open me-2"></i>Mis cursos en progreso</h5>
+        <a href="{{ url_for('alumno_cursos') }}" class="btn btn-encl btn-encl-primary btn-encl-sm">Ver todos</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-encl">
+            <thead>
+                <tr>
+                    <th>Curso</th>
+                    <th>Instructor</th>
+                    <th>Progreso</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for insc in inscripciones[:5] %}
+                <tr>
+                    <td><strong>{{ insc.curso.titulo }}</strong></td>
+                    <td>{{ insc.curso.instructor.nombre if insc.curso.instructor else 'Asignado' }} {{ insc.curso.instructor.apellidos if insc.curso.instructor else '' }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress-encl flex-grow-1"><div class="progress-bar-encl" style="width: {{ insc.progreso }}%;"></div></div>
+                            <small>{{ insc.progreso|int }}%</small>
+                        </div>
+                    </td>
+                    <td>{% if insc.completado %}<span class="badge bg-success">Completado</span>{% else %}<span class="badge bg-primary">En curso</span>{% endif %}</td>
+                    <td><a href="{{ url_for('alumno_clases_grabadas') }}" class="btn btn-encl btn-encl-primary btn-encl-sm"><i class="fas fa-play"></i></a></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center py-4 text-muted">No estás inscrito en ningún curso. <a href="{{ url_for('public_cursos') }}">Explorar cursos</a></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- CERTIFICATES -->
+<div class="row g-4">
+    {% for cert in certificados[:4] %}
+    <div class="col-md-3">
+        <div class="certificate-card">
+            <div class="cert-icon"><i class="fas fa-award"></i></div>
+            <h5>{{ cert.curso.titulo }}</h5>
+            <div class="cert-folio">{{ cert.folio }}</div>
+            <div class="cert-qr"><i class="fas fa-qrcode"></i></div>
+            <small class="text-muted">{{ cert.fecha_emision.strftime('%d/%m/%Y') }}</small>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

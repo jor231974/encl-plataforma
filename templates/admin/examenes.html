@@ -1,0 +1,65 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'admin/sidebar.html' %}{% endblock %}
+{% block page_title %}Exámenes{% endblock %}
+{% block page_subtitle %}Administra las evaluaciones académicas{% endblock %}
+
+{% block content %}
+<div class="dashboard-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="font-weight: 700; color: var(--primary); margin: 0;"><i class="fas fa-tasks me-2"></i>Exámenes registrados</h5>
+        <button class="btn btn-encl btn-encl-success" data-bs-toggle="modal" data-bs-target="#modalCrear"><i class="fas fa-plus me-2"></i>Nuevo examen</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-encl">
+            <thead><tr><th>Título</th><th>Curso</th><th>Preguntas</th><th>Tiempo</th><th>Mínimo</th></tr></thead>
+            <tbody>
+                {% for ex in examenes %}
+                <tr>
+                    <td><strong>{{ ex.titulo }}</strong></td>
+                    <td>{{ ex.curso.titulo if ex.curso else '' }}</td>
+                    <td>{{ ex.preguntas|length }}</td>
+                    <td>{{ ex.tiempo_limite_minutos }} min</td>
+                    <td>{{ ex.calificacion_minima }}/10</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted">No hay exámenes</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade modal-encl" id="modalCrear"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Crear examen</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form method="POST" action="{{ url_for('admin_crear_examen') }}">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label class="form-label">Título</label><input type="text" class="form-control" name="titulo" required></div>
+                <div class="col-md-6"><label class="form-label">Curso</label><select class="form-select" name="curso_id">{% for c in cursos %}<option value="{{ c.id }}">{{ c.titulo }}</option>{% endfor %}</select></div>
+                <div class="col-md-6"><label class="form-label">Tiempo límite (min)</label><input type="number" class="form-control" name="tiempo_limite" value="30"></div>
+                <div class="col-md-6"><label class="form-label">Calificación mínima</label><input type="number" class="form-control" name="calificacion_minima" step="0.5" value="6"></div>
+                <div class="col-12"><label class="form-label">Descripción</label><textarea class="form-control" name="descripcion" rows="2"></textarea></div>
+            </div>
+            <h6 style="font-weight: 600; color: var(--primary);">Preguntas (máximo 10)</h6>
+            {% for i in range(1, 6) %}
+            <div class="card mb-3 p-3" style="border: 1px solid var(--gray-200);">
+                <h6>Pregunta {{ i }}</h6>
+                <div class="mb-2"><input type="text" class="form-control" name="pregunta_{{ i }}" placeholder="Texto de la pregunta"></div>
+                <div class="row g-2">
+                    <div class="col-md-6"><input type="text" class="form-control" name="opcion_{{ i }}_0" placeholder="Opción A"></div>
+                    <div class="col-md-6"><input type="text" class="form-control" name="opcion_{{ i }}_1" placeholder="Opción B"></div>
+                    <div class="col-md-6"><input type="text" class="form-control" name="opcion_{{ i }}_2" placeholder="Opción C"></div>
+                    <div class="col-md-6"><input type="text" class="form-control" name="opcion_{{ i }}_3" placeholder="Opción D"></div>
+                </div>
+                <div class="mt-2"><label class="form-label">Respuesta correcta</label>
+                    <select class="form-select" name="correcta_{{ i }}">
+                        <option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option>
+                    </select>
+                </div>
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-encl btn-encl-primary w-100">Crear examen</button>
+        </form>
+    </div>
+</div></div></div>
+{% endblock %}

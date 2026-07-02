@@ -1,0 +1,45 @@
+<footer class="footer">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <i class="fas fa-graduation-cap" style="font-size: 2.5rem; color: var(--accent);"></i>
+                    <div>
+                        <h5 class="mb-0" style="color: #fff;">{{ site_name }}</h5>
+                        <small style="color: var(--accent);">Transformando personas</small>
+                    </div>
+                </div>
+                <p style="font-size: 0.9rem; line-height: 1.8;">{{ site_subtitle }}</p>
+                <div class="d-flex gap-3 mt-3">
+                    <a href="#" class="text-white" style="font-size: 1.2rem;"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="text-white" style="font-size: 1.2rem;"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-white" style="font-size: 1.2rem;"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-white" style="font-size: 1.2rem;"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" class="text-white" style="font-size: 1.2rem;"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <h5>Plataforma</h5>
+                <a href="{{ url_for('public_cursos') }}">Cursos</a>
+                <a href="{{ url_for('public_instructores') }}">Instructores</a>
+                <a href="{{ url_for('public_patrocinadores') }}">Patrocinadores</a>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <h5>Institución</h5>
+                <a href="{{ url_for('public_nosotros') }}">Nosotros</a>
+                <a href="{{ url_for('public_contacto') }}">Contacto</a>
+                <a href="#">Aviso de Privacidad</a>
+                <a href="#">Términos y Condiciones</a>
+            </div>
+            <div class="col-lg-4 col-md-4">
+                <h5>Contacto</h5>
+                <p style="font-size: 0.9rem; margin-bottom: 0.5rem;"><i class="fas fa-map-marker-alt me-2" style="color: var(--accent);"></i>{{ contact_address }}</p>
+                <p style="font-size: 0.9rem; margin-bottom: 0.5rem;"><i class="fas fa-phone me-2" style="color: var(--accent);"></i>{{ contact_phone }}</p>
+                <p style="font-size: 0.9rem; margin-bottom: 0.5rem;"><i class="fas fa-envelope me-2" style="color: var(--accent);"></i>{{ contact_email }}</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="mb-0">&copy; {{ now().year if now is defined else '2026' }} {{ site_name }}. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</footer>

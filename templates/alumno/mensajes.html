@@ -1,0 +1,61 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'alumno/sidebar.html' %}{% endblock %}
+{% block page_title %}Mensajes{% endblock %}
+{% block page_subtitle %}Comunicación interna{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="dashboard-card">
+            <h5 style="font-weight: 700; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-envelope me-2"></i>Bandeja de entrada</h5>
+            {% for msg in mensajes %}
+            <div class="message-item" data-message-id="{{ msg.id }}" style="padding: 1rem; border-bottom: 1px solid var(--gray-200); cursor: pointer; {% if not msg.leido and msg.destinatario_id == current_user.id %}background: rgba(13,110,253,0.03);{% endif %}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>{{ msg.asunto }}</strong>
+                        {% if not msg.leido and msg.destinatario_id == current_user.id %}
+                        <span class="badge bg-danger ms-2" style="font-size: 0.6rem;">Nuevo</span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">{{ msg.fecha_envio.strftime('%d/%m/%Y %H:%M') }}</small>
+                </div>
+                <p class="mb-0 mt-1" style="font-size: 0.85rem; color: var(--gray-600);">
+                    <strong>De:</strong> {{ msg.remitente.nombre if msg.remitente else 'Sistema' }}
+                </p>
+                <p class="mb-0 mt-1" style="font-size: 0.85rem;">{{ msg.contenido[:150] }}{% if msg.contenido and msg.contenido|length > 150 %}...{% endif %}</p>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-inbox" style="font-size: 3rem; color: var(--gray-300);"></i>
+                <p class="mt-2 text-muted">No hay mensajes</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="dashboard-card">
+            <h5 style="font-weight: 700; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-pen me-2"></i>Nuevo mensaje</h5>
+            <form method="POST" action="{{ url_for('alumno_enviar_mensaje') }}">
+                <div class="mb-3">
+                    <label class="form-label">Para</label>
+                    <select class="form-select" name="destinatario_id">
+                        <option value="">Seleccionar destinatario</option>
+                        {% for user in User.query.all() if user.id != current_user.id %}
+                        <option value="{{ user.id }}">{{ user.nombre }} {{ user.apellidos }} ({{ user.role }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Asunto</label>
+                    <input type="text" class="form-control" name="asunto" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mensaje</label>
+                    <textarea class="form-control" name="contenido" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-encl btn-encl-primary w-100"><i class="fas fa-paper-plane me-2"></i>Enviar</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

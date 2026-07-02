@@ -1,0 +1,81 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'admin/sidebar.html' %}{% endblock %}
+{% block page_title %}Reportes y Estadísticas{% endblock %}
+{% block page_subtitle %}Análisis de datos de la plataforma{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Alumnos activos</h6><div class="card-icon stat-card-primary"><i class="fas fa-user-graduate"></i></div></div>
+            <div class="card-value">{{ User.query.filter_by(role='alumno', activo=True).count() }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Cursos activos</h6><div class="card-icon stat-card-success"><i class="fas fa-book-open"></i></div></div>
+            <div class="card-value">{{ Curso.query.filter_by(activo=True).count() }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Inscripciones</h6><div class="card-icon stat-card-info"><i class="fas fa-user-plus"></i></div></div>
+            <div class="card-value">{{ Inscripcion.query.count() }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Tasa completado</h6><div class="card-icon stat-card-warning"><i class="fas fa-check-circle"></i></div></div>
+            <div class="card-value">{{ (Inscripcion.query.filter_by(completado=True).count() / Inscripcion.query.count() * 100)|round|int if Inscripcion.query.count() > 0 else 0 }}%</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="admin-widget">
+            <div class="widget-title"><i class="fas fa-chart-pie me-2"></i>Distribución de alumnos por estado</div>
+            <div class="table-responsive">
+                <table class="table table-encl">
+                    <thead><tr><th>Estado</th><th>Alumnos</th><th>%</th></tr></thead>
+                    <tbody>
+                        {% for est in Estado.query.all() %}
+                        {% set count = User.query.filter_by(estado_id=est.id, role='alumno').count() %}
+                        {% if count > 0 %}
+                        <tr>
+                            <td>{{ est.nombre }}</td>
+                            <td>{{ count }}</td>
+                            <td>
+                                <div class="progress-encl"><div class="progress-bar-encl" style="width: {{ (count / User.query.filter_by(role='alumno').count() * 100)|round }}%;"></div></div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="admin-widget">
+            <div class="widget-title"><i class="fas fa-chart-bar me-2"></i>Cursos por nivel</div>
+            <canvas id="chartNiveles" data-chart="true" data-chart-type="bar"
+                data-labels='["Principiante", "Intermedio", "Avanzado"]'
+                data-values='[{{ Curso.query.filter_by(nivel="Principiante").count() }}, {{ Curso.query.filter_by(nivel="Intermedio").count() }}, {{ Curso.query.filter_by(nivel="Avanzado").count() }}]'></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="admin-widget">
+            <div class="widget-title"><i class="fas fa-download me-2"></i>Exportar datos</div>
+            <div class="d-flex gap-3">
+                <button class="btn btn-encl btn-encl-primary" onclick="alert('Exportando reporte de alumnos...')"><i class="fas fa-file-excel me-2"></i>Alumnos</button>
+                <button class="btn btn-encl btn-encl-success" onclick="alert('Exportando reporte de cursos...')"><i class="fas fa-file-excel me-2"></i>Cursos</button>
+                <button class="btn btn-encl btn-encl-info" onclick="alert('Exportando reporte de certificados...')" style="background: var(--secondary);"><i class="fas fa-file-excel me-2"></i>Certificados</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

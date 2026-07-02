@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="about-hero">
+    <div class="container">
+        <h1>Nuestros Instructores</h1>
+        <p>Profesionales certificados con amplia experiencia en cada materia</p>
+    </div>
+</div>
+
+<section style="padding: 60px 0;">
+    <div class="container">
+        <div class="row g-4">
+            {% for instr in instructores %}
+            <div class="col-lg-3 col-md-6 animate-on-scroll">
+                <div class="instructor-card">
+                    <div class="instructor-avatar"><i class="fas fa-user-tie"></i></div>
+                    <h5>{{ instr.nombre }} {{ instr.apellidos }}</h5>
+                    <p><i class="fas fa-chalkboard-teacher me-1" style="color: var(--accent);"></i>Instructor certificado</p>
+                    <small class="text-muted">{{ instr.cursos_impartidos|length }} cursos activos</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

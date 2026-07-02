@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="dc-app">
+  <style>
+    .dc-app { --dc-primary: #0a1628; --dc-secondary: #2962ff; --dc-accent: #ff6d00; --dc-success: #00c853; --dc-bg: #f0f2f5; --dc-bg-card: #ffffff; --dc-text: #1a2027; --dc-text-light: #6b7280; --dc-border: #e5e7eb; --dc-radius: 16px; --dc-radius-sm: 10px; --dc-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); --dc-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dc/css/dc-style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='dc/css/dc-responsive.css') }}">
+
+  <div class="page page--active" id="page-cursos">
+    <section class="section">
+      <div class="container">
+        <div class="section__header">
+          <div class="section__tag section__tag--blue">Curso de Inglés</div>
+          <h2 class="section__title">Programa de Inglés ENCL</h2>
+          <p class="section__subtitle">Curso completo de inglés básico A1-A2 con videos, ejercicios interactivos y certificación.</p>
+        </div>
+        <div class="courses-grid">
+          <div class="course-card">
+            <div class="course-card__image" style="background:linear-gradient(135deg,#132f4c,#2962ff)">
+              <i class="fas fa-language course-card__image-icon"></i>
+              <span class="course-card__badge course-card__badge--gratis">Gratis</span>
+            </div>
+            <div class="course-card__body">
+              <div class="course-card__title">{{ curso.titulo }}</div>
+              <div class="course-card__summary">{{ curso.descripcion_corta }}</div>
+              <div class="course-card__meta">
+                <span class="course-card__meta-item"><i class="fas fa-signal"></i> {{ curso.nivel }}</span>
+                <span class="course-card__meta-item"><i class="far fa-clock"></i> {{ curso.duracion_horas|int }}h</span>
+                <span class="course-card__meta-item"><i class="fas fa-file-video"></i> {{ clases|length }} clases</span>
+              </div>
+              <div class="course-card__footer">
+                <span class="course-card__level">Idiomas</span>
+                <button class="btn btn--primary btn--sm" onclick="showCurso()">Ver Curso</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="page" id="page-curso">
+    <section class="section">
+      <div class="container">
+        <div style="margin-bottom:24px">
+          <button class="btn btn--ghost" onclick="showCatalog()"><i class="fas fa-arrow-left"></i> Volver al listado</button>
+        </div>
+
+        <div class="curso-header">
+          <div class="curso-header__info">
+            <div class="curso-header__category">Idiomas</div>
+            <h1 class="curso-header__title">{{ curso.titulo }}</h1>
+            <p class="curso-header__summary">{{ curso.descripcion_corta }}</p>
+            <div class="curso-header__details">
+              <span class="curso-header__detail"><i class="fas fa-signal"></i> {{ curso.nivel }}</span>
+              <span class="curso-header__detail"><i class="far fa-clock"></i> {{ curso.duracion_horas|int }} horas</span>
+              <span class="curso-header__detail"><i class="fas fa-file-video"></i> {{ clases|length }} clases</span>
+              <span class="curso-header__detail"><i class="fas fa-file-alt"></i> {{ examenes|length }} exámenes</span>
+            </div>
+            <div class="curso-header__instructor">
+              <div class="curso-header__instructor-avatar">{{ curso.instructor.nombre[0] if curso.instructor else '?' }}</div>
+              <div class="curso-header__instructor-info">
+                <div class="curso-header__instructor-name">{{ curso.instructor.nombre + ' ' + curso.instructor.apellidos if curso.instructor else 'Instructor ENCL' }}</div>
+                <div class="curso-header__instructor-role">Instructor certificado</div>
+              </div>
+            </div>
+          </div>
+          <div class="curso-header__card">
+            <div class="curso-header__price">{% if curso.precio == 0 %}Gratis{% else %}${{ '{:,.0f}'.format(curso.precio) }}{% endif %}</div>
+            <div class="curso-header__price-label">Acceso completo</div>
+            <button class="btn btn--primary btn--lg btn--block" onclick="inscribirse()"><i class="fas fa-user-plus"></i> Inscribirme</button>
+          </div>
+        </div>
+
+        <div class="curso-tabs" style="margin-top:32px">
+          <div class="curso-tabs__nav">
+            <button class="curso-tab-link curso-tab-link--active" onclick="switchTab('clases',this)"><i class="fas fa-video"></i> Clases ({{ clases|length }})</button>
+            <button class="curso-tab-link" onclick="switchTab('examenes',this)"><i class="fas fa-file-alt"></i> Exámenes ({{ examenes|length }})</button>
+            <button class="curso-tab-link" onclick="switchTab('tareas',this)"><i class="fas fa-tasks"></i> Tareas ({{ tareas|length }})</button>
+          </div>
+
+          <div class="curso-tab-pane curso-tab-pane--active" id="tabClases">
+            <div class="curso-class-list">
+              {% for cl in clases %}
+              <div class="curso-class-item">
+                <div class="curso-class-item__icon curso-class-item__icon--{{ 'live' if cl.tipo == 'vivo' else 'recorded' }}">
+                  <i class="fas {{ 'fa-video' if cl.tipo == 'vivo' else 'fa-play-circle' }}"></i>
+                </div>
+                <div class="curso-class-item__body">
+                  <div class="curso-class-item__title">{{ cl.titulo }}</div>
+                  <div class="curso-class-item__desc">{{ cl.descripcion }}</div>
+                  <div class="curso-class-item__meta">
+                    <span><i class="far fa-clock"></i> {{ cl.duracion_minutos }} min</span>
+                    <span><i class="fas {{ 'fa-calendar-check' if cl.tipo == 'vivo' else 'fa-play-circle' }}"></i> {{ 'En vivo' if cl.tipo == 'vivo' else 'Grabada' }}{% if cl.fecha_programada %} · {{ cl.fecha_programada.strftime('%d/%m/%Y') }}{% endif %}</span>
+                  </div>
+                </div>
+                <div class="curso-class-item__action">
+                  {% if cl.url_video %}
+                  <a href="{{ cl.url_video }}" target="_blank" class="btn btn--sm btn--primary"><i class="fas fa-play"></i></a>
+                  {% else %}
+                  <button class="btn btn--sm btn--outline" disabled><i class="fas fa-lock"></i></button>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="curso-tab-pane" id="tabExamenes">
+            <div class="curso-class-list">
+              {% for ex in examenes %}
+              <div class="curso-exam-item">
+                <div class="curso-exam-item__header">
+                  <div class="curso-exam-item__title">{{ ex.titulo }}</div>
+                  <span class="badge badge--warning">No intentado</span>
+                </div>
+                <div class="curso-exam-item__desc">{{ ex.descripcion }}</div>
+                <div class="curso-exam-item__meta">
+                  <span><i class="fas fa-question-circle"></i> {{ ex.preguntas|length }} preguntas</span>
+                  <span><i class="far fa-clock"></i> {{ ex.tiempo_limite_minutos }} min</span>
+                  <span><i class="fas fa-check-circle"></i> Aprobación: {{ ex.calificacion_minima|int }}/10</span>
+                </div>
+                <div style="margin-top:12px">
+                  <button class="btn btn--primary btn--sm" onclick="iniciarExamen({{ ex.id }})"><i class="fas fa-play"></i> Comenzar Examen</button>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="curso-tab-pane" id="tabTareas">
+            <div class="curso-class-list">
+              {% for ta in tareas %}
+              <div class="curso-exam-item">
+                <div class="curso-exam-item__header">
+                  <div class="curso-exam-item__title">{{ ta.titulo }}</div>
+                  <span class="badge badge--warning">Pendiente</span>
+                </div>
+                <div class="curso-exam-item__desc">{{ ta.descripcion }}</div>
+                <div class="curso-exam-item__meta">
+                  <span><i class="fas fa-calendar-alt"></i> Vence: {{ ta.fecha_entrega.strftime('%d/%m/%Y') if ta.fecha_entrega else '—' }}</span>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="exam-overlay" id="examOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;overflow-y:auto;padding:20px">
+    <div style="max-width:700px;margin:40px auto;background:var(--bg-card);border-radius:var(--radius);padding:32px;box-shadow:var(--shadow-lg)">
+      <div id="examBefore">
+        <div style="text-align:center;padding:20px 0">
+          <i class="fas fa-file-alt" style="font-size:3rem;color:var(--secondary);margin-bottom:16px;display:block"></i>
+          <h3 id="examTitle" style="font-size:1.3rem;font-weight:700;margin-bottom:8px"></h3>
+          <p id="examDesc" style="color:var(--text-light);margin-bottom:4px"></p>
+          <p id="examMeta" style="color:var(--text-light);margin-bottom:24px"></p>
+          <button class="btn btn--accent btn--lg" onclick="startExam()"><i class="fas fa-play"></i> Comenzar</button>
+          <button class="btn btn--ghost" style="margin-left:8px" onclick="cerrarExamen()">Cancelar</button>
+        </div>
+      </div>
+      <div id="examRunning" style="display:none">
+        <div class="exam-header">
+          <div class="exam-progress">
+            <span style="font-weight:600"><span id="examCurrentQ">1</span>/<span id="examTotalQ">0</span></span>
+            <div class="exam-progress__bar"><div class="exam-progress__fill" id="examProgressFill" style="width:10%"></div></div>
+          </div>
+          <span class="exam-timer" id="examTimer">00:00</span>
+        </div>
+        <div id="examQuestions"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:16px">
+          <button class="btn btn--ghost" onclick="prevQuestion()" id="prevBtn"><i class="fas fa-arrow-left"></i> Anterior</button>
+          <button class="btn btn--primary" onclick="nextQuestion()" id="nextBtn">Siguiente <i class="fas fa-arrow-right"></i></button>
+        </div>
+        <div style="text-align:center;margin-top:16px">
+          <button class="btn btn--accent btn--lg" onclick="finishExam()"><i class="fas fa-flag-checkered"></i> Finalizar Examen</button>
+        </div>
+      </div>
+      <div id="examResult" style="display:none;text-align:center;padding:20px 0"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var examenesData = {{ examenes_json|safe }};
+var currentExam = null;
+var currentQ = 0;
+var answers = [];
+var timerInterval = null;
+
+function showCatalog() {
+  document.getElementById('page-cursos').classList.add('page--active');
+  document.getElementById('page-curso').classList.remove('page--active');
+}
+
+function showCurso() {
+  document.getElementById('page-cursos').classList.remove('page--active');
+  document.getElementById('page-curso').classList.add('page--active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.curso-tab-link').forEach(t => t.classList.remove('curso-tab-link--active'));
+  btn.classList.add('curso-tab-link--active');
+  document.querySelectorAll('.curso-tab-pane').forEach(p => p.classList.remove('curso-tab-pane--active'));
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('curso-tab-pane--active');
+}
+
+function inscribirse() {
+  {% if current_user.is_authenticated and current_user.role == 'alumno' %}
+  window.location.href = "{{ url_for('alumno_inscribir', curso_id=curso.id) }}";
+  {% else %}
+  window.location.href = "{{ url_for('public_login') }}";
+  {% endif %}
+}
+
+function iniciarExamen(examenId) {
+  var ex = examenesData.find(e => e.id === examenId);
+  if (!ex) return;
+  currentExam = ex;
+  currentQ = 0;
+  answers = new Array(ex.preguntas.length).fill(-1);
+  document.getElementById('examTitle').textContent = ex.titulo;
+  document.getElementById('examDesc').textContent = ex.descripcion;
+  document.getElementById('examMeta').textContent = ex.preguntas.length + ' preguntas · ' + ex.tiempo_limite_minutos + ' min · Aprobación: ' + ex.calificacion_minima + '/10';
+  document.getElementById('examOverlay').style.display = 'block';
+  document.getElementById('examBefore').style.display = 'block';
+  document.getElementById('examRunning').style.display = 'none';
+  document.getElementById('examResult').style.display = 'none';
+}
+
+function startExam() {
+  document.getElementById('examBefore').style.display = 'none';
+  document.getElementById('examRunning').style.display = 'block';
+  document.getElementById('examResult').style.display = 'none';
+  currentQ = 0;
+  answers = new Array(currentExam.preguntas.length).fill(-1);
+  renderQuestion();
+  var totalSec = currentExam.tiempo_limite_minutos * 60;
+  document.getElementById('examTimer').textContent = formatTime(totalSec);
+  clearInterval(timerInterval);
+  timerInterval = setInterval(function() {
+    var el = document.getElementById('examTimer');
+    var parts = el.textContent.split(':');
+    var sec = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    sec--;
+    if (sec <= 0) { clearInterval(timerInterval); finishExam(); return; }
+    el.textContent = formatTime(sec);
+  }, 1000);
+}
+
+function renderQuestion() {
+  if (!currentExam || currentExam.preguntas.length === 0) return;
+  var q = currentExam.preguntas[currentQ];
+  document.getElementById('examCurrentQ').textContent = currentQ + 1;
+  document.getElementById('examTotalQ').textContent = currentExam.preguntas.length;
+  document.getElementById('examProgressFill').style.width = ((currentQ + 1) / currentExam.preguntas.length * 100) + '%';
+  document.getElementById('prevBtn').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
+  document.getElementById('nextBtn').textContent = currentQ === currentExam.preguntas.length - 1 ? 'Finalizar' : 'Siguiente';
+  var html = '<div class="exercise-question"><div class="exercise-question__text" style="font-size:1.1rem;font-weight:600;margin-bottom:16px">' + (currentQ+1) + '. ' + q.texto + '</div><div class="exercise-options">';
+  q.opciones.forEach(function(o, i) {
+    var checked = answers[currentQ] === i ? 'checked' : '';
+    html += '<label class="exercise-option" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:var(--transition);background:var(--bg-card)" onclick="selectAnswer(' + i + ')">';
+    html += '<input type="radio" name="ex_q" value="' + i + '" ' + checked + ' style="width:18px;height:18px;accent-color:var(--secondary)">';
+    html += '<span>' + o + '</span></label>';
+  });
+  html += '</div></div>';
+  document.getElementById('examQuestions').innerHTML = html;
+}
+
+function selectAnswer(idx) {
+  answers[currentQ] = idx;
+  var radios = document.querySelectorAll('#examQuestions input[name="ex_q"]');
+  radios.forEach(function(r, i) { r.checked = i === idx; });
+}
+
+function nextQuestion() {
+  if (currentQ < currentExam.preguntas.length - 1) { currentQ++; renderQuestion(); }
+  else finishExam();
+}
+
+function prevQuestion() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+
+function finishExam() {
+  clearInterval(timerInterval);
+  var total = currentExam.preguntas.length;
+  var correct = 0;
+  currentExam.preguntas.forEach(function(q, i) {
+    var ans = answers[i];
+    if (ans === q.respuesta_correcta) correct++;
+  });
+  var score = Math.round(correct / total * 10 * 10) / 10;
+  var passed = score >= currentExam.calificacion_minima;
+  document.getElementById('examRunning').style.display = 'none';
+  document.getElementById('examResult').style.display = 'block';
+  document.getElementById('examResult').innerHTML =
+    '<div style="font-size:3rem;font-weight:900;color:' + (passed ? 'var(--success)' : 'var(--accent)') + '">' + score + '/10</div>' +
+    '<p style="font-size:1.2rem;font-weight:700;margin:12px 0">' + (passed ? '¡Aprobado! 🎉' : 'Sigue practicando') + '</p>' +
+    '<p style="color:var(--text-light)">' + correct + ' de ' + total + ' respuestas correctas</p>' +
+    '<p style="color:var(--text-light);margin-bottom:20px">Calificación mínima: ' + currentExam.calificacion_minima + '/10</p>' +
+    '<button class="btn btn--primary" onclick="cerrarExamen()"><i class="fas fa-times"></i> Cerrar</button>';
+}
+
+function cerrarExamen() {
+  clearInterval(timerInterval);
+  document.getElementById('examOverlay').style.display = 'none';
+}
+
+function formatTime(sec) {
+  var m = Math.floor(sec / 60);
+  var s = sec % 60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+</script>
+{% endblock %}

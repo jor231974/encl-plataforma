@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="background: var(--gradient-hero); padding: 120px 0 60px; text-align: center; color: #fff;">
+    <div class="container">
+        <h1 style="font-size: 2.5rem; font-weight: 900;">Oferta Académica</h1>
+        <p style="opacity: 0.8; font-size: 1.1rem;">Todos nuestros cursos de capacitación profesional</p>
+    </div>
+</div>
+
+<section style="padding: 60px 0;">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <input type="text" id="search-courses" class="form-control" placeholder="Buscar cursos..." style="border-radius: 50px; padding: 0.7rem 1.2rem;">
+            </div>
+            <div class="col-md-3 mb-3">
+                <select class="form-select" style="border-radius: 50px; padding: 0.7rem 1.2rem;" onchange="if(this.value) window.location='{{ url_for('public_cursos') }}?categoria='+this.value">
+                    <option value="">Todas las categorías</option>
+                    {% for cat in categorias %}
+                    <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <select class="form-select" style="border-radius: 50px; padding: 0.7rem 1.2rem;" onchange="if(this.value) window.location='{{ url_for('public_cursos') }}?nivel='+this.value">
+                    <option value="">Todos los niveles</option>
+                    <option value="Principiante">Principiante</option>
+                    <option value="Intermedio">Intermedio</option>
+                    <option value="Avanzado">Avanzado</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            {% if cursos %}
+            {% for curso in cursos %}
+            <div class="col-lg-3 col-md-6 animate-on-scroll">
+                <div class="course-card">
+                    <div class="card-img">
+                        <i class="fas {{ curso.categoria.icono if curso.categoria else 'fa-book' }}"></i>
+                        <div class="overlay"></div>
+                        <span class="badge-level">{{ curso.nivel }}</span>
+                        <div class="card-price {% if curso.precio == 0 %}free{% endif %}">
+                            {% if curso.precio == 0 %}<i class="fas fa-star me-1"></i>Gratis{% else %}${{ '{:,.0f}'.format(curso.precio) }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-category">{{ curso.categoria.nombre if curso.categoria else '' }}</div>
+                        <h5>{{ curso.titulo }}</h5>
+                        <p>{{ curso.descripcion_corta[:100] }}{% if curso.descripcion_corta and curso.descripcion_corta|length > 100 %}...{% endif %}</p>
+                        <div class="card-meta">
+                            <span><i class="far fa-clock"></i> {{ curso.duracion_horas|int }}h</span>
+                            {% if curso.slug == 'ingles-basico' %}
+                            <a href="{{ url_for('public_curso_ingles') }}" class="btn btn-encl btn-encl-primary btn-encl-sm">Ver más <i class="fas fa-external-link-alt ms-1"></i></a>
+                            {% else %}
+                            <a href="{{ url_for('public_curso_detalle', slug=curso.slug) }}" class="btn btn-encl btn-encl-primary btn-encl-sm">Ver más</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-search" style="font-size: 3rem; color: var(--gray-300);"></i>
+                <h4 class="mt-3 text-muted">No se encontraron cursos</h4>
+                <p>Intenta con otros filtros o categorías</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

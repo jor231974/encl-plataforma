@@ -1,0 +1,47 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'alumno/sidebar.html' %}{% endblock %}
+{% block page_title %}Exámenes{% endblock %}
+{% block page_subtitle %}Evaluaciones de tus cursos{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    {% for examen in examenes %}
+    <div class="col-lg-4 col-md-6">
+        <div class="dashboard-card">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, rgba(255,193,7,0.2), rgba(255,215,0,0.2)); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: #f0ad4e;">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1" style="font-weight: 700;">{{ examen.titulo }}</h6>
+                    <small class="text-muted">{{ examen.curso.titulo if examen.curso else '' }}</small>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mb-3">
+                <span class="badge bg-info"><i class="far fa-clock me-1"></i>{{ examen.tiempo_limite_minutos }} min</span>
+                <span class="badge bg-warning text-dark"><i class="fas fa-check-circle me-1"></i>{{ examen.calificacion_minima }}/10</span>
+            </div>
+            {% if examen.id in intentos %}
+                {% set intento = intentos[examen.id] %}
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><strong>Calificación:</strong> {{ intento.calificacion|round(1) }}/10</span>
+                    {% if intento.aprobado %}
+                    <span class="badge bg-success"><i class="fas fa-check me-1"></i>Aprobado</span>
+                    {% else %}
+                    <span class="badge bg-danger"><i class="fas fa-times me-1"></i>Reprobado</span>
+                    {% endif %}
+                </div>
+            {% else %}
+            <a href="{{ url_for('alumno_realizar_examen', examen_id=examen.id) }}" class="btn btn-encl btn-encl-primary w-100"><i class="fas fa-play me-2"></i>Comenzar examen</a>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <i class="fas fa-tasks" style="font-size: 4rem; color: var(--gray-300);"></i>
+        <h4 class="mt-3 text-muted">No hay exámenes disponibles</h4>
+        <p>Los exámenes aparecerán cuando estén asignados a tus cursos.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

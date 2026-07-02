@@ -1,0 +1,122 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'admin/sidebar.html' %}{% endblock %}
+{% block page_title %}Gestión de Pagos{% endblock %}
+{% block page_subtitle %}Registra y verifica pagos de alumnos{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Ingresos totales</h6><div class="card-icon stat-card-success"><i class="fas fa-dollar-sign"></i></div></div>
+            <div class="card-value">${{ '%.0f'|format(total_ingresos) }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Pendientes</h6><div class="card-icon stat-card-warning"><i class="fas fa-clock"></i></div></div>
+            <div class="card-value">{{ pendientes }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Completados</h6><div class="card-icon stat-card-primary"><i class="fas fa-check-circle"></i></div></div>
+            <div class="card-value">{{ completados }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-card">
+            <div class="card-header-dash"><h6>Este mes</h6><div class="card-icon stat-card-info"><i class="fas fa-calendar"></i></div></div>
+            <div class="card-value">${{ '%.0f'|format(ingresos_mes) }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="font-weight: 700; color: var(--primary); margin: 0;"><i class="fas fa-credit-card me-2"></i>Historial de pagos</h5>
+        <button class="btn btn-encl btn-encl-success" data-bs-toggle="modal" data-bs-target="#modalCrearPago"><i class="fas fa-plus me-2"></i>Registrar pago</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-encl">
+            <thead><tr><th>Fecha</th><th>Alumno</th><th>Concepto</th><th>Curso</th><th>Monto</th><th>Método</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>
+                {% for p in pagos %}
+                <tr>
+                    <td>{{ p.fecha_pago.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ p.alumno.nombre if p.alumno else '?' }} {{ p.alumno.apellidos if p.alumno else '' }}</td>
+                    <td>{{ p.concepto }}</td>
+                    <td>{{ p.curso.titulo[:25] if p.curso else '-' }}</td>
+                    <td><strong>${{ '%.0f'|format(p.monto) }}</strong></td>
+                    <td>{{ p.metodo_pago }}</td>
+                    <td>{% if p.verificado %}<span class="badge bg-success">Verificado</span>{% else %}<span class="badge bg-warning text-dark">Pendiente</span>{% endif %}</td>
+                    <td>
+                        {% if not p.verificado %}
+                        <a href="{{ url_for('admin_verificar_pago', pago_id=p.id) }}" class="btn btn-encl btn-encl-success btn-encl-sm" onclick="return confirm('¿Verificar este pago? El alumno será activado.')"><i class="fas fa-check"></i></a>
+                        {% endif %}
+                        <a href="{{ url_for('admin_eliminar_pago', pago_id=p.id) }}" class="btn btn-encl btn-encl-danger btn-encl-sm" onclick="return confirm('¿Eliminar este pago?')"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="text-center text-muted py-4">No hay pagos registrados</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Crear Pago -->
+<div class="modal fade modal-encl" id="modalCrearPago">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Registrar pago</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <form method="POST" action="{{ url_for('admin_crear_pago') }}" class="form-encl row g-3">
+                <div class="col-12">
+                    <label class="form-label">Alumno</label>
+                    <select class="form-select" name="alumno_id" required>
+                        <option value="">Seleccionar alumno</option>
+                        {% for a in alumnos %}
+                        <option value="{{ a.id }}">{{ a.nombre }} {{ a.apellidos }} ({{ a.username }}){% if not a.activo %} - INACTIVO{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Curso</label>
+                    <select class="form-select" name="curso_id" required>
+                        <option value="">Seleccionar curso</option>
+                        {% for c in cursos %}
+                        <option value="{{ c.id }}">{{ c.titulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Concepto</label>
+                    <input type="text" class="form-control" name="concepto" required placeholder="Ej: Inscripción">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Monto $</label>
+                    <input type="number" step="0.01" class="form-control" name="monto" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Método de pago</label>
+                    <select class="form-select" name="metodo_pago">
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Tarjeta">Tarjeta</option>
+                        <option value="Depósito">Depósito</option>
+                        <option value="PayPal">PayPal</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Referencia</label>
+                    <input type="text" class="form-control" name="referencia" placeholder="Folio, N° transacción">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Notas</label>
+                    <textarea class="form-control" name="notas" rows="2"></textarea>
+                </div>
+                <div class="col-12"><button type="submit" class="btn btn-encl btn-encl-primary w-100">Registrar pago</button></div>
+            </form>
+        </div>
+    </div></div>
+</div>
+{% endblock %}
