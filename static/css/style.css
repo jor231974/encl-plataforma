@@ -186,9 +186,9 @@ body {
     width: 70%;
 }
 .navbar-encl .btn-acceso {
-    background: var(--gradient-accent);
-    color: #fff !important;
-    border: none;
+    background: #fff;
+    color: var(--primary) !important;
+    border: 2px solid var(--primary);
     padding: 0.5rem 1.5rem !important;
     border-radius: 50px;
     font-weight: 700;
@@ -196,8 +196,10 @@ body {
     transition: all 0.3s ease;
 }
 .navbar-encl .btn-acceso:hover {
+    background: var(--primary);
+    color: #fff !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(30,58,138,0.3);
+    box-shadow: 0 4px 20px rgba(14,165,233,0.2);
 }
 .navbar-encl .dropdown-menu {
     background: rgba(10, 10, 26, 0.98);
@@ -715,9 +717,9 @@ body {
     box-shadow: 0 0 0 3px rgba(26,35,126,0.1);
 }
 .auth-card .btn-auth {
-    background: var(--gradient-primary);
-    color: #fff;
-    border: none;
+    background: #fff;
+    color: var(--primary);
+    border: 2px solid var(--primary);
     padding: 0.8rem;
     border-radius: var(--radius-sm);
     font-weight: 600;
@@ -725,8 +727,10 @@ body {
     transition: all 0.3s;
 }
 .auth-card .btn-auth:hover {
+    background: var(--primary);
+    color: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(26,35,126,0.3);
+    box-shadow: 0 4px 15px rgba(14,165,233,0.2);
 }
 
 /* ==================== DASHBOARD LAYOUT ==================== */
@@ -935,22 +939,28 @@ body {
     border: none;
 }
 .btn-encl-primary {
-    background: var(--gradient-primary);
-    color: #fff;
+    background: #fff;
+    color: var(--primary);
+    border: 2px solid var(--primary);
 }
 .btn-encl-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(14,165,233,0.3);
+    background: var(--primary);
     color: #fff;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(14,165,233,0.2);
 }
 .btn-encl-success {
-    background: var(--gradient-accent);
-    color: #fff;
+    background: #fff;
+    color: #059669;
+    border: 2px solid #059669;
 }
 .btn-encl-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(37,99,235,0.3);
+    background: #059669;
     color: #fff;
+    border-color: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(5,150,105,0.3);
 }
 .btn-encl-danger {
     background: linear-gradient(135deg, #dc3545, #c82333);
