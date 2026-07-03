@@ -2,8 +2,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
 import uuid
-import random
-import string
 
 db = SQLAlchemy()
 
@@ -22,15 +20,6 @@ class User(UserMixin, db.Model):
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
     activo = db.Column(db.Boolean, default=True)
 
-    # Seguridad
-    primer_acceso = db.Column(db.Boolean, default=True)
-    cuenta_bloqueada = db.Column(db.Boolean, default=False)
-    intentos_fallidos = db.Column(db.Integer, default=0)
-    bloqueo_hasta = db.Column(db.DateTime)
-    ultimo_acceso = db.Column(db.DateTime)
-    fecha_cambio_password = db.Column(db.DateTime)
-    ultimo_acceso_ip = db.Column(db.String(50))
-
     # Territorial
     estado_id = db.Column(db.Integer, db.ForeignKey('estado.id'))
     municipio_id = db.Column(db.Integer, db.ForeignKey('municipio.id'))
@@ -43,36 +32,6 @@ class User(UserMixin, db.Model):
     municipio = db.relationship('Municipio', backref='usuarios')
     distrito = db.relationship('Distrito', backref='usuarios')
     grupo = db.relationship('Grupo', backref='usuarios')
-
-    def generar_username(self):
-        formato = db.session.query(Configuracion).filter_by(clave='formato_usuario').first()
-        patron = formato.valor if formato else 'alumno{numero:06d}'
-        conf = db.session.query(Configuracion).filter_by(clave='contador_usuario').first()
-        if not conf:
-            conf = Configuracion(clave='contador_usuario', valor='0', tipo='numero')
-            db.session.add(conf)
-            db.session.commit()
-        numero = int(conf.valor) + 1
-        conf.valor = str(numero)
-        db.session.commit()
-        return patron.format(numero=numero)
-
-    def generar_password_temporal(self):
-        anio = datetime.utcnow().strftime('%Y')
-        nums = ''.join(random.choices(string.digits, k=3))
-        return f'ENCL{anio}#{nums}'
-
-    def bloquear(self, minutos=15):
-        from datetime import timedelta
-        self.cuenta_bloqueada = True
-        self.bloqueo_hasta = datetime.utcnow() + timedelta(minutes=minutos)
-        db.session.commit()
-
-    def desbloquear(self):
-        self.cuenta_bloqueada = False
-        self.intentos_fallidos = 0
-        self.bloqueo_hasta = None
-        db.session.commit()
 
 class Estado(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -385,32 +344,3 @@ class SolicitudBeca(db.Model):
     alumno = db.relationship('User', foreign_keys=[alumno_id], backref='solicitudes_becas')
     curso = db.relationship('Curso', backref='solicitudes_becas')
     resolvedor = db.relationship('User', foreign_keys=[resuelto_por], backref='resoluciones_becas')
-
-class PasswordHistory(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
-    fecha_cambio = db.Column(db.DateTime, default=datetime.utcnow)
-    cambiado_por = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship('User', foreign_keys=[user_id], backref='historial_passwords')
-    cambiado_por_user = db.relationship('User', foreign_keys=[cambiado_por])
-
-class OTPCode(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    codigo = db.Column(db.String(10), nullable=False)
-    tipo = db.Column(db.String(20), default='recuperacion')
-    usado = db.Column(db.Boolean, default=False)
-    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
-    fecha_expiracion = db.Column(db.DateTime, nullable=False)
-    fecha_uso = db.Column(db.DateTime)
-    user = db.relationship('User', backref='codigos_otp')
-
-class LoginAttempt(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    username = db.Column(db.String(80))
-    ip_address = db.Column(db.String(50))
-    exitoso = db.Column(db.Boolean, default=False)
-    fecha = db.Column(db.DateTime, default=datetime.utcnow)
-    user = db.relationship('User', backref='intentos_login')
