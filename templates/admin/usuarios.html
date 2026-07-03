@@ -32,6 +32,18 @@
                     <td>
                         <button class="btn btn-encl btn-encl-primary btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalEditar{{ user.id }}"><i class="fas fa-edit"></i></button>
                         <a href="{{ url_for('admin_eliminar_usuario', user_id=user.id) }}" class="btn btn-encl btn-encl-danger btn-encl-sm" onclick="return confirm('¿Eliminar usuario?')"><i class="fas fa-trash"></i></a>
+                        {% if current_user.role == 'superadmin' and user.role != 'superadmin' %}
+                        <div class="btn-group mt-1">
+                            {% if user.cuenta_bloqueada %}
+                            <a href="{{ url_for('admin_desbloquear_usuario', user_id=user.id) }}" class="btn btn-encl btn-encl-sm btn-encl-success" title="Desbloquear"><i class="fas fa-unlock"></i></a>
+                            {% else %}
+                            <a href="{{ url_for('admin_bloquear_usuario', user_id=user.id) }}" class="btn btn-encl btn-encl-sm btn-encl-warning" title="Bloquear" onclick="return confirm('¿Bloquear este usuario?')"><i class="fas fa-lock"></i></a>
+                            {% endif %}
+                            <a href="{{ url_for('admin_reenviar_credenciales', user_id=user.id) }}" class="btn btn-encl btn-encl-sm btn-encl-info" title="Reenviar credenciales" onclick="return confirm('¿Reenviar credenciales por correo?')"><i class="fas fa-envelope"></i></a>
+                            <a href="{{ url_for('admin_forzar_cambio_password', user_id=user.id) }}" class="btn btn-encl btn-encl-sm btn-encl-warning" title="Forzar cambio de contraseña" onclick="return confirm('¿Forzar cambio de contraseña en el próximo inicio?')"><i class="fas fa-sync-alt"></i></a>
+                            <a href="{{ url_for('admin_historial_accesos', user_id=user.id) }}" class="btn btn-encl btn-encl-sm" style="background:var(--gray-200);color:var(--gray-800);" title="Historial"><i class="fas fa-clock"></i></a>
+                        </div>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

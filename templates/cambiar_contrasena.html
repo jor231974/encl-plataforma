@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<section style="min-height: 100vh; display: flex; align-items: center; background: var(--gradient-hero); padding-top: 80px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-5 col-md-7">
+                <div class="dashboard-card">
+                    <div class="text-center mb-4">
+                        <div style="width: 64px; height: 64px; background: rgba(14,165,233,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                            <i class="fas fa-shield-alt" style="font-size: 1.5rem; color: var(--accent);"></i>
+                        </div>
+                        <h5 style="font-weight: 700;">Cambio obligatorio de contraseña</h5>
+                        <p class="text-muted small">Por seguridad, debes cambiar tu contraseña temporal</p>
+                    </div>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña actual</label>
+                            <input type="password" class="form-control" name="actual" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nueva contraseña</label>
+                            <input type="password" class="form-control" name="nueva" required minlength="8">
+                            <small class="text-muted">Mínimo 8 caracteres</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirmar nueva contraseña</label>
+                            <input type="password" class="form-control" name="confirmar" required minlength="8">
+                        </div>
+                        <button type="submit" class="btn btn-encl btn-encl-primary w-100">Cambiar contraseña</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

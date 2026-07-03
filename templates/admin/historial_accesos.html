@@ -1,0 +1,50 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'admin/sidebar.html' %}{% endblock %}
+{% block page_title %}Historial de {{ user.nombre }} {{ user.apellidos }}{% endblock %}
+{% block page_subtitle %}Accesos y cambios de contraseña del usuario{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="dashboard-card">
+            <h5 style="font-weight: 700; color: var(--primary);"><i class="fas fa-sign-in-alt me-2"></i>Intentos de acceso</h5>
+            <div class="table-responsive">
+                <table class="table table-encl">
+                    <thead><tr><th>Fecha</th><th>IP</th><th>Resultado</th></tr></thead>
+                    <tbody>
+                        {% for i in intentos %}
+                        <tr>
+                            <td><small>{{ i.fecha.strftime('%d/%m/%Y %H:%M') }}</small></td>
+                            <td><small>{{ i.ip_address }}</small></td>
+                            <td><span class="badge bg-{{ 'success' if i.exitoso else 'danger' }}">{{ 'Exitoso' if i.exitoso else 'Fallido' }}</span></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted py-3">Sin registros</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="dashboard-card">
+            <h5 style="font-weight: 700; color: var(--primary);"><i class="fas fa-history me-2"></i>Cambios de contraseña</h5>
+            <div class="table-responsive">
+                <table class="table table-encl">
+                    <thead><tr><th>Fecha</th><th>Anterior</th></tr></thead>
+                    <tbody>
+                        {% for c in cambios %}
+                        <tr>
+                            <td><small>{{ c.fecha_cambio.strftime('%d/%m/%Y %H:%M') }}</small></td>
+                            <td><small class="text-muted">Contraseña anterior registrada</small></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">Sin cambios registrados</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,4 +1,9 @@
 import os
+import smtplib
+import random
+import string
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from flask import (Flask, render_template, redirect, url_for, request,
                    flash, jsonify, session, send_from_directory)
 from flask_login import (LoginManager, login_user, logout_user,
@@ -22,6 +27,32 @@ db.init_app(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'public_login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+def enviar_email(destinatario, asunto, cuerpo_html):
+    try:
+        smtp_host = get_config('smtp_host', '')
+        smtp_port = int(get_config('smtp_port', '587'))
+        smtp_user = get_config('smtp_user', '')
+        smtp_pass = get_config('smtp_pass', '')
+        smtp_from = get_config('smtp_from', 'noreply@escuelanacional.mx')
+        if not smtp_host or not smtp_user or not smtp_pass:
+            return False
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = asunto
+        msg['From'] = smtp_from
+        msg['To'] = destinatario
+        msg.attach(MIMEText(cuerpo_html, 'html'))
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_from, destinatario, msg.as_string())
+        return True
+    except Exception:
+        return False
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -215,54 +246,275 @@ def public_login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        ip = request.remote_addr or '0.0.0.0'
         user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password_hash, password):
-            if not user.activo:
-                flash('Cuenta desactivada. Contacte al administrador.', 'error')
+
+        if not user:
+            db.session.add(LoginAttempt(username=username, ip_address=ip, exitoso=False))
+            db.session.commit()
+            flash('Usuario o contraseña incorrectos', 'error')
+            return render_template('login.html', **get_theme_config())
+
+        if user.cuenta_bloqueada:
+            if user.bloqueo_hasta and user.bloqueo_hasta > datetime.utcnow():
+                flash(f'Cuenta bloqueada. Intente después de las {user.bloqueo_hasta.strftime("%H:%M")}', 'error')
+                db.session.add(LoginAttempt(user_id=user.id, username=username, ip_address=ip, exitoso=False))
+                db.session.commit()
                 return render_template('login.html', **get_theme_config())
-            login_user(user)
-            flash(f'Bienvenido {user.nombre} {user.apellidos}', 'success')
-            return redirect_user_by_role()
-        flash('Usuario o contraseña incorrectos', 'error')
+            else:
+                user.desbloquear()
+
+        if not user.activo:
+            flash('Cuenta desactivada. Contacte al administrador.', 'error')
+            db.session.add(LoginAttempt(user_id=user.id, username=username, ip_address=ip, exitoso=False))
+            db.session.commit()
+            return render_template('login.html', **get_theme_config())
+
+        if not check_password_hash(user.password_hash, password):
+            user.intentos_fallidos = (user.intentos_fallidos or 0) + 1
+            if user.intentos_fallidos >= 5:
+                user.bloquear(15)
+                flash('Cuenta bloqueada por 15 minutos por múltiples intentos fallidos', 'error')
+            else:
+                flash(f'Usuario o contraseña incorrectos ({user.intentos_fallidos}/5)', 'error')
+            db.session.add(LoginAttempt(user_id=user.id, username=username, ip_address=ip, exitoso=False))
+            db.session.commit()
+            return render_template('login.html', **get_theme_config())
+
+        if user.intentos_fallidos and user.intentos_fallidos > 0:
+            user.intentos_fallidos = 0
+        user.ultimo_acceso = datetime.utcnow()
+        user.ultimo_acceso_ip = ip
+        db.session.add(LoginAttempt(user_id=user.id, username=username, ip_address=ip, exitoso=True))
+        db.session.commit()
+        login_user(user)
+
+        if user.primer_acceso and user.role != 'superadmin':
+            flash('Por seguridad, debe cambiar su contraseña temporal', 'warning')
+            return redirect(url_for('cambiar_contrasena'))
+
+        flash(f'Bienvenido {user.nombre} {user.apellidos}', 'success')
+        return redirect_user_by_role()
     tc = get_theme_config()
     return render_template('login.html', **tc)
 
 @app.route('/registro', methods=['GET', 'POST'])
 def public_registro():
     if request.method == 'POST':
-        username = request.form.get('username')
         email = request.form.get('email')
-        password = request.form.get('password')
         nombre = request.form.get('nombre')
         apellidos = request.form.get('apellidos')
+        telefono = request.form.get('telefono')
+        curso_id = request.form.get('curso_id', type=int)
+        grupo_id = request.form.get('grupo_id', type=int)
 
-        if User.query.filter_by(username=username).first():
-            flash('El usuario ya existe', 'error')
-            return render_template('registro.html', **get_theme_config())
         if User.query.filter_by(email=email).first():
             flash('El email ya está registrado', 'error')
             return render_template('registro.html', **get_theme_config())
 
+        username = User().generar_username()
+        temp_pass = User().generar_password_temporal()
+        password_hash = generate_password_hash(temp_pass)
+
         user = User(
             username=username,
             email=email,
-            password_hash=generate_password_hash(password),
+            password_hash=password_hash,
             role='alumno',
             nombre=nombre,
-            apellidos=apellidos
+            apellidos=apellidos,
+            telefono=telefono
         )
         db.session.add(user)
         db.session.commit()
-        flash('Registro exitoso. Ya puedes iniciar sesión.', 'success')
+
+        if curso_id:
+            insc = Inscripcion(alumno_id=user.id, curso_id=curso_id)
+            db.session.add(insc)
+
+        grupo = Grupo.query.get(grupo_id) if grupo_id else None
+        if grupo:
+            user.grupo_id = grupo_id
+
+        comprobante = request.files.get('comprobante')
+        if comprobante and comprobante.filename:
+            fname = f'pago_{user.id}_{int(datetime.utcnow().timestamp())}_{comprobante.filename}'
+            upload_dir = app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_dir, exist_ok=True)
+            comprobante.save(os.path.join(upload_dir, fname))
+            pago = Pago(
+                alumno_id=user.id,
+                curso_id=curso_id,
+                monto=0,
+                concepto=f'Pago pendiente - {nombre} {apellidos}',
+                metodo_pago='Transferencia',
+                referencia=f'/uploads/{fname}'
+            )
+            db.session.add(pago)
+
+        db.session.commit()
+        flash('Registro completado. Espere la validación del pago para recibir sus credenciales por correo.', 'success')
         return redirect(url_for('public_login'))
     tc = get_theme_config()
-    return render_template('registro.html', **tc)
+    return render_template('registro.html', cursos=Curso.query.filter_by(activo=True).all(), grupos=Grupo.query.filter_by(activo=True).all(), **tc)
 
 @app.route('/logout')
 @login_required
 def public_logout():
     logout_user()
     return redirect(url_for('public_index'))
+
+@app.route('/cambiar-contrasena', methods=['GET', 'POST'])
+@login_required
+def cambiar_contrasena():
+    if request.method == 'POST':
+        actual = request.form.get('actual')
+        nueva = request.form.get('nueva')
+        confirmar = request.form.get('confirmar')
+
+        if not check_password_hash(current_user.password_hash, actual):
+            flash('La contraseña actual es incorrecta', 'error')
+            return render_template('cambiar_contrasena.html', **get_theme_config())
+
+        if nueva != confirmar:
+            flash('Las contraseñas no coinciden', 'error')
+            return render_template('cambiar_contrasena.html', **get_theme_config())
+
+        if len(nueva) < 8:
+            flash('La contraseña debe tener al menos 8 caracteres', 'error')
+            return render_template('cambiar_contrasena.html', **get_theme_config())
+
+        historial = PasswordHistory.query.filter_by(user_id=current_user.id).order_by(PasswordHistory.fecha_cambio.desc()).limit(5).all()
+        for h in historial:
+            if check_password_hash(h.password_hash, nueva):
+                flash('No puede usar una de sus últimas 5 contraseñas', 'error')
+                return render_template('cambiar_contrasena.html', **get_theme_config())
+
+        db.session.add(PasswordHistory(user_id=current_user.id, password_hash=current_user.password_hash))
+        current_user.password_hash = generate_password_hash(nueva)
+        current_user.primer_acceso = False
+        current_user.fecha_cambio_password = datetime.utcnow()
+        db.session.commit()
+        flash('Contraseña cambiada exitosamente', 'success')
+        return redirect_user_by_role()
+    return render_template('cambiar_contrasena.html', **get_theme_config())
+
+@app.route('/recuperar')
+def recuperar_paso1():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            flash('No existe una cuenta con ese correo electrónico', 'error')
+            return render_template('recuperar.html', paso=1, **get_theme_config())
+        if user.role == 'superadmin':
+            flash('La recuperación de contraseña no está disponible para Súper Administradores', 'error')
+            return render_template('recuperar.html', paso=1, **get_theme_config())
+
+        codigo = ''.join(random.choices(string.digits, k=6))
+        otp = OTPCode(
+            user_id=user.id,
+            codigo=codigo,
+            tipo='recuperacion',
+            fecha_expiracion=datetime.utcnow() + timedelta(minutes=10)
+        )
+        db.session.add(otp)
+        db.session.commit()
+
+        cuerpo = f'''
+        <h2>Recuperación de contraseña</h2>
+        <p>Hola {user.nombre},</p>
+        <p>Tu código de verificación es:</p>
+        <h1 style="letter-spacing:8px;font-size:32px;text-align:center;padding:16px;background:#f3f4f6;border-radius:8px;">{codigo}</h1>
+        <p>Este código expira en 10 minutos.</p>
+        <p>Si no solicitaste este cambio, ignora este mensaje.</p>
+        '''
+        enviado = enviar_email(email, 'Código de recuperación - ENCL', cuerpo)
+
+        if not enviado:
+            flash('No se pudo enviar el correo. Contacte al administrador.', 'error')
+            return render_template('recuperar.html', paso=1, **get_theme_config())
+
+        session['recover_user_id'] = user.id
+        session['recover_otp_id'] = otp.id
+        flash('Código de verificación enviado a tu correo', 'success')
+        return render_template('recuperar.html', paso=2, email=email, **get_theme_config())
+    return render_template('recuperar.html', paso=1, **get_theme_config())
+
+@app.route('/recuperar/verificar', methods=['POST'])
+def recuperar_paso2():
+    codigo = request.form.get('codigo')
+    user_id = session.get('recover_user_id')
+    otp_id = session.get('recover_otp_id')
+    if not user_id or not otp_id:
+        flash('Sesión de recuperación expirada', 'error')
+        return render_template('recuperar.html', paso=1, **get_theme_config())
+
+    otp = OTPCode.query.get(otp_id)
+    if not otp or otp.usado or otp.fecha_expiracion < datetime.utcnow():
+        flash('Código expirado o inválido. Solicite uno nuevo.', 'error')
+        session.pop('recover_user_id', None)
+        session.pop('recover_otp_id', None)
+        return render_template('recuperar.html', paso=1, **get_theme_config())
+
+    if otp.codigo != codigo:
+        flash('Código incorrecto', 'error')
+        return render_template('recuperar.html', paso=2, email=User.query.get(user_id).email, **get_theme_config())
+
+    otp.usado = True
+    otp.fecha_uso = datetime.utcnow()
+    db.session.commit()
+    session['recover_verified'] = True
+    return render_template('recuperar.html', paso=3, **get_theme_config())
+
+@app.route('/recuperar/cambiar', methods=['POST'])
+def recuperar_paso3():
+    if not session.get('recover_verified'):
+        flash('Debe verificar su identidad primero', 'error')
+        return render_template('recuperar.html', paso=1, **get_theme_config())
+
+    user_id = session.get('recover_user_id')
+    user = User.query.get(user_id)
+    if not user:
+        flash('Error de sesión', 'error')
+        return render_template('recuperar.html', paso=1, **get_theme_config())
+
+    nueva = request.form.get('nueva')
+    confirmar = request.form.get('confirmar')
+
+    if nueva != confirmar:
+        flash('Las contraseñas no coinciden', 'error')
+        return render_template('recuperar.html', paso=3, **get_theme_config())
+
+    if len(nueva) < 8:
+        flash('La contraseña debe tener al menos 8 caracteres', 'error')
+        return render_template('recuperar.html', paso=3, **get_theme_config())
+
+    db.session.add(PasswordHistory(user_id=user.id, password_hash=user.password_hash))
+    user.password_hash = generate_password_hash(nueva)
+    user.primer_acceso = False
+    user.fecha_cambio_password = datetime.utcnow()
+    db.session.commit()
+
+    session.pop('recover_user_id', None)
+    session.pop('recover_otp_id', None)
+    session.pop('recover_verified', None)
+    flash('Contraseña restablecida exitosamente. Ya puedes iniciar sesión.', 'success')
+    return redirect(url_for('public_login'))
+
+# --- Session timeout middleware ---
+@app.before_request
+def check_session_timeout():
+    if current_user.is_authenticated:
+        last_active = session.get('last_active')
+        now = datetime.utcnow().timestamp()
+        timeout_minutes = 30
+        if last_active and (now - last_active) > timeout_minutes * 60:
+            logout_user()
+            session.clear()
+            flash('Sesión expirada por inactividad', 'info')
+            return redirect(url_for('public_login'))
+        session['last_active'] = now
 
 def redirect_user_by_role():
     if current_user.role == 'admin':
@@ -1191,10 +1443,44 @@ def admin_verificar_pago(pago_id):
     pago.verificado_por = current_user.id
     pago.fecha_verificacion = datetime.utcnow()
     alumno = User.query.get(pago.alumno_id)
+    temp_pass = ''
     if alumno:
+        if not alumno.primer_acceso and not alumno.username:
+            username = alumno.generar_username()
+            temp_pass = alumno.generar_password_temporal()
+            alumno.username = username
+            alumno.password_hash = generate_password_hash(temp_pass)
+            alumno.primer_acceso = True
         alumno.activo = True
     db.session.commit()
-    flash('Pago verificado y alumno activado', 'success')
+
+    if alumno and alumno.email:
+        curso_nombre = pago.curso.titulo if pago.curso else 'No especificado'
+        grupo_nombre = alumno.grupo.nombre if alumno.grupo else 'General'
+        sitio = get_config('site_name', 'ENCL')
+        url_plataforma = request.host_url
+        credencial_msg = temp_pass if temp_pass else 'Configurada por administrador'
+        cuerpo = f'''
+        <h2>Bienvenido a {sitio}</h2>
+        <p>Estimado(a) {alumno.nombre} {alumno.apellidos}:</p>
+        <p>Su inscripción ha sido aprobada correctamente.</p>
+        <hr>
+        <p><strong>Curso:</strong> {curso_nombre}</p>
+        <p><strong>Aula Digital:</strong> {grupo_nombre}</p>
+        <p><strong>Usuario:</strong> {alumno.username}</p>
+        <p><strong>Contraseña temporal:</strong> {credencial_msg}</p>
+        <hr>
+        <p>Puede ingresar a: <a href="{url_plataforma}">{url_plataforma}</a></p>
+        <p><strong>Instrucciones:</strong></p>
+        <ol>
+        <li>Ingrese con su usuario y contraseña temporal.</li>
+        <li>El sistema le solicitará cambiar su contraseña.</li>
+        <li>Utilice una contraseña segura de al menos 8 caracteres.</li>
+        </ol>
+        '''
+        enviar_email(alumno.email, f'Bienvenido a {sitio}', cuerpo)
+
+    flash('Pago verificado, credenciales generadas y enviadas al alumno', 'success')
     return redirect(url_for('admin_pagos'))
 
 @app.route('/admin/pagos/eliminar/<int:pago_id>')
@@ -1477,6 +1763,102 @@ def admin_reordenar_banners():
             banner.orden = item['orden']
     db.session.commit()
     return jsonify({'status': 'ok'})
+
+# ==================== ADMIN GESTION USUARIOS ====================
+
+@app.route('/admin/configuracion-credenciales', methods=['GET', 'POST'])
+@login_required
+@superadmin_required
+def admin_config_credenciales():
+    if request.method == 'POST':
+        formato = request.form.get('formato_usuario')
+        conf = Configuracion.query.filter_by(clave='formato_usuario').first()
+        if conf:
+            conf.valor = formato
+        else:
+            conf = Configuracion(clave='formato_usuario', valor=formato, tipo='texto')
+            db.session.add(conf)
+        for k in ['smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from']:
+            v = request.form.get(k, '')
+            c = Configuracion.query.filter_by(clave=k).first()
+            if c:
+                c.valor = v
+            else:
+                c = Configuracion(clave=k, valor=v, tipo='texto')
+                db.session.add(c)
+        db.session.commit()
+        flash('Configuración guardada', 'success')
+        return redirect(url_for('admin_config_credenciales'))
+    return render_template('admin/config_credenciales.html', **get_theme_config())
+
+@app.route('/admin/usuarios/bloquear/<int:user_id>')
+@login_required
+@superadmin_required
+def admin_bloquear_usuario(user_id):
+    user = User.query.get_or_404(user_id)
+    user.bloquear(9999)
+    flash(f'Usuario {user.nombre} {user.apellidos} bloqueado', 'success')
+    return redirect(url_for('admin_usuarios'))
+
+@app.route('/admin/usuarios/desbloquear/<int:user_id>')
+@login_required
+@superadmin_required
+def admin_desbloquear_usuario(user_id):
+    user = User.query.get_or_404(user_id)
+    user.desbloquear()
+    flash(f'Usuario {user.nombre} {user.apellidos} desbloqueado', 'success')
+    return redirect(url_for('admin_usuarios'))
+
+@app.route('/admin/usuarios/reenviar-credenciales/<int:user_id>')
+@login_required
+@superadmin_required
+def admin_reenviar_credenciales(user_id):
+    user = User.query.get_or_404(user_id)
+    if not user.email:
+        flash('El usuario no tiene correo registrado', 'error')
+        return redirect(url_for('admin_usuarios'))
+    temp_pass = user.generar_password_temporal()
+    user.password_hash = generate_password_hash(temp_pass)
+    user.primer_acceso = True
+    db.session.commit()
+    sitio = get_config('site_name', 'ENCL')
+    url_plataforma = request.host_url
+    cuerpo = f'''
+    <h2>Credenciales de acceso - {sitio}</h2>
+    <p>Estimado(a) {user.nombre} {user.apellidos}:</p>
+    <p>Se han generado nuevas credenciales para su acceso.</p>
+    <hr>
+    <p><strong>Usuario:</strong> {user.username}</p>
+    <p><strong>Contraseña temporal:</strong> {temp_pass}</p>
+    <hr>
+    <p>Ingrese a: <a href="{url_plataforma}">{url_plataforma}</a></p>
+    <p>El sistema le solicitará cambiar su contraseña al iniciar sesión.</p>
+    '''
+    enviado = enviar_email(user.email, f'Credenciales de acceso - {sitio}', cuerpo)
+    if enviado:
+        flash(f'Credenciales reenviadas a {user.email}', 'success')
+    else:
+        flash(f'No se pudo enviar el correo. Configure SMTP en Configuración de Credenciales.', 'warning')
+    return redirect(url_for('admin_usuarios'))
+
+@app.route('/admin/usuarios/forzar-cambio/<int:user_id>')
+@login_required
+@superadmin_required
+def admin_forzar_cambio_password(user_id):
+    user = User.query.get_or_404(user_id)
+    user.primer_acceso = True
+    db.session.commit()
+    flash(f'Se ha forzado el cambio de contraseña para {user.nombre} {user.apellidos}', 'success')
+    return redirect(url_for('admin_usuarios'))
+
+@app.route('/admin/usuarios/historial-accesos/<int:user_id>')
+@login_required
+@admin_required
+def admin_historial_accesos(user_id):
+    user = User.query.get_or_404(user_id)
+    intentos = LoginAttempt.query.filter_by(user_id=user_id).order_by(LoginAttempt.fecha.desc()).limit(50).all()
+    cambios = PasswordHistory.query.filter_by(user_id=user_id).order_by(PasswordHistory.fecha_cambio.desc()).all()
+    return render_template('admin/historial_accesos.html', user=user, intentos=intentos, cambios=cambios, **get_theme_config())
 
 # ==================== STATIC FILES ====================
 
