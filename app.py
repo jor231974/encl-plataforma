@@ -494,31 +494,146 @@ def instructor_curso_detalle(curso_id):
     inscripciones = Inscripcion.query.filter_by(curso_id=curso_id).all()
     clases = Clase.query.filter_by(curso_id=curso_id).order_by(Clase.fecha_creacion).all()
     examenes = Examen.query.filter_by(curso_id=curso_id).all()
+    horarios = Horario.query.filter_by(curso_id=curso_id, activo=True).all()
+    enlaces = EnlaceExterno.query.filter_by(curso_id=curso_id, activo=True).all()
+    grupos = Grupo.query.all()
+    asistencias = {a.clase_id: {a.alumno_id: a.presente for a in Asistencia.query.filter(Asistencia.clase_id.in_([c.id for c in clases])).all()} for c in clases}
     return render_template('instructor/curso_detalle.html', curso=curso,
                          inscripciones=inscripciones, clases=clases, examenes=examenes,
+                         horarios=horarios, enlaces=enlaces, grupos=grupos,
+                         asistencias=asistencias,
                          **get_theme_config())
 
 @app.route('/instructor/clase/nueva', methods=['POST'])
 @login_required
 @instructor_required
 def instructor_nueva_clase():
+    import os as fmod
     curso_id = request.form.get('curso_id')
     titulo = request.form.get('titulo')
     tipo = request.form.get('tipo', 'grabada')
     url_reunion = request.form.get('url_reunion')
+    descripcion = request.form.get('descripcion')
     fecha_str = request.form.get('fecha_programada')
+    url_video = ''
+    archivo = request.files.get('archivo')
+    if archivo and archivo.filename:
+        fname = f'mat_{int(datetime.utcnow().timestamp())}_{archivo.filename}'
+        upload_dir = app.config['UPLOAD_FOLDER']
+        fmod.makedirs(upload_dir, exist_ok=True)
+        archivo.save(fmod.path.join(upload_dir, fname))
+        url_video = f'/uploads/{fname}'
 
     clase = Clase(
         curso_id=curso_id,
         titulo=titulo,
         tipo=tipo,
+        descripcion=descripcion,
         url_reunion=url_reunion,
+        url_video=url_video,
         fecha_programada=datetime.strptime(fecha_str, '%Y-%m-%dT%H:%M') if fecha_str else None
     )
     db.session.add(clase)
     db.session.commit()
+
+    if url_video:
+        mat = MaterialClase(clase_id=clase.id, titulo='Material de clase', tipo='video', archivo_url=url_video)
+        db.session.add(mat)
+        db.session.commit()
+
     flash('Clase creada exitosamente', 'success')
     return redirect(url_for('instructor_curso_detalle', curso_id=curso_id))
+
+@app.route('/instructor/examen/crear', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_crear_examen():
+    curso_id = request.form.get('curso_id')
+    curso = Curso.query.get_or_404(curso_id)
+    if curso.instructor_id != current_user.id and current_user.role != 'admin':
+        flash('Acceso no autorizado', 'error')
+        return redirect(url_for('instructor_dashboard'))
+    examen = Examen(
+        curso_id=curso_id,
+        titulo=request.form.get('titulo'),
+        descripcion=request.form.get('descripcion'),
+        tiempo_limite_minutos=int(request.form.get('tiempo_limite', 30)),
+        calificacion_minima=float(request.form.get('calificacion_minima', 6))
+    )
+    db.session.add(examen)
+    db.session.commit()
+    for i in range(1, 11):
+        texto = request.form.get(f'pregunta_{i}')
+        if texto:
+            opciones = [
+                request.form.get(f'opcion_{i}_0'),
+                request.form.get(f'opcion_{i}_1'),
+                request.form.get(f'opcion_{i}_2'),
+                request.form.get(f'opcion_{i}_3')
+            ]
+            correcta = int(request.form.get(f'correcta_{i}', 0))
+            pregunta = Pregunta(
+                examen_id=examen.id, texto=texto,
+                opciones=[o for o in opciones if o],
+                respuesta_correcta=correcta
+            )
+            db.session.add(pregunta)
+    db.session.commit()
+    flash('Examen creado', 'success')
+    return redirect(url_for('instructor_curso_detalle', curso_id=curso_id))
+
+@app.route('/instructor/asistencia', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_asistencia():
+    clase_id = request.form.get('clase_id')
+    curso_id = request.form.get('curso_id')
+    presentes = request.form.getlist('presentes')
+    clase = Clase.query.get_or_404(clase_id)
+    for insc in Inscripcion.query.filter_by(curso_id=curso_id).all():
+        existe = Asistencia.query.filter_by(clase_id=clase_id, alumno_id=insc.alumno_id).first()
+        if not existe:
+            asis = Asistencia(clase_id=clase_id, alumno_id=insc.alumno_id,
+                             presente=str(insc.alumno_id) in presentes,
+                             fecha=datetime.utcnow())
+            db.session.add(asis)
+        else:
+            existe.presente = str(insc.alumno_id) in presentes
+    db.session.commit()
+    flash('Asistencia registrada', 'success')
+    return redirect(url_for('instructor_curso_detalle', curso_id=curso_id))
+
+@app.route('/instructor/horario/crear', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_crear_horario():
+    horario = Horario(
+        curso_id=request.form.get('curso_id'),
+        grupo_id=request.form.get('grupo_id') or None,
+        dia_semana=int(request.form.get('dia_semana', 0)),
+        hora_inicio=request.form.get('hora_inicio'),
+        hora_fin=request.form.get('hora_fin'),
+        salon=request.form.get('salon')
+    )
+    db.session.add(horario)
+    db.session.commit()
+    flash('Horario agregado', 'success')
+    return redirect(url_for('instructor_curso_detalle', curso_id=horario.curso_id))
+
+@app.route('/instructor/enlace/crear', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_crear_enlace():
+    enlace = EnlaceExterno(
+        curso_id=request.form.get('curso_id'),
+        titulo=request.form.get('titulo'),
+        url=request.form.get('url'),
+        plataforma=request.form.get('plataforma', 'Zoom')
+    )
+    db.session.add(enlace)
+    db.session.commit()
+    flash('Enlace agregado', 'success')
+    return redirect(url_for('instructor_curso_detalle', curso_id=enlace.curso_id))
 
 # ==================== ADMIN ROUTES ====================
 

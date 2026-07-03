@@ -1,152 +1,344 @@
 {% extends 'dashboard_base.html' %}
 {% block sidebar_menu %}{% include 'instructor/sidebar.html' %}{% endblock %}
-{% block page_title %}{{ curso.titulo }}{% endblock %}
-{% block page_subtitle %}Gestión completa del curso{% endblock %}
+{% block page_title %}<i class="fas fa-chalkboard-teacher me-2"></i>Aula Digital: {{ curso.titulo }}{% endblock %}
+{% block page_subtitle %}Gestiona clases, alumnos, exámenes y más{% endblock %}
 
 {% block content %}
 <div class="row g-4 mb-4">
     <div class="col-md-3 col-6">
-        <div class="dashboard-card">
-            <div class="card-header-dash"><h6>Alumnos</h6><div class="card-icon stat-card-primary"><i class="fas fa-users"></i></div></div>
+        <div class="dashboard-card text-center">
+            <div class="card-icon stat-card-primary mx-auto mb-2"><i class="fas fa-users"></i></div>
             <div class="card-value">{{ inscripciones|length }}</div>
+            <small class="text-muted">Alumnos</small>
         </div>
     </div>
     <div class="col-md-3 col-6">
-        <div class="dashboard-card">
-            <div class="card-header-dash"><h6>Clases</h6><div class="card-icon stat-card-success"><i class="fas fa-video"></i></div></div>
+        <div class="dashboard-card text-center">
+            <div class="card-icon stat-card-success mx-auto mb-2"><i class="fas fa-video"></i></div>
             <div class="card-value">{{ clases|length }}</div>
+            <small class="text-muted">Clases</small>
         </div>
     </div>
     <div class="col-md-3 col-6">
-        <div class="dashboard-card">
-            <div class="card-header-dash"><h6>Exámenes</h6><div class="card-icon stat-card-warning"><i class="fas fa-tasks"></i></div></div>
+        <div class="dashboard-card text-center">
+            <div class="card-icon stat-card-warning mx-auto mb-2"><i class="fas fa-tasks"></i></div>
             <div class="card-value">{{ examenes|length }}</div>
+            <small class="text-muted">Exámenes</small>
         </div>
     </div>
     <div class="col-md-3 col-6">
-        <div class="dashboard-card">
-            <div class="card-header-dash"><h6>Completados</h6><div class="card-icon stat-card-info"><i class="fas fa-check-circle"></i></div></div>
+        <div class="dashboard-card text-center">
+            <div class="card-icon stat-card-info mx-auto mb-2"><i class="fas fa-check-circle"></i></div>
             <div class="card-value">{{ inscripciones|selectattr('completado', 'equalto', true)|list|length }}</div>
+            <small class="text-muted">Completados</small>
         </div>
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-lg-6">
-        <div class="dashboard-card">
-            <h5 style="font-weight: 700; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-video me-2"></i>Clases del curso</h5>
+<!-- TABS -->
+<ul class="nav nav-tabs mb-4" id="aulaTabs" style="border-bottom: 2px solid var(--gray-200);">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#clases"><i class="fas fa-video me-1"></i>Clases</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#alumnos"><i class="fas fa-users me-1"></i>Alumnos</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#examenes"><i class="fas fa-tasks me-1"></i>Exámenes</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#horarios"><i class="far fa-calendar me-1"></i>Horarios</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#enlaces"><i class="fas fa-link me-1"></i>Enlaces</a></li>
+</ul>
+
+<div class="tab-content">
+    <!-- TAB CLASES -->
+    <div class="tab-pane fade show active" id="clases">
+        <div class="dashboard-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-video me-2"></i>Clases del curso</h5>
+                <button class="btn btn-encl btn-encl-primary btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalClase"><i class="fas fa-plus me-1"></i>Nueva clase</button>
+            </div>
             <div class="table-responsive">
                 <table class="table table-encl">
-                    <thead><tr><th>Título</th><th>Tipo</th><th>Duración</th></tr></thead>
+                    <thead><tr><th>Título</th><th>Tipo</th><th>Duración</th><th>Enlace</th><th>Material</th></tr></thead>
                     <tbody>
                         {% for clase in clases %}
                         <tr>
-                            <td>{{ clase.titulo }}</td>
+                            <td><strong>{{ clase.titulo }}</strong><br><small class="text-muted">{{ clase.descripcion[:60] if clase.descripcion else '' }}</small></td>
                             <td><span class="badge bg-{{ 'danger' if clase.tipo == 'vivo' else 'primary' }}">{{ 'En vivo' if clase.tipo == 'vivo' else 'Grabada' }}</span></td>
                             <td>{{ clase.duracion_minutos }} min</td>
+                            <td>{% if clase.url_reunion %}<a href="{{ clase.url_reunion }}" target="_blank" class="btn btn-encl btn-encl-sm btn-encl-primary"><i class="fas fa-external-link-alt"></i></a>{% endif %}</td>
+                            <td>
+                                {% for m in clase.materiales %}
+                                <a href="{{ m.archivo_url }}" target="_blank" class="btn btn-encl btn-encl-sm btn-encl-success"><i class="fas fa-file"></i></a>
+                                {% else %}
+                                <span class="text-muted">--</span>
+                                {% endfor %}
+                            </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="3" class="text-center text-muted">Sin clases</td></tr>
+                        <tr><td colspan="5" class="text-center text-muted py-4">Sin clases. ¡Crea la primera!</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-
-            <hr>
-            <h6 style="font-weight: 600; margin-bottom: 1rem;">Agregar nueva clase</h6>
-            <form method="POST" action="{{ url_for('instructor_nueva_clase') }}">
-                <input type="hidden" name="curso_id" value="{{ curso.id }}">
-                <div class="row g-2">
-                    <div class="col-md-6">
-                        <input type="text" class="form-control" name="titulo" placeholder="Título de la clase" required>
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-select" name="tipo">
-                            <option value="grabada">Grabada</option>
-                            <option value="vivo">En vivo</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="datetime-local" class="form-control" name="fecha_programada">
-                    </div>
-                    <div class="col-md-9">
-                        <input type="text" class="form-control" name="url_reunion" placeholder="URL de reunión (opcional)">
-                    </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-encl btn-encl-primary w-100"><i class="fas fa-plus"></i> Crear</button>
-                    </div>
-                </div>
-            </form>
         </div>
     </div>
 
-    <div class="col-lg-6">
+    <!-- TAB ALUMNOS -->
+    <div class="tab-pane fade" id="alumnos">
         <div class="dashboard-card">
-            <h5 style="font-weight: 700; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-users me-2"></i>Alumnos inscritos</h5>
+            <h5 class="mb-3"><i class="fas fa-users me-2"></i>Lista de alumnos y asistencia</h5>
+            {% for clase in clases %}
+            <div class="mb-4 p-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-sm);">
+                <h6 class="mb-2">{{ clase.titulo }} <small class="text-muted">({{ clase.fecha_programada.strftime('%d/%m/%Y') if clase.fecha_programada else 'Sin fecha' }})</small></h6>
+                <form method="POST" action="{{ url_for('instructor_asistencia') }}">
+                    <input type="hidden" name="clase_id" value="{{ clase.id }}">
+                    <input type="hidden" name="curso_id" value="{{ curso.id }}">
+                    <table class="table table-encl">
+                        <thead><tr><th>Alumno</th><th>Presente</th><th>Progreso</th></tr></thead>
+                        <tbody>
+                            {% for insc in inscripciones %}
+                            <tr>
+                                <td>{{ insc.alumno.nombre if insc.alumno else '' }} {{ insc.alumno.apellidos if insc.alumno else '' }}</td>
+                                <td>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" name="presentes" value="{{ insc.alumno_id }}"
+                                            {% set asist = asistencias.get(clase.id, {}) %}
+                                            {% if asist.get(insc.alumno_id) %}checked{% endif %}>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress-encl" style="width: 60px;"><div class="progress-bar-encl" style="width: {{ insc.progreso }}%;"></div></div>
+                                        <small>{{ insc.progreso|int }}%</small>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-muted">Sin alumnos</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if inscripciones %}
+                    <button type="submit" class="btn btn-encl btn-encl-primary btn-encl-sm"><i class="fas fa-check me-1"></i>Guardar asistencia</button>
+                    {% endif %}
+                </form>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No hay clases para registrar asistencia</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- TAB EXÁMENES -->
+    <div class="tab-pane fade" id="examenes">
+        <div class="dashboard-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Exámenes del curso</h5>
+                <button class="btn btn-encl btn-encl-primary btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalExamen"><i class="fas fa-plus me-1"></i>Nuevo examen</button>
+            </div>
             <div class="table-responsive">
                 <table class="table table-encl">
-                    <thead><tr><th>Alumno</th><th>Progreso</th><th>Estado</th></tr></thead>
+                    <thead><tr><th>Título</th><th>Preguntas</th><th>Tiempo</th><th>Mínimo</th><th>Intentos</th></tr></thead>
                     <tbody>
-                        {% for insc in inscripciones %}
+                        {% for ex in examenes %}
                         <tr>
-                            <td>
-                                <div class="student-list-item">
-                                    <div class="student-avatar">{{ insc.alumno.nombre[0] if insc.alumno else '?' }}</div>
-                                    <div>
-                                        <strong>{{ insc.alumno.nombre if insc.alumno else 'Desconocido' }} {{ insc.alumno.apellidos if insc.alumno else '' }}</strong>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="progress-encl" style="width: 60px;"><div class="progress-bar-encl" style="width: {{ insc.progreso }}%;"></div></div>
-                                    <small>{{ insc.progreso|int }}%</small>
-                                </div>
-                            </td>
-                            <td>{% if insc.completado %}<span class="badge bg-success">Completado</span>{% else %}<span class="badge bg-primary">En curso</span>{% endif %}</td>
+                            <td><strong>{{ ex.titulo }}</strong></td>
+                            <td>{{ ex.preguntas|length }}</td>
+                            <td>{{ ex.tiempo_limite_minutos }} min</td>
+                            <td>{{ ex.calificacion_minima }}/10</td>
+                            <td>{{ ex.intentos|length }}</td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="3" class="text-center text-muted">Sin alumnos inscritos</td></tr>
+                        <tr><td colspan="5" class="text-center text-muted py-4">Sin exámenes</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB HORARIOS -->
+    <div class="tab-pane fade" id="horarios">
+        <div class="dashboard-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="far fa-calendar me-2"></i>Horarios</h5>
+                <button class="btn btn-encl btn-encl-primary btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalHorario"><i class="fas fa-plus me-1"></i>Agregar horario</button>
+            </div>
+            <div class="row g-3">
+                {% for h in horarios %}
+                <div class="col-md-4">
+                    <div class="dashboard-card text-center">
+                        <h6 style="font-weight: 700; color: var(--primary);">
+                            {% set dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'] %}
+                            {{ dias[h.dia_semana] if h.dia_semana < 7 else '' }}
+                        </h6>
+                        <p style="font-size: 1.3rem; font-weight: 700; margin: 0.5rem 0;">{{ h.hora_inicio }} - {{ h.hora_fin }}</p>
+                        {% if h.salon %}<small class="text-muted"><i class="fas fa-door-open me-1"></i>{{ h.salon }}</small>{% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12 text-center text-muted py-4">
+                    <i class="far fa-calendar" style="font-size: 3rem; display: block; margin-bottom: 1rem;"></i>
+                    <p>Sin horarios registrados</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB ENLACES -->
+    <div class="tab-pane fade" id="enlaces">
+        <div class="dashboard-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-link me-2"></i>Enlaces externos</h5>
+                <button class="btn btn-encl btn-encl-primary btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalEnlace"><i class="fas fa-plus me-1"></i>Agregar enlace</button>
+            </div>
+            <div class="row g-3">
+                {% for e in enlaces %}
+                <div class="col-md-4">
+                    <a href="{{ e.url }}" target="_blank" style="text-decoration: none;">
+                        <div class="dashboard-card text-center">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">
+                                {% if 'zoom' in e.plataforma|lower %}<i class="fas fa-video" style="color: #2D8CFF;"></i>
+                                {% elif 'meet' in e.plataforma|lower %}<i class="fas fa-video" style="color: #34A853;"></i>
+                                {% elif 'whatsapp' in e.plataforma|lower %}<i class="fab fa-whatsapp" style="color: #25D366;"></i>
+                                {% elif 'teams' in e.plataforma|lower %}<i class="fab fa-microsoft" style="color: #6264A7;"></i>
+                                {% else %}<i class="fas fa-external-link-alt" style="color: var(--primary);"></i>{% endif %}
+                            </div>
+                            <h6 style="font-weight: 700;">{{ e.titulo }}</h6>
+                            <small class="text-muted">{{ e.plataforma }}</small>
+                        </div>
+                    </a>
+                </div>
+                {% else %}
+                <div class="col-12 text-center text-muted py-4">
+                    <i class="fas fa-link" style="font-size: 3rem; display: block; margin-bottom: 1rem;"></i>
+                    <p>Sin enlaces. Agrega enlaces a Zoom, Meet, WhatsApp, etc.</p>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
 </div>
 
-<div class="row g-4 mt-2">
-    <div class="col-lg-6">
-        <div class="dashboard-card">
-            <h5 style="font-weight: 700; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-tasks me-2"></i>Exámenes</h5>
-            <div class="table-responsive">
-                <table class="table table-encl">
-                    <thead><tr><th>Título</th><th>Preguntas</th><th>Calificación mínima</th></tr></thead>
-                    <tbody>
-                        {% for ex in examenes %}
-                        <tr>
-                            <td>{{ ex.titulo }}</td>
-                            <td>{{ ex.preguntas|length }}</td>
-                            <td>{{ ex.calificacion_minima }}/10</td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="3" class="text-center text-muted">Sin exámenes</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+<!-- MODAL CLASE -->
+<div class="modal fade modal-encl" id="modalClase">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('instructor_nueva_clase') }}" enctype="multipart/form-data">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Nueva clase</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="hidden" name="curso_id" value="{{ curso.id }}">
+                    <div class="mb-2"><label class="form-label">Título</label><input type="text" class="form-control" name="titulo" required></div>
+                    <div class="mb-2"><label class="form-label">Descripción</label><textarea class="form-control" name="descripcion" rows="2"></textarea></div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo</label>
+                            <select class="form-select" name="tipo">
+                                <option value="grabada">Grabada</option>
+                                <option value="vivo">En vivo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Fecha/Hora</label>
+                            <input type="datetime-local" class="form-control" name="fecha_programada">
+                        </div>
+                    </div>
+                    <div class="mb-2"><label class="form-label">URL de reunión (Zoom, Meet, etc.)</label><input type="url" class="form-control" name="url_reunion" placeholder="https://zoom.us/j/..."></div>
+                    <div class="mb-2"><label class="form-label">Subir archivo (video, PDF, etc.)</label><input type="file" class="form-control" name="archivo"></div>
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-encl btn-encl-primary">Crear clase</button></div>
             </div>
-        </div>
+        </form>
     </div>
-    <div class="col-lg-6">
-        <div class="dashboard-card">
-            <h5 style="font-weight: 700; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-info-circle me-2"></i>Información del curso</h5>
-            <p><strong>Categoría:</strong> {{ curso.categoria.nombre if curso.categoria else '' }}</p>
-            <p><strong>Nivel:</strong> {{ curso.nivel }}</p>
-            <p><strong>Duración:</strong> {{ curso.duracion_horas|int }} horas</p>
-            <p><strong>Precio:</strong> {% if curso.precio == 0 %}Gratis{% else %}${{ '{:,.0f}'.format(curso.precio) }}{% endif %}</p>
-            <p><strong>Certificado:</strong> {% if curso.tiene_certificado %}Sí{% else %}No{% endif %}</p>
-            <p><strong>Descripción:</strong> {{ curso.descripcion_corta }}</p>
-        </div>
+</div>
+
+<!-- MODAL EXAMEN -->
+<div class="modal fade modal-encl" id="modalExamen">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" action="{{ url_for('instructor_crear_examen') }}">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Nuevo examen</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="hidden" name="curso_id" value="{{ curso.id }}">
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6"><label class="form-label">Título</label><input type="text" class="form-control" name="titulo" required></div>
+                        <div class="col-md-3"><label class="form-label">Tiempo (min)</label><input type="number" class="form-control" name="tiempo_limite" value="30"></div>
+                        <div class="col-md-3"><label class="form-label">Mínimo</label><input type="number" class="form-control" name="calificacion_minima" step="0.5" value="6"></div>
+                        <div class="col-12"><label class="form-label">Descripción</label><textarea class="form-control" name="descripcion" rows="2"></textarea></div>
+                    </div>
+                    <h6 style="font-weight: 600;">Preguntas</h6>
+                    {% for i in range(1, 6) %}
+                    <div class="card mb-2 p-3" style="border: 1px solid var(--gray-200);">
+                        <h6>Pregunta {{ i }}</h6>
+                        <input type="text" class="form-control mb-2" name="pregunta_{{ i }}" placeholder="Texto de la pregunta">
+                        <div class="row g-2">
+                            <div class="col-md-6"><input type="text" class="form-control" name="opcion_{{ i }}_0" placeholder="Opción A"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" name="opcion_{{ i }}_1" placeholder="Opción B"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" name="opcion_{{ i }}_2" placeholder="Opción C"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" name="opcion_{{ i }}_3" placeholder="Opción D"></div>
+                        </div>
+                        <div class="mt-2">
+                            <label class="form-label">Correcta</label>
+                            <select class="form-select" name="correcta_{{ i }}">
+                                <option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option>
+                            </select>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-encl btn-encl-primary">Crear examen</button></div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL HORARIO -->
+<div class="modal fade modal-encl" id="modalHorario">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('instructor_crear_horario') }}">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Agregar horario</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="hidden" name="curso_id" value="{{ curso.id }}">
+                    <div class="mb-2"><label class="form-label">Día</label>
+                        <select class="form-select" name="dia_semana">
+                            <option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option>
+                            <option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6"><label class="form-label">Hora inicio</label><input type="time" class="form-control" name="hora_inicio"></div>
+                        <div class="col-md-6"><label class="form-label">Hora fin</label><input type="time" class="form-control" name="hora_fin"></div>
+                    </div>
+                    <div class="mb-2"><label class="form-label">Salón / Aula</label><input type="text" class="form-control" name="salon" placeholder="Aula 1"></div>
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-encl btn-encl-primary">Guardar</button></div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL ENLACE -->
+<div class="modal fade modal-encl" id="modalEnlace">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('instructor_crear_enlace') }}">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Agregar enlace</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="hidden" name="curso_id" value="{{ curso.id }}">
+                    <div class="mb-2"><label class="form-label">Título</label><input type="text" class="form-control" name="titulo" placeholder="Clase Zoom 1"></div>
+                    <div class="mb-2"><label class="form-label">URL</label><input type="url" class="form-control" name="url" placeholder="https://zoom.us/j/..." required></div>
+                    <div class="mb-2"><label class="form-label">Plataforma</label>
+                        <select class="form-select" name="plataforma">
+                            <option value="Zoom">Zoom</option>
+                            <option value="Google Meet">Google Meet</option>
+                            <option value="Microsoft Teams">Microsoft Teams</option>
+                            <option value="WhatsApp">WhatsApp</option>
+                            <option value="Jitsi">Jitsi</option>
+                            <option value="Otra">Otra</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-encl btn-encl-primary">Agregar</button></div>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

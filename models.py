@@ -260,6 +260,36 @@ class ImagenSite(db.Model):
     activo = db.Column(db.Boolean, default=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Horario(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'))
+    grupo_id = db.Column(db.Integer, db.ForeignKey('grupo.id'))
+    dia_semana = db.Column(db.Integer, default=0)
+    hora_inicio = db.Column(db.String(5))
+    hora_fin = db.Column(db.String(5))
+    salon = db.Column(db.String(100))
+    activo = db.Column(db.Boolean, default=True)
+    curso = db.relationship('Curso', backref='horarios')
+    grupo = db.relationship('Grupo', backref='horarios')
+
+class MaterialClase(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    clase_id = db.Column(db.Integer, db.ForeignKey('clase.id'))
+    titulo = db.Column(db.String(300))
+    tipo = db.Column(db.String(50))
+    archivo_url = db.Column(db.String(500))
+    fecha_subida = db.Column(db.DateTime, default=datetime.utcnow)
+    clase = db.relationship('Clase', backref='materiales')
+
+class EnlaceExterno(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'))
+    titulo = db.Column(db.String(300))
+    url = db.Column(db.String(500))
+    plataforma = db.Column(db.String(50))
+    activo = db.Column(db.Boolean, default=True)
+    curso = db.relationship('Curso', backref='enlaces_externos')
+
 class Banner(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(300))
