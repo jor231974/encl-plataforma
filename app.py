@@ -5,7 +5,7 @@ import string
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import (Flask, render_template, redirect, url_for, request,
-                   flash, jsonify, session, send_from_directory, send_file)
+                   flash, jsonify, session, send_from_directory)
 from flask_login import (LoginManager, login_user, logout_user,
                          login_required, current_user)
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -1844,23 +1844,6 @@ def admin_historial_accesos(user_id):
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-@app.route('/admin/respaldar')
-@login_required
-@superadmin_required
-def admin_respaldar():
-    import tarfile, io
-    db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
-    buf = io.BytesIO()
-    with tarfile.open(fileobj=buf, mode='w:gz') as tar:
-        tar.add(db_path, arcname='encl.db')
-        uploads = app.config['UPLOAD_FOLDER']
-        if os.path.exists(uploads):
-            tar.add(uploads, arcname='uploads')
-    buf.seek(0)
-    from datetime import datetime as dt
-    fname = f'respaldo_encl_{dt.now().strftime("%Y%m%d_%H%M")}.tar.gz'
-    return send_file(buf, as_attachment=True, download_name=fname, mimetype='application/gzip')
 
 # ==================== ERROR HANDLERS ====================
 
