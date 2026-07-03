@@ -899,17 +899,19 @@ def admin_api_grupos(distrito_id):
 
 @app.route('/admin/patrocinadores')
 @login_required
-@admin_required
+@superadmin_required
 def admin_patrocinadores():
-    patrocinadores = Patrocinador.query.all()
-    return render_template('admin/patrocinadores.html', patrocinadores=patrocinadores, **get_theme_config())
+    patrocinadores = Patrocinador.query.order_by(Patrocinador.nombre).all()
+    estados = Estado.query.all()
+    return render_template('admin/patrocinadores.html', patrocinadores=patrocinadores, estados=estados, **get_theme_config())
 
 @app.route('/admin/patrocinadores/crear', methods=['POST'])
 @login_required
-@admin_required
+@superadmin_required
 def admin_crear_patrocinador():
     import os as fmod
-    logo_url = ''
+    import uuid
+    logo_url = ''; foto_url = ''
     archivo = request.files.get('logo')
     if archivo and archivo.filename:
         fname = f'pat_{int(datetime.utcnow().timestamp())}_{archivo.filename}'
@@ -917,12 +919,28 @@ def admin_crear_patrocinador():
         fmod.makedirs(upload_dir, exist_ok=True)
         archivo.save(fmod.path.join(upload_dir, fname))
         logo_url = f'/uploads/{fname}'
+    foto_file = request.files.get('foto')
+    if foto_file and foto_file.filename:
+        fname = f'foto_{int(datetime.utcnow().timestamp())}_{foto_file.filename}'
+        upload_dir = app.config['UPLOAD_FOLDER']
+        fmod.makedirs(upload_dir, exist_ok=True)
+        foto_file.save(fmod.path.join(upload_dir, fname))
+        foto_url = f'/uploads/{fname}'
+    codigo_int = request.form.get('codigo_interno') or f'PAT-{uuid.uuid4().hex[:6].upper()}'
     pat = Patrocinador(
         nombre=request.form.get('nombre'),
         logo=logo_url,
+        foto=foto_url,
         cargo=request.form.get('cargo'),
-        lema=request.form.get('lema')
+        lema=request.form.get('lema'),
+        mensaje=request.form.get('mensaje'),
+        codigo_interno=codigo_int,
+        codigo_qr=request.form.get('codigo_qr'),
+        estado_id=request.form.get('estado_id') or None,
+        municipio_id=request.form.get('municipio_id') or None
     )
+    if not pat.codigo_qr:
+        pat.codigo_qr = f'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={codigo_int}'
     db.session.add(pat)
     db.session.commit()
     flash('Patrocinador creado', 'success')
@@ -930,13 +948,18 @@ def admin_crear_patrocinador():
 
 @app.route('/admin/patrocinadores/editar/<int:pat_id>', methods=['POST'])
 @login_required
-@admin_required
+@superadmin_required
 def admin_editar_patrocinador(pat_id):
     import os as fmod
     pat = Patrocinador.query.get_or_404(pat_id)
     pat.nombre = request.form.get('nombre', pat.nombre)
     pat.cargo = request.form.get('cargo', pat.cargo)
     pat.lema = request.form.get('lema', pat.lema)
+    pat.mensaje = request.form.get('mensaje', pat.mensaje)
+    pat.codigo_interno = request.form.get('codigo_interno', pat.codigo_interno)
+    pat.codigo_qr = request.form.get('codigo_qr', pat.codigo_qr)
+    pat.estado_id = request.form.get('estado_id') or None
+    pat.municipio_id = request.form.get('municipio_id') or None
     pat.activo = request.form.get('activo', '1') == '1'
     archivo = request.files.get('logo')
     if archivo and archivo.filename:
@@ -945,13 +968,20 @@ def admin_editar_patrocinador(pat_id):
         fmod.makedirs(upload_dir, exist_ok=True)
         archivo.save(fmod.path.join(upload_dir, fname))
         pat.logo = f'/uploads/{fname}'
+    foto_file = request.files.get('foto')
+    if foto_file and foto_file.filename:
+        fname = f'foto_{int(datetime.utcnow().timestamp())}_{foto_file.filename}'
+        upload_dir = app.config['UPLOAD_FOLDER']
+        fmod.makedirs(upload_dir, exist_ok=True)
+        foto_file.save(fmod.path.join(upload_dir, fname))
+        pat.foto = f'/uploads/{fname}'
     db.session.commit()
     flash('Patrocinador actualizado', 'success')
     return redirect(url_for('admin_patrocinadores'))
 
 @app.route('/admin/patrocinadores/eliminar/<int:pat_id>')
 @login_required
-@admin_required
+@superadmin_required
 def admin_eliminar_patrocinador(pat_id):
     pat = Patrocinador.query.get_or_404(pat_id)
     db.session.delete(pat)

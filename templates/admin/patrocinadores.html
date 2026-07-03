@@ -2,74 +2,143 @@
 {% block sidebar_menu %}{% include 'admin/sidebar.html' %}{% endblock %}
 {% block page_title %}Gestión de Patrocinadores{% endblock %}
 {% block page_subtitle %}Administra los aliados estratégicos{% endblock %}
-
 {% block content %}
 <div class="dashboard-card mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 style="font-weight: 700; color: var(--primary); margin: 0;"><i class="fas fa-handshake me-2"></i>Patrocinadores</h5>
+        <h5 style="font-weight: 700; color: var(--primary); margin: 0;"><i class="fas fa-handshake me-2"></i>Patrocinadores ({{ patrocinadores|length }})</h5>
         <button class="btn btn-encl btn-encl-success" data-bs-toggle="modal" data-bs-target="#modalCrear"><i class="fas fa-plus me-2"></i>Nuevo patrocinador</button>
     </div>
     <div class="row g-4">
         {% for pat in patrocinadores %}
-        <div class="col-lg-4 col-md-6">
+        <div class="col-lg-6">
             <div class="dashboard-card">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--primary); overflow: hidden; background: var(--gray-100);">
-                        {% if pat.logo %}
-                        <img src="{{ pat.logo }}" style="width: 100%; height: 100%; object-fit: cover;">
-                        {% else %}
-                        <i class="fas fa-handshake"></i>
+                <div class="row g-3">
+                    <div class="col-md-4 text-center">
+                        <div style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; margin: 0 auto; background: var(--gray-100); display: flex; align-items: center; justify-content: center;">
+                            {% if pat.foto %}<img src="{{ pat.foto }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}<i class="fas fa-user" style="font-size: 2rem; color: var(--gray-600);"></i>{% endif %}
+                        </div>
+                        <div style="width: 80px; height: 80px; border-radius: 8px; overflow: hidden; margin: 0.5rem auto; background: var(--gray-100); display: flex; align-items: center; justify-content: center;">
+                            {% if pat.logo %}<img src="{{ pat.logo }}" style="width: 100%; height: 100%; object-fit: contain;">
+                            {% else %}<i class="fas fa-building" style="font-size: 1.5rem; color: var(--gray-600);"></i>{% endif %}
+                        </div>
+                        {% if pat.codigo_qr %}
+                        <img src="{{ pat.codigo_qr }}" style="width: 60px; height: 60px; border-radius: 4px;">
                         {% endif %}
                     </div>
-                    <div>
-                        <h6 class="mb-0" style="font-weight: 700;">{{ pat.nombre }}</h6>
-                        <small class="text-muted">{{ pat.cargo }}</small>
+                    <div class="col-md-8">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-1" style="font-weight: 700;">{{ pat.nombre }}</h5>
+                            <span class="badge bg-{{ 'success' if pat.activo else 'secondary' }}">{{ 'Activo' if pat.activo else 'Inactivo' }}</span>
+                        </div>
+                        <small class="text-muted d-block">{{ pat.cargo }}</small>
+                        <small class="d-block"><strong>Código:</strong> {{ pat.codigo_interno }}</small>
+                        {% if pat.estado %}<small class="d-block"><i class="fas fa-map-marker-alt me-1"></i>{{ pat.estado.nombre }}{% if pat.municipio %} / {{ pat.municipio.nombre }}{% endif %}</small>{% endif %}
+                        <p style="font-size: 0.85rem; font-style: italic; margin: 0.5rem 0;">"{{ pat.lema }}"</p>
+                        {% if pat.mensaje %}<p style="font-size: 0.8rem; color: var(--gray-600);">{{ pat.mensaje[:150] }}</p>{% endif %}
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn btn-encl btn-encl-primary btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalEditar{{ pat.id }}"><i class="fas fa-edit me-1"></i>Editar</button>
+                            <a href="{{ url_for('admin_eliminar_patrocinador', pat_id=pat.id) }}" class="btn btn-encl btn-encl-danger btn-encl-sm" onclick="return confirm('¿Eliminar patrocinador?')"><i class="fas fa-trash me-1"></i>Eliminar</a>
+                        </div>
                     </div>
                 </div>
-                <p style="font-size: 0.85rem; font-style: italic;">"{{ pat.lema }}"</p>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-encl btn-encl-primary btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalEditar{{ pat.id }}"><i class="fas fa-edit me-1"></i>Editar</button>
-                    <a href="{{ url_for('admin_eliminar_patrocinador', pat_id=pat.id) }}" class="btn btn-encl btn-encl-danger btn-encl-sm" onclick="return confirm('¿Eliminar patrocinador?')"><i class="fas fa-trash me-1"></i>Eliminar</a>
-                </div>
             </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5 text-muted">
+            <i class="fas fa-handshake" style="font-size: 4rem; display: block; margin-bottom: 1rem;"></i>
+            <p>No hay patrocinadores registrados</p>
         </div>
         {% endfor %}
     </div>
 </div>
 
-<div class="modal fade modal-encl" id="modalCrear"><div class="modal-dialog"><div class="modal-content">
+<!-- Modal Crear -->
+<div class="modal fade modal-encl" id="modalCrear"><div class="modal-dialog modal-lg"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title">Nuevo patrocinador</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
         <form method="POST" action="{{ url_for('admin_crear_patrocinador') }}" enctype="multipart/form-data">
-            <div class="mb-3"><label class="form-label">Nombre</label><input type="text" class="form-control" name="nombre" required></div>
-            <div class="mb-3"><label class="form-label">Logo</label><input type="file" class="form-control" name="logo" accept="image/*"></div>
-            <div class="mb-3"><label class="form-label">Cargo</label><input type="text" class="form-control" name="cargo"></div>
-            <div class="mb-3"><label class="form-label">Lema</label><textarea class="form-control" name="lema" rows="2"></textarea></div>
-            <button type="submit" class="btn btn-encl btn-encl-primary w-100">Crear</button>
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Nombre *</label><input type="text" class="form-control" name="nombre" required></div>
+                <div class="col-md-6"><label class="form-label">Código interno</label><input type="text" class="form-control" name="codigo_interno" placeholder="Auto-generado si se deja vacío"></div>
+                <div class="col-md-6"><label class="form-label">Estado</label>
+                    <select class="form-select" name="estado_id" id="estado_crear" onchange="cargarMunicipios(this.value, 'municipio_crear')">
+                        <option value="">-- Seleccionar --</option>
+                        {% for e in estados %}<option value="{{ e.id }}">{{ e.nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6"><label class="form-label">Municipio</label>
+                    <select class="form-select" name="municipio_id" id="municipio_crear">
+                        <option value="">-- Seleccionar --</option>
+                    </select>
+                </div>
+                <div class="col-md-6"><label class="form-label">Cargo / Puesto</label><input type="text" class="form-control" name="cargo"></div>
+                <div class="col-md-6"><label class="form-label">Lema</label><input type="text" class="form-control" name="lema"></div>
+                <div class="col-12"><label class="form-label">Mensaje</label><textarea class="form-control" name="mensaje" rows="2"></textarea></div>
+                <div class="col-md-6"><label class="form-label">Foto (persona)</label><input type="file" class="form-control" name="foto" accept="image/*"></div>
+                <div class="col-md-6"><label class="form-label">Logotipo</label><input type="file" class="form-control" name="logo" accept="image/*"></div>
+                <div class="col-12"><label class="form-label">Código QR (URL)</label><input type="url" class="form-control" name="codigo_qr" placeholder="https://... se genera automático si se deja vacío"></div>
+            </div>
+            <button type="submit" class="btn btn-encl btn-encl-primary w-100 mt-3">Crear patrocinador</button>
         </form>
     </div>
 </div></div></div>
 
 {% for pat in patrocinadores %}
-<div class="modal fade modal-encl" id="modalEditar{{ pat.id }}"><div class="modal-dialog"><div class="modal-content">
+<!-- Modal Editar -->
+<div class="modal fade modal-encl" id="modalEditar{{ pat.id }}"><div class="modal-dialog modal-lg"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title">Editar: {{ pat.nombre }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
         <form method="POST" action="{{ url_for('admin_editar_patrocinador', pat_id=pat.id) }}" enctype="multipart/form-data">
-            <div class="mb-3">
-                <label class="form-label">Nombre</label>
-                <input type="text" class="form-control" name="nombre" value="{{ pat.nombre }}" required>
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Nombre *</label><input type="text" class="form-control" name="nombre" value="{{ pat.nombre }}" required></div>
+                <div class="col-md-6"><label class="form-label">Código interno</label><input type="text" class="form-control" name="codigo_interno" value="{{ pat.codigo_interno or '' }}"></div>
+                <div class="col-md-6"><label class="form-label">Estado</label>
+                    <select class="form-select" name="estado_id" onchange="cargarMunicipios(this.value, 'municipio_{{ pat.id }}')">
+                        <option value="">-- Seleccionar --</option>
+                        {% for e in estados %}<option value="{{ e.id }}" {% if pat.estado_id == e.id %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6"><label class="form-label">Municipio</label>
+                    <select class="form-select" name="municipio_id" id="municipio_{{ pat.id }}">
+                        <option value="">-- Seleccionar --</option>
+                    </select>
+                </div>
+                <div class="col-md-6"><label class="form-label">Cargo</label><input type="text" class="form-control" name="cargo" value="{{ pat.cargo or '' }}"></div>
+                <div class="col-md-6"><label class="form-label">Lema</label><input type="text" class="form-control" name="lema" value="{{ pat.lema or '' }}"></div>
+                <div class="col-12"><label class="form-label">Mensaje</label><textarea class="form-control" name="mensaje" rows="2">{{ pat.mensaje or '' }}</textarea></div>
+                <div class="col-md-6">
+                    <label class="form-label">Foto</label>
+                    {% if pat.foto %}<div class="mb-1"><img src="{{ pat.foto }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;"></div>{% endif %}
+                    <input type="file" class="form-control" name="foto" accept="image/*">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Logotipo</label>
+                    {% if pat.logo %}<div class="mb-1"><img src="{{ pat.logo }}" style="width: 60px; height: 60px; object-fit: contain; border-radius: 4px;"></div>{% endif %}
+                    <input type="file" class="form-control" name="logo" accept="image/*">
+                </div>
+                <div class="col-md-8"><label class="form-label">Código QR (URL)</label><input type="url" class="form-control" name="codigo_qr" value="{{ pat.codigo_qr or '' }}"></div>
+                <div class="col-md-4 d-flex align-items-end"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="activo" value="1" {{ 'checked' if pat.activo }}><label class="form-check-label">Activo</label></div></div>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Logo</label>
-                {% if pat.logo %}<div class="mb-1"><img src="{{ pat.logo }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;"></div>{% endif %}
-                <input type="file" class="form-control" name="logo" accept="image/*">
-            </div>
-            <div class="mb-3"><label class="form-label">Cargo</label><input type="text" class="form-control" name="cargo" value="{{ pat.cargo }}"></div>
-            <div class="mb-3"><label class="form-label">Lema</label><textarea class="form-control" name="lema" rows="2">{{ pat.lema }}</textarea></div>
-            <div class="mb-3 form-check form-switch"><input class="form-check-input" type="checkbox" name="activo" value="1" {{ 'checked' if pat.activo }}><label class="form-check-label">Activo</label></div>
-            <button type="submit" class="btn btn-encl btn-encl-primary w-100">Guardar</button>
+            <button type="submit" class="btn btn-encl btn-encl-primary w-100 mt-3">Guardar cambios</button>
         </form>
     </div>
 </div></div></div>
 {% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const estadosData = {};
+function cargarMunicipios(estadoId, targetId) {
+    if (!estadoId) return;
+    fetch('/admin/api/municipios/' + estadoId)
+        .then(r => r.json())
+        .then(data => {
+            const sel = document.getElementById(targetId);
+            sel.innerHTML = '<option value="">-- Seleccionar --</option>';
+            data.forEach(m => { sel.innerHTML += '<option value="' + m.id + '">' + m.nombre + '</option>'; });
+        });
+}
+</script>
 {% endblock %}

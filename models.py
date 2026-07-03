@@ -188,9 +188,17 @@ class Patrocinador(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(200), nullable=False)
     logo = db.Column(db.String(500))
+    foto = db.Column(db.String(500))
     cargo = db.Column(db.String(200))
     lema = db.Column(db.Text)
+    mensaje = db.Column(db.Text)
+    codigo_interno = db.Column(db.String(100), unique=True)
+    codigo_qr = db.Column(db.String(500))
+    estado_id = db.Column(db.Integer, db.ForeignKey('estado.id'))
+    municipio_id = db.Column(db.Integer, db.ForeignKey('municipio.id'))
     activo = db.Column(db.Boolean, default=True)
+    estado = db.relationship('Estado', backref='patrocinadores')
+    municipio = db.relationship('Municipio', backref='patrocinadores')
 
 class Mensaje(db.Model):
     id = db.Column(db.Integer, primary_key=True)
