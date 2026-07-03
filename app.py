@@ -195,25 +195,6 @@ def public_curso_detalle(slug):
     tc = get_theme_config()
     return render_template('public/curso_detalle.html', curso=curso, **tc)
 
-@app.route('/curso-de-ingles')
-@login_required
-def public_curso_ingles():
-    curso = Curso.query.filter_by(slug='ingles-basico', activo=True).first_or_404()
-    clases = Clase.query.filter_by(curso_id=curso.id, activo=True).order_by(Clase.id).all()
-    examenes = Examen.query.filter_by(curso_id=curso.id).all()
-    for ex in examenes:
-        ex.preguntas = Pregunta.query.filter_by(examen_id=ex.id).all()
-    tareas = Tarea.query.filter_by(curso_id=curso.id, activo=True).all()
-    import json as jmod
-    examenes_json = []
-    for ex in examenes:
-        preg = []
-        for p in ex.preguntas:
-            preg.append({'id': p.id, 'texto': p.texto, 'opciones': p.opciones, 'respuesta_correcta': p.respuesta_correcta})
-        examenes_json.append({'id': ex.id, 'titulo': ex.titulo, 'descripcion': ex.descripcion, 'tiempo_limite_minutos': ex.tiempo_limite_minutos, 'calificacion_minima': ex.calificacion_minima, 'preguntas': preg})
-    tc = get_theme_config()
-    return render_template('public/curso_ingles.html', curso=curso, clases=clases, examenes=examenes, tareas=tareas, examenes_json=jmod.dumps(examenes_json), **tc)
-
 @app.route('/nosotros')
 def public_nosotros():
     tc = get_theme_config()
