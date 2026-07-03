@@ -43,7 +43,10 @@ def get_theme_config():
         'contact_email': get_config('contact_email'),
         'contact_phone': get_config('contact_phone'),
         'contact_address': get_config('contact_address'),
-        'primary_color': get_config('primary_color', '#0d6efd'),
+        'primary_color': get_config('primary_color', '#1a237e'),
+        'secondary_color': get_config('secondary_color', '#0d6efd'),
+        'accent_color': get_config('accent_color', '#00c853'),
+        'dark_color': get_config('dark_color', '#0a0a1a'),
         'favicon_url': get_config('favicon_url', ''),
         'get_config': get_config,
     }

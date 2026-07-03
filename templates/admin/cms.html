@@ -50,9 +50,25 @@
                 <label class="form-label">Dirección</label>
                 <input type="text" class="form-control" name="contact_address" value="{{ get_config('contact_address') }}">
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label">Color primario</label>
-                <input type="color" class="form-control form-control-color" name="primary_color" value="{{ get_config('primary_color', '#0d6efd') }}">
+                <input type="color" class="form-control form-control-color" name="primary_color" value="{{ get_config('primary_color', '#1a237e') }}">
+                <small class="text-muted">#{{ get_config('primary_color', '1a237e') }}</small>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Color secundario</label>
+                <input type="color" class="form-control form-control-color" name="secondary_color" value="{{ get_config('secondary_color', '#0d6efd') }}">
+                <small class="text-muted">#{{ get_config('secondary_color', '0d6efd') }}</small>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Color acento</label>
+                <input type="color" class="form-control form-control-color" name="accent_color" value="{{ get_config('accent_color', '#00c853') }}">
+                <small class="text-muted">#{{ get_config('accent_color', '00c853') }}</small>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Color fondo oscuro</label>
+                <input type="color" class="form-control form-control-color" name="dark_color" value="{{ get_config('dark_color', '#0a0a1a') }}">
+                <small class="text-muted">#{{ get_config('dark_color', '0a0a1a') }}</small>
             </div>
         </div>
         <hr class="my-4">
