@@ -1,21 +1,21 @@
 :root {
-    --primary: #0d1b2a;
-    --primary-light: #1b3a5c;
-    --primary-dark: #070f18;
-    --secondary: #1a3a5c;
-    --accent: #c9a84c;
-    --accent-light: #e8d5a3;
-    --gold: #d4af37;
+    --primary: #0f172a;
+    --primary-light: #1e293b;
+    --primary-dark: #0a0f18;
+    --secondary: #1e293b;
+    --accent: #0ea5e9;
+    --accent-light: #7dd3fc;
+    --gold: #f59e0b;
     --dark: #0a0f18;
     --darker: #050810;
-    --gray-100: #f7f8fa;
-    --gray-200: #e8eaed;
-    --gray-300: #d1d5db;
-    --gray-600: #6b7280;
-    --gray-800: #374151;
-    --gradient-primary: linear-gradient(135deg, #0d1b2a 0%, #1b3a5c 50%, #2a4a7f 100%);
-    --gradient-hero: linear-gradient(135deg, #070f18 0%, #0d1b2a 50%, #1b3a5c 100%);
-    --gradient-accent: linear-gradient(135deg, #c9a84c 0%, #d4af37 50%, #e8d5a3 100%);
+    --gray-100: #f8fafc;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-600: #64748b;
+    --gray-800: #334155;
+    --gradient-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+    --gradient-hero: linear-gradient(135deg, #0a0f18 0%, #0f172a 50%, #1e293b 100%);
+    --gradient-accent: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 50%, #7dd3fc 100%);
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
     --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
     --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
@@ -102,7 +102,7 @@ body {
     background: rgba(10, 15, 24, 0.97) !important;
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border-bottom: 1px solid rgba(201,168,76,0.1);
+    border-bottom: 1px solid rgba(14,165,233,0.1);
     padding: 0;
     transition: all 0.3s ease;
     z-index: 1000;
@@ -162,7 +162,7 @@ body {
 }
 .navbar-encl .btn-acceso {
     background: var(--gradient-accent);
-    color: var(--primary-dark) !important;
+    color: #fff !important;
     border: none;
     padding: 0.5rem 1.5rem !important;
     border-radius: 50px;
@@ -172,7 +172,7 @@ body {
 }
 .navbar-encl .btn-acceso:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(201,168,76,0.4);
+    box-shadow: 0 4px 20px rgba(14,165,233,0.4);
 }
 .navbar-encl .dropdown-menu {
     background: rgba(10, 10, 26, 0.98);
@@ -206,8 +206,8 @@ body {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.08) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 20%, rgba(26,58,92,0.3) 0%, transparent 50%);
+    background: radial-gradient(ellipse at 20% 50%, rgba(14,165,233,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(30,41,59,0.3) 0%, transparent 50%);
     pointer-events: none;
 }
 .hero-section .hero-bg-shapes {
@@ -243,8 +243,8 @@ body {
 }
 .hero-content .badge-hero {
     display: inline-block;
-    background: rgba(201,168,76,0.12);
-    border: 1px solid rgba(201,168,76,0.3);
+    background: rgba(14,165,233,0.12);
+    border: 1px solid rgba(14,165,233,0.3);
     color: var(--accent);
     padding: 0.4rem 1.2rem;
     border-radius: 50px;
@@ -333,9 +333,9 @@ body {
 }
 .section-header .section-badge {
     display: inline-block;
-    background: rgba(201,168,76,0.1);
+    background: rgba(14,165,233,0.1);
     color: var(--accent);
-    border: 1px solid rgba(201,168,76,0.2);
+    border: 1px solid rgba(14,165,233,0.2);
     padding: 0.3rem 1.2rem;
     border-radius: 50px;
     font-size: 0.75rem;
@@ -460,7 +460,7 @@ body {
     top: 15px;
     right: 15px;
     background: var(--gradient-accent);
-    color: var(--primary-dark);
+    color: #fff;
     padding: 0.2rem 0.8rem;
     border-radius: 50px;
     font-size: 0.7rem;
@@ -519,7 +519,7 @@ body {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(ellipse at 50% 100%, rgba(201,168,76,0.06) 0%, transparent 60%);
+    background: radial-gradient(ellipse at 50% 100%, rgba(14,165,233,0.06) 0%, transparent 60%);
     pointer-events: none;
 }
 .stat-card {
@@ -640,7 +640,7 @@ body {
     margin-bottom: 0.5rem;
 }
 .footer a:hover { color: var(--accent); padding-left: 5px; }
-.footer .footer-bottom { border-top-color: rgba(201,168,76,0.1); }
+.footer .footer-bottom { border-top-color: rgba(14,165,233,0.1); }
 .footer .footer-bottom {
     border-top: 1px solid rgba(255,255,255,0.05);
     padding: 1.5rem 0;
