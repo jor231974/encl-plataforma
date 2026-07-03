@@ -630,9 +630,15 @@ def instructor_asistencia():
 @login_required
 @instructor_required
 def instructor_crear_horario():
+    grupo_id = request.form.get('grupo_id')
+    if not grupo_id or grupo_id == '':
+        grupo = Grupo(nombre=request.form.get('grupo_nombre', f'Grupo {int(datetime.utcnow().timestamp())}'), activo=True)
+        db.session.add(grupo)
+        db.session.flush()
+        grupo_id = grupo.id
     horario = Horario(
         curso_id=request.form.get('curso_id'),
-        grupo_id=request.form.get('grupo_id') or None,
+        grupo_id=grupo_id,
         dia_semana=int(request.form.get('dia_semana', 0)),
         hora_inicio=request.form.get('hora_inicio'),
         hora_fin=request.form.get('hora_fin'),
@@ -642,6 +648,16 @@ def instructor_crear_horario():
     db.session.commit()
     flash('Horario agregado', 'success')
     return redirect(url_for('instructor_curso_detalle', curso_id=horario.curso_id))
+
+@app.route('/instructor/grupo/crear', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_crear_grupo():
+    grupo = Grupo(nombre=request.form.get('nombre'), activo=True)
+    db.session.add(grupo)
+    db.session.commit()
+    flash('Grupo creado', 'success')
+    return redirect(url_for('instructor_curso_detalle', curso_id=request.form.get('curso_id')))
 
 @app.route('/instructor/enlace/crear', methods=['POST'])
 @login_required

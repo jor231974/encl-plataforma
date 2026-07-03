@@ -307,6 +307,20 @@
                         <div class="col-md-6"><label class="form-label">Hora inicio</label><input type="time" class="form-control" name="hora_inicio"></div>
                         <div class="col-md-6"><label class="form-label">Hora fin</label><input type="time" class="form-control" name="hora_fin"></div>
                     </div>
+                    <div class="mb-2"><label class="form-label">Grupo</label>
+                        <div class="row g-1">
+                            <div class="col-8">
+                                <select class="form-select" name="grupo_id">
+                                    <option value="">-- Seleccionar --</option>
+                                    {% for g in grupos %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <input type="text" class="form-control" name="grupo_nombre" placeholder="O crear nuevo">
+                            </div>
+                        </div>
+                        <small class="text-muted">Selecciona un grupo existente o escribe el nombre de uno nuevo</small>
+                    </div>
                     <div class="mb-2"><label class="form-label">Salón / Aula</label><input type="text" class="form-control" name="salon" placeholder="Aula 1"></div>
                 </div>
                 <div class="modal-footer"><button type="submit" class="btn btn-encl btn-encl-primary">Guardar</button></div>
