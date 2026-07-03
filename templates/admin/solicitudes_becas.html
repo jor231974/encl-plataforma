@@ -1,0 +1,72 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'admin/sidebar.html' %}{% endblock %}
+{% block page_title %}Solicitudes de becas{% endblock %}
+{% block page_subtitle %}Revisa y resuelve las solicitudes de becas{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="dashboard-card text-center p-3">
+            <h3 class="mb-0" style="color: var(--accent);">{{ solicitudes|selectattr('estado', 'equalto', 'pendiente')|list|length }}</h3>
+            <small class="text-muted">Pendientes</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-card text-center p-3">
+            <h3 class="mb-0" style="color: #059669;">{{ solicitudes|selectattr('estado', 'equalto', 'aprobada')|list|length }}</h3>
+            <small class="text-muted">Aprobadas</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-card text-center p-3">
+            <h3 class="mb-0" style="color: #dc2626;">{{ solicitudes|selectattr('estado', 'equalto', 'rechazada')|list|length }}</h3>
+            <small class="text-muted">Rechazadas</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-card text-center p-3">
+            <h3 class="mb-0">{{ solicitudes|length }}</h3>
+            <small class="text-muted">Total</small>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="table-responsive">
+        <table class="table table-encl">
+            <thead><tr><th>Alumno</th><th>Beca</th><th>Curso</th><th>Fecha</th><th>Estado</th><th>Notas</th><th>Acciones</th></tr></thead>
+            <tbody>
+                {% for s in solicitudes %}
+                <tr>
+                    <td><strong>{{ s.alumno.nombre }} {{ s.alumno.apellidos }}</strong><br><small class="text-muted">{{ s.alumno.email }}</small></td>
+                    <td>{{ s.beca.nombre }}<br><small class="text-muted">{{ s.beca.valor }}{{ '%' if s.beca.tipo == 'porcentaje' else ' MXN' }}</small></td>
+                    <td>{{ s.curso.titulo if s.curso else '—' }}</td>
+                    <td><small>{{ s.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }}</small></td>
+                    <td>
+                        {% if s.estado == 'pendiente' %}<span class="badge bg-warning text-dark">Pendiente</span>
+                        {% elif s.estado == 'aprobada' %}<span class="badge bg-success">Aprobada</span>
+                        {% else %}<span class="badge bg-danger">Rechazada</span>{% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin_notas_solicitud', sol_id=s.id) }}" class="d-flex gap-1">
+                            <input type="text" class="form-control form-control-sm" name="notas" value="{{ s.notas or '' }}" placeholder="Nota...">
+                            <button class="btn btn-encl btn-encl-sm btn-encl-primary" title="Guardar nota"><i class="fas fa-save"></i></button>
+                        </form>
+                    </td>
+                    <td>
+                        {% if s.estado == 'pendiente' %}
+                        <a href="{{ url_for('admin_resolver_solicitud', sol_id=s.id, accion='aprobar') }}" class="btn btn-encl btn-encl-sm btn-encl-success" onclick="return confirm('¿Aprobar esta solicitud?')"><i class="fas fa-check"></i></a>
+                        <a href="{{ url_for('admin_resolver_solicitud', sol_id=s.id, accion='rechazar') }}" class="btn btn-encl btn-encl-sm btn-encl-danger" onclick="return confirm('¿Rechazar esta solicitud?')"><i class="fas fa-times"></i></a>
+                        {% else %}
+                        <small class="text-muted">Resuelta</small>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center py-4 text-muted">No hay solicitudes de beca</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

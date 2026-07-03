@@ -297,6 +297,19 @@ def seed_database():
             )
             db.session.add(pat)
 
+        from datetime import date
+        becas_data = [
+            {'nombre': 'Beca Excelencia Académica', 'descripcion': 'Apoyo para alumnos con alto rendimiento en cursos de tecnología y desarrollo profesional.', 'tipo': 'porcentaje', 'valor': 50, 'requisitos': 'Estar inscrito en al menos un curso. No tener adeudos. Promedio mínimo de 8.', 'cupo_maximo': 20},
+            {'nombre': 'Beca Impulso Social', 'descripcion': 'Apoyo económico para estudiantes de comunidades vulnerables.', 'tipo': 'monto_fijo', 'valor': 500, 'requisitos': 'Comprobante de residencia en zona prioritaria. Carta de exposición de motivos.', 'cupo_maximo': 50},
+            {'nombre': 'Beca Mujeres en Tecnología', 'descripcion': 'Fomenta la participación femenina en cursos de tecnología e innovación.', 'tipo': 'porcentaje', 'valor': 75, 'requisitos': 'Ser mujer mexicana mayor de 18 años. Inscribirse a un curso de tecnología.', 'cupo_maximo': 30},
+            {'nombre': 'Beca Jóvenes Emprendedores', 'descripcion': 'Apoyo integral para jóvenes que deseen desarrollar su propio negocio.', 'tipo': 'porcentaje', 'valor': 40, 'requisitos': 'Tener entre 18 y 29 años. Presentar un plan de negocio básico.', 'cupo_maximo': 25},
+            {'nombre': 'Beca Capacitación Continua', 'descripcion': 'Descuento para profesionales que deseen actualizar sus habilidades.', 'tipo': 'porcentaje', 'valor': 30, 'requisitos': 'Comprobante de empleo activo. Carta de recomendación laboral.', 'cupo_maximo': 0},
+        ]
+        for bd in becas_data:
+            if not Beca.query.filter_by(nombre=bd['nombre']).first():
+                beca = Beca(nombre=bd['nombre'], descripcion=bd['descripcion'], tipo=bd['tipo'], valor=bd['valor'], requisitos=bd['requisitos'], cupo_maximo=bd['cupo_maximo'], activo=True, fecha_inicio=date.today())
+                db.session.add(beca)
+
         config_defaults = {
             'site_name': 'ESCUELA NACIONAL DE CAPACITACIÓN Y CURSOS EN LÍNEA',
             'site_subtitle': 'Transformando personas, fortaleciendo comunidades y desarrollando talento para el futuro.',

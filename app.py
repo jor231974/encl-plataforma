@@ -461,6 +461,31 @@ def alumno_perfil():
     territorial = get_territorial_context(current_user)
     return render_template('alumno/perfil.html', territorial=territorial, **get_theme_config())
 
+@app.route('/alumno/becas')
+@login_required
+def alumno_becas():
+    becas = Beca.query.filter(Beca.activo == True).all()
+    mis_solicitudes = SolicitudBeca.query.filter_by(alumno_id=current_user.id).order_by(SolicitudBeca.fecha_solicitud.desc()).all()
+    return render_template('alumno/becas.html', becas=becas, mis_solicitudes=mis_solicitudes, **get_theme_config())
+
+@app.route('/alumno/becas/solicitar/<int:beca_id>', methods=['POST'])
+@login_required
+def alumno_solicitar_beca(beca_id):
+    beca = Beca.query.get_or_404(beca_id)
+    if not beca.activo:
+        flash('Esta beca no está disponible', 'error')
+        return redirect(url_for('alumno_becas'))
+    existente = SolicitudBeca.query.filter_by(beca_id=beca_id, alumno_id=current_user.id, estado='pendiente').first()
+    if existente:
+        flash('Ya tienes una solicitud pendiente para esta beca', 'info')
+        return redirect(url_for('alumno_becas'))
+    curso_id = request.form.get('curso_id', type=int)
+    sol = SolicitudBeca(beca_id=beca_id, alumno_id=current_user.id, curso_id=curso_id)
+    db.session.add(sol)
+    db.session.commit()
+    flash('Solicitud de beca enviada exitosamente', 'success')
+    return redirect(url_for('alumno_becas'))
+
 # ==================== INSTRUCTOR ROUTES ====================
 
 @app.route('/instructor')
@@ -1181,6 +1206,106 @@ def admin_eliminar_pago(pago_id):
     db.session.commit()
     flash('Pago eliminado', 'success')
     return redirect(url_for('admin_pagos'))
+
+@app.route('/admin/becas')
+@login_required
+@admin_required
+def admin_becas():
+    becas = Beca.query.order_by(Beca.fecha_creacion.desc()).all()
+    return render_template('admin/becas.html', becas=becas, **get_theme_config())
+
+@app.route('/admin/becas/crear', methods=['POST'])
+@login_required
+@admin_required
+def admin_crear_beca():
+    beca = Beca(
+        nombre=request.form.get('nombre'),
+        descripcion=request.form.get('descripcion'),
+        tipo=request.form.get('tipo', 'porcentaje'),
+        valor=float(request.form.get('valor', 0)),
+        requisitos=request.form.get('requisitos'),
+        cupo_maximo=int(request.form.get('cupo_maximo', 0)),
+        fecha_inicio=datetime.strptime(request.form.get('fecha_inicio'), '%Y-%m-%d').date() if request.form.get('fecha_inicio') else None,
+        fecha_fin=datetime.strptime(request.form.get('fecha_fin'), '%Y-%m-%d').date() if request.form.get('fecha_fin') else None,
+    )
+    db.session.add(beca)
+    db.session.commit()
+    flash('Beca creada exitosamente', 'success')
+    return redirect(url_for('admin_becas'))
+
+@app.route('/admin/becas/editar/<int:beca_id>', methods=['POST'])
+@login_required
+@admin_required
+def admin_editar_beca(beca_id):
+    beca = Beca.query.get_or_404(beca_id)
+    beca.nombre = request.form.get('nombre')
+    beca.descripcion = request.form.get('descripcion')
+    beca.tipo = request.form.get('tipo', 'porcentaje')
+    beca.valor = float(request.form.get('valor', 0))
+    beca.requisitos = request.form.get('requisitos')
+    beca.cupo_maximo = int(request.form.get('cupo_maximo', 0))
+    beca.fecha_inicio = datetime.strptime(request.form.get('fecha_inicio'), '%Y-%m-%d').date() if request.form.get('fecha_inicio') else None
+    beca.fecha_fin = datetime.strptime(request.form.get('fecha_fin'), '%Y-%m-%d').date() if request.form.get('fecha_fin') else None
+    db.session.commit()
+    flash('Beca actualizada', 'success')
+    return redirect(url_for('admin_becas'))
+
+@app.route('/admin/becas/toggle/<int:beca_id>')
+@login_required
+@admin_required
+def admin_toggle_beca(beca_id):
+    beca = Beca.query.get_or_404(beca_id)
+    beca.activo = not beca.activo
+    db.session.commit()
+    flash(f'Beca {"activada" if beca.activo else "desactivada"}', 'success')
+    return redirect(url_for('admin_becas'))
+
+@app.route('/admin/becas/eliminar/<int:beca_id>')
+@login_required
+@admin_required
+def admin_eliminar_beca(beca_id):
+    beca = Beca.query.get_or_404(beca_id)
+    db.session.delete(beca)
+    db.session.commit()
+    flash('Beca eliminada', 'success')
+    return redirect(url_for('admin_becas'))
+
+@app.route('/admin/solicitudes-becas')
+@login_required
+@admin_required
+def admin_solicitudes_becas():
+    solicitudes = SolicitudBeca.query.order_by(SolicitudBeca.fecha_solicitud.desc()).all()
+    becas = Beca.query.all()
+    return render_template('admin/solicitudes_becas.html', solicitudes=solicitudes, becas=becas, **get_theme_config())
+
+@app.route('/admin/solicitudes-becas/resolver/<int:sol_id>/<string:accion>')
+@login_required
+@admin_required
+def admin_resolver_solicitud(sol_id, accion):
+    sol = SolicitudBeca.query.get_or_404(sol_id)
+    if accion == 'aprobar':
+        sol.estado = 'aprobada'
+        sol.beca.usados = (sol.beca.usados or 0) + 1
+    elif accion == 'rechazar':
+        sol.estado = 'rechazada'
+    else:
+        flash('Acción no válida', 'error')
+        return redirect(url_for('admin_solicitudes_becas'))
+    sol.fecha_resolucion = datetime.utcnow()
+    sol.resuelto_por = current_user.id
+    db.session.commit()
+    flash(f'Solicitud {accion}da exitosamente', 'success')
+    return redirect(url_for('admin_solicitudes_becas'))
+
+@app.route('/admin/solicitudes-becas/notas/<int:sol_id>', methods=['POST'])
+@login_required
+@admin_required
+def admin_notas_solicitud(sol_id):
+    sol = SolicitudBeca.query.get_or_404(sol_id)
+    sol.notas = request.form.get('notas')
+    db.session.commit()
+    flash('Notas guardadas', 'success')
+    return redirect(url_for('admin_solicitudes_becas'))
 
 @app.route('/admin/usuario/toggle/<int:user_id>')
 @login_required

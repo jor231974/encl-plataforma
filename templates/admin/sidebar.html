@@ -7,6 +7,8 @@
 <a href="{{ url_for('admin_inscripciones') }}"><i class="fas fa-user-graduate"></i>Inscripciones</a>
 <a href="{{ url_for('admin_examenes') }}"><i class="fas fa-tasks"></i>Exámenes</a>
 <a href="{{ url_for('admin_certificados') }}"><i class="fas fa-certificate"></i>Certificados</a>
+<a href="{{ url_for('admin_becas') }}"><i class="fas fa-graduation-cap"></i>Becas</a>
+<a href="{{ url_for('admin_solicitudes_becas') }}"><i class="fas fa-file-alt"></i>Solicitudes</a>
 {% if current_user.role == 'superadmin' %}<a href="{{ url_for('admin_patrocinadores') }}"><i class="fas fa-handshake"></i>Patrocinadores</a>{% endif %}
 <a href="{{ url_for('admin_pagos') }}"><i class="fas fa-credit-card"></i>Pagos</a>
 <a href="{{ url_for('admin_banners') }}"><i class="fas fa-sliders-h"></i>Banners</a>

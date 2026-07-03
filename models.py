@@ -314,3 +314,33 @@ class Configuracion(db.Model):
     clave = db.Column(db.String(200), unique=True, nullable=False)
     valor = db.Column(db.Text)
     tipo = db.Column(db.String(50), default='texto')
+
+class Beca(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(300), nullable=False)
+    descripcion = db.Column(db.Text)
+    tipo = db.Column(db.String(20), nullable=False, default='porcentaje')
+    valor = db.Column(db.Float, nullable=False)
+    requisitos = db.Column(db.Text)
+    cupo_maximo = db.Column(db.Integer, default=0)
+    usados = db.Column(db.Integer, default=0)
+    fecha_inicio = db.Column(db.Date)
+    fecha_fin = db.Column(db.Date)
+    activo = db.Column(db.Boolean, default=True)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+
+class SolicitudBeca(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    beca_id = db.Column(db.Integer, db.ForeignKey('beca.id'))
+    alumno_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'))
+    fecha_solicitud = db.Column(db.DateTime, default=datetime.utcnow)
+    estado = db.Column(db.String(20), default='pendiente')
+    fecha_resolucion = db.Column(db.DateTime)
+    resuelto_por = db.Column(db.Integer, db.ForeignKey('user.id'))
+    notas = db.Column(db.Text)
+
+    beca = db.relationship('Beca', backref='solicitudes')
+    alumno = db.relationship('User', foreign_keys=[alumno_id], backref='solicitudes_becas')
+    curso = db.relationship('Curso', backref='solicitudes_becas')
+    resolvedor = db.relationship('User', foreign_keys=[resuelto_por], backref='resoluciones_becas')

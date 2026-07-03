@@ -1,0 +1,113 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'alumno/sidebar.html' %}{% endblock %}
+{% block page_title %}Becas disponibles{% endblock %}
+{% block page_subtitle %}Solicita apoyos educativos para tus cursos{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="dashboard-card text-center p-3">
+            <h3 class="mb-0" style="color: var(--accent);">{{ becas|length }}</h3>
+            <small class="text-muted">Becas disponibles</small>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="dashboard-card text-center p-3">
+            <h3 class="mb-0">{{ mis_solicitudes|length }}</h3>
+            <small class="text-muted">Mis solicitudes</small>
+        </div>
+    </div>
+</div>
+
+<h5 class="mb-3" style="font-weight: 700; color: var(--primary);"><i class="fas fa-gift me-2"></i>Becas disponibles</h5>
+<div class="row g-4 mb-5">
+    {% for b in becas %}
+    <div class="col-lg-4 col-md-6">
+        <div class="dashboard-card h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 style="font-weight: 700; color: var(--primary);">{{ b.nombre }}</h6>
+                <span class="badge bg-{{ 'info' if b.tipo == 'porcentaje' else 'warning' }}" style="font-size: 0.7rem;">
+                    {{ b.valor }}{{ '%' if b.tipo == 'porcentaje' else ' MXN' }}
+                </span>
+            </div>
+            <p class="text-muted small flex-grow-1">{{ b.descripcion or 'Sin descripción' }}</p>
+            {% if b.requisitos %}
+            <div class="mb-2 p-2" style="background: var(--gray-100); border-radius: var(--radius-sm);">
+                <small class="text-muted"><i class="fas fa-clipboard-list me-1"></i>{{ b.requisitos[:120] }}{% if b.requisitos|length > 120 %}...{% endif %}</small>
+            </div>
+            {% endif %}
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <small class="text-muted">
+                    {% if b.cupo_maximo > 0 %}
+                    {{ b.usados or 0 }}/{{ b.cupo_maximo }} usados
+                    {% else %}
+                    Sin límite de cupo
+                    {% endif %}
+                </small>
+                {% if b.fecha_fin %}
+                <small class="text-muted">Vence: {{ b.fecha_fin.strftime('%d/%m/%Y') }}</small>
+                {% endif %}
+            </div>
+            {% set ya_solicitada = mis_solicitudes|selectattr('beca_id', 'equalto', b.id)|first %}
+            {% if ya_solicitada %}
+            <span class="badge bg-{{ 'success' if ya_solicitada.estado == 'aprobada' else 'warning' if ya_solicitada.estado == 'pendiente' else 'danger' }} mt-2 py-2">
+                {{ ya_solicitada.estado|capitalize }}
+            </span>
+            {% else %}
+            <button class="btn btn-encl btn-encl-primary btn-encl-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalSolicitar{{ b.id }}"><i class="fas fa-paper-plane me-1"></i>Solicitar</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="modal fade modal-encl" id="modalSolicitar{{ b.id }}"><div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Solicitar: {{ b.nombre }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <p class="text-muted small">{{ b.descripcion }}</p>
+            <p><strong>Valor:</strong> {{ b.valor }}{{ '%' if b.tipo == 'porcentaje' else ' MXN' }}</p>
+            {% if b.requisitos %}<p><strong>Requisitos:</strong><br>{{ b.requisitos }}</p>{% endif %}
+            <form method="POST" action="{{ url_for('alumno_solicitar_beca', beca_id=b.id) }}">
+                <div class="mb-3">
+                    <label class="form-label">Selecciona un curso</label>
+                    <select class="form-control" name="curso_id" required>
+                        <option value="">— Selecciona —</option>
+                        {% for insc in current_user.inscripciones %}
+                        <option value="{{ insc.curso_id }}">{{ insc.curso.titulo }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Solo puedes solicitar beca para cursos en los que estás inscrito</small>
+                </div>
+                <button type="submit" class="btn btn-encl btn-encl-primary w-100">Enviar solicitud</button>
+            </form>
+        </div>
+    </div></div></div>
+    {% else %}
+    <div class="col-12"><p class="text-muted text-center py-4">No hay becas disponibles en este momento</p></div>
+    {% endfor %}
+</div>
+
+<h5 class="mb-3" style="font-weight: 700; color: var(--primary);"><i class="fas fa-history me-2"></i>Mis solicitudes</h5>
+<div class="dashboard-card">
+    <div class="table-responsive">
+        <table class="table table-encl">
+            <thead><tr><th>Beca</th><th>Curso</th><th>Fecha</th><th>Estado</th><th>Notas</th></tr></thead>
+            <tbody>
+                {% for s in mis_solicitudes %}
+                <tr>
+                    <td><strong>{{ s.beca.nombre }}</strong><br><small class="text-muted">{{ s.beca.valor }}{{ '%' if s.beca.tipo == 'porcentaje' else ' MXN' }}</small></td>
+                    <td>{{ s.curso.titulo if s.curso else '—' }}</td>
+                    <td><small>{{ s.fecha_solicitud.strftime('%d/%m/%Y') }}</small></td>
+                    <td>
+                        {% if s.estado == 'pendiente' %}<span class="badge bg-warning text-dark">Pendiente</span>
+                        {% elif s.estado == 'aprobada' %}<span class="badge bg-success">Aprobada</span>
+                        {% else %}<span class="badge bg-danger">Rechazada</span>{% endif %}
+                    </td>
+                    <td><small class="text-muted">{{ s.notas or '—' }}</small></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center py-4 text-muted">No has realizado solicitudes</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
