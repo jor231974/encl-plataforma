@@ -123,6 +123,7 @@ def public_index():
     cursos = Curso.query.filter_by(activo=True).all()
     instructores = User.query.filter_by(role='instructor', activo=True).all()
     patrocinadores = Patrocinador.query.filter_by(activo=True).all()
+    banners = Banner.query.filter_by(activo=True).order_by(Banner.orden).all()
     total_cursos = len(cursos)
     total_alumnos = User.query.filter_by(role='alumno', activo=True).count()
     total_instructores = len(instructores)
@@ -130,6 +131,7 @@ def public_index():
     return render_template('public/index.html', **tc,
                          categorias=categorias, cursos=cursos,
                          instructores=instructores, patrocinadores=patrocinadores,
+                         banners=banners,
                          total_cursos=total_cursos,
                          total_alumnos=total_alumnos, total_instructores=total_instructores)
 
@@ -1079,6 +1081,90 @@ def admin_toggle_imagen(img_id):
     img.activo = not img.activo
     db.session.commit()
     return redirect(url_for('admin_imagenes'))
+
+@app.route('/admin/banners')
+@login_required
+@superadmin_required
+def admin_banners():
+    banners = Banner.query.order_by(Banner.orden).all()
+    return render_template('admin/banners.html', banners=banners, **get_theme_config())
+
+@app.route('/admin/banners/crear', methods=['POST'])
+@login_required
+@superadmin_required
+def admin_crear_banner():
+    import os as fmod
+    titulo = request.form.get('titulo')
+    subtitulo = request.form.get('subtitulo')
+    link = request.form.get('link')
+    tiempo_ms = int(request.form.get('tiempo_ms', 5000))
+    archivo = request.files.get('imagen')
+    url = ''
+    if archivo and archivo.filename:
+        fname = f'banner_{int(datetime.utcnow().timestamp())}_{archivo.filename}'
+        upload_dir = app.config['UPLOAD_FOLDER']
+        fmod.makedirs(upload_dir, exist_ok=True)
+        archivo.save(fmod.path.join(upload_dir, fname))
+        url = f'/uploads/{fname}'
+    max_orden = db.session.query(db.func.max(Banner.orden)).scalar() or 0
+    banner = Banner(titulo=titulo, subtitulo=subtitulo, imagen=url, link=link, tiempo_ms=tiempo_ms, orden=max_orden + 1)
+    db.session.add(banner)
+    db.session.commit()
+    flash('Banner creado exitosamente', 'success')
+    return redirect(url_for('admin_banners'))
+
+@app.route('/admin/banners/editar/<int:banner_id>', methods=['POST'])
+@login_required
+@superadmin_required
+def admin_editar_banner(banner_id):
+    import os as fmod
+    banner = Banner.query.get_or_404(banner_id)
+    banner.titulo = request.form.get('titulo', banner.titulo)
+    banner.subtitulo = request.form.get('subtitulo', banner.subtitulo)
+    banner.link = request.form.get('link', banner.link)
+    banner.tiempo_ms = int(request.form.get('tiempo_ms', banner.tiempo_ms))
+    banner.activo = request.form.get('activo', '1') == '1'
+    archivo = request.files.get('imagen')
+    if archivo and archivo.filename:
+        fname = f'banner_{int(datetime.utcnow().timestamp())}_{archivo.filename}'
+        upload_dir = app.config['UPLOAD_FOLDER']
+        fmod.makedirs(upload_dir, exist_ok=True)
+        archivo.save(fmod.path.join(upload_dir, fname))
+        banner.imagen = f'/uploads/{fname}'
+    db.session.commit()
+    flash('Banner actualizado', 'success')
+    return redirect(url_for('admin_banners'))
+
+@app.route('/admin/banners/eliminar/<int:banner_id>')
+@login_required
+@superadmin_required
+def admin_eliminar_banner(banner_id):
+    banner = Banner.query.get_or_404(banner_id)
+    db.session.delete(banner)
+    db.session.commit()
+    flash('Banner eliminado', 'success')
+    return redirect(url_for('admin_banners'))
+
+@app.route('/admin/banners/toggle/<int:banner_id>')
+@login_required
+@superadmin_required
+def admin_toggle_banner(banner_id):
+    banner = Banner.query.get_or_404(banner_id)
+    banner.activo = not banner.activo
+    db.session.commit()
+    return redirect(url_for('admin_banners'))
+
+@app.route('/admin/banners/reordenar', methods=['POST'])
+@login_required
+@superadmin_required
+def admin_reordenar_banners():
+    ordenes = request.json.get('ordenes', [])
+    for item in ordenes:
+        banner = Banner.query.get(item['id'])
+        if banner:
+            banner.orden = item['orden']
+    db.session.commit()
+    return jsonify({'status': 'ok'})
 
 # ==================== STATIC FILES ====================
 

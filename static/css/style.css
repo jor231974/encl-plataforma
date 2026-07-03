@@ -1218,6 +1218,18 @@ body {
     to { transform: rotate(360deg); }
 }
 
+/* ==================== HERO CAROUSEL ==================== */
+#heroCarousel { border-radius: var(--radius-lg); overflow: hidden; }
+#heroCarousel .carousel-inner { border-radius: var(--radius-lg); }
+#heroCarousel .carousel-caption { text-align: left; left: 20px; right: 20px; }
+#heroCarousel .carousel-indicators button { width: 12px; height: 12px; border-radius: 50%; }
+#heroCarousel .carousel-control-prev, #heroCarousel .carousel-control-next { width: 8%; }
+
+/* ==================== BANNER ADMIN ==================== */
+#banner-list .dashboard-card { transition: all 0.2s; }
+#banner-list .dashboard-card:hover { border-color: var(--primary); }
+.drag-handle:hover { color: var(--primary) !important; }
+
 /* ==================== ABOUT PAGE ==================== */
 .about-hero {
     background: var(--gradient-hero);

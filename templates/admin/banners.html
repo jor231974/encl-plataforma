@@ -1,0 +1,124 @@
+{% extends 'dashboard_base.html' %}
+{% block page_title %}Gestión de Banners{% endblock %}
+{% block page_subtitle %}Administra los banners del carrusel principal{% endblock %}
+{% block sidebar_menu %}{% include 'admin/sidebar.html' %}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0"><i class="fas fa-sliders-h me-2"></i>Banners del Carrusel</h5>
+    <button class="btn btn-encl btn-encl-primary btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalCrear">
+        <i class="fas fa-plus me-1"></i>Nuevo Banner
+    </button>
+</div>
+<div class="admin-widget">
+    <div class="widget-title"><i class="fas fa-list me-2"></i>Banners ({{ banners|length }})</div>
+    <div id="banner-list" class="row g-3">
+        {% for b in banners %}
+        <div class="col-md-6" data-id="{{ b.id }}">
+            <div class="dashboard-card d-flex align-items-center gap-3" style="cursor: move;">
+                <div class="drag-handle" style="cursor: grab; color: var(--gray-600);"><i class="fas fa-grip-vertical"></i></div>
+                <div style="width: 120px; height: 68px; border-radius: var(--radius-sm); overflow: hidden; background: var(--gray-200); flex-shrink: 0;">
+                    {% if b.imagen %}
+                    <img src="{{ b.imagen }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--gray-600);"><i class="fas fa-image"></i></div>
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1" style="min-width: 0;">
+                    <strong style="font-size: 0.9rem;">{{ b.titulo or 'Sin título' }}</strong>
+                    <small class="d-block text-muted" style="font-size: 0.75rem;">{{ b.subtitulo[:60] if b.subtitulo else '' }}</small>
+                    <small class="d-block" style="font-size: 0.7rem; color: var(--gray-600);">
+                        <i class="far fa-clock me-1"></i>{{ b.tiempo_ms//1000 }}s
+                        <span class="ms-2 badge bg-{{ 'success' if b.activo else 'secondary' }}">{{ 'Activo' if b.activo else 'Inactivo' }}</span>
+                    </small>
+                </div>
+                <div class="d-flex gap-1 flex-shrink-0">
+                    <button class="btn btn-encl btn-encl-primary btn-encl-sm" data-bs-toggle="modal" data-bs-target="#modalEditar{{ b.id }}" title="Editar"><i class="fas fa-edit"></i></button>
+                    <a href="{{ url_for('admin_toggle_banner', banner_id=b.id) }}" class="btn btn-encl btn-encl-sm {{ 'btn-encl-success' if b.activo else 'btn-encl-danger' }}" title="{{ 'Desactivar' if b.activo else 'Activar' }}">
+                        <i class="fas fa-{{ 'eye' if b.activo else 'eye-slash' }}"></i>
+                    </a>
+                    <a href="{{ url_for('admin_eliminar_banner', banner_id=b.id) }}" class="btn btn-encl btn-encl-sm btn-encl-danger" onclick="return confirm('¿Eliminar banner?')" title="Eliminar"><i class="fas fa-trash"></i></a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5 text-muted">
+            <i class="fas fa-image" style="font-size: 3rem; display: block; margin-bottom: 1rem;"></i>
+            <p>No hay banners. ¡Crea el primero!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal Crear -->
+<div class="modal fade modal-encl" id="modalCrear">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('admin_crear_banner') }}" enctype="multipart/form-data">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Nuevo Banner</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="form-label">Imagen</label><input type="file" name="imagen" class="form-control" accept="image/*" required></div>
+                    <div class="mb-2"><label class="form-label">Título</label><input type="text" name="titulo" class="form-control" placeholder="Título del banner"></div>
+                    <div class="mb-2"><label class="form-label">Subtítulo</label><input type="text" name="subtitulo" class="form-control" placeholder="Subtítulo"></div>
+                    <div class="mb-2"><label class="form-label">Enlace (opcional)</label><input type="url" name="link" class="form-control" placeholder="https://..."></div>
+                    <div class="mb-2"><label class="form-label">Tiempo</label>
+                        <select name="tiempo_ms" class="form-select">
+                            <option value="5000">5 segundos</option>
+                            <option value="10000" selected>10 segundos</option>
+                            <option value="15000">15 segundos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-encl btn-encl-primary">Crear</button></div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% for b in banners %}
+<!-- Modal Editar {{ b.id }} -->
+<div class="modal fade modal-encl" id="modalEditar{{ b.id }}">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('admin_editar_banner', banner_id=b.id) }}" enctype="multipart/form-data">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Editar Banner</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="form-label">Imagen (dejar vacío para mantener actual)</label><input type="file" name="imagen" class="form-control" accept="image/*"></div>
+                    <div class="mb-2"><label class="form-label">Título</label><input type="text" name="titulo" class="form-control" value="{{ b.titulo or '' }}"></div>
+                    <div class="mb-2"><label class="form-label">Subtítulo</label><input type="text" name="subtitulo" class="form-control" value="{{ b.subtitulo or '' }}"></div>
+                    <div class="mb-2"><label class="form-label">Enlace</label><input type="url" name="link" class="form-control" value="{{ b.link or '' }}"></div>
+                    <div class="mb-2"><label class="form-label">Tiempo</label>
+                        <select name="tiempo_ms" class="form-select">
+                            <option value="5000" {% if b.tiempo_ms == 5000 %}selected{% endif %}>5 segundos</option>
+                            <option value="10000" {% if b.tiempo_ms == 10000 %}selected{% endif %}>10 segundos</option>
+                            <option value="15000" {% if b.tiempo_ms == 15000 %}selected{% endif %}>15 segundos</option>
+                        </select>
+                    </div>
+                    <div class="form-check"><input type="checkbox" name="activo" class="form-check-input" value="1" {% if b.activo %}checked{% endif %} id="activo{{ b.id }}"><label class="form-check-label" for="activo{{ b.id }}">Activo</label></div>
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-encl btn-encl-primary">Guardar</button></div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+Sortable.create(document.getElementById('banner-list'), {
+    handle: '.drag-handle',
+    animation: 150,
+    onEnd: function() {
+        const ordenes = [];
+        document.querySelectorAll('#banner-list > div').forEach((el, i) => {
+            ordenes.push({id: parseInt(el.dataset.id), orden: i});
+        });
+        fetch('{{ url_for("admin_reordenar_banners") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ordenes})
+        });
+    }
+});
+</script>
+{% endblock %}

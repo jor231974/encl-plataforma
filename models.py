@@ -260,6 +260,17 @@ class ImagenSite(db.Model):
     activo = db.Column(db.Boolean, default=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Banner(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(300))
+    subtitulo = db.Column(db.String(500))
+    imagen = db.Column(db.String(500), nullable=False)
+    tiempo_ms = db.Column(db.Integer, default=5000)
+    orden = db.Column(db.Integer, default=0)
+    activo = db.Column(db.Boolean, default=True)
+    link = db.Column(db.String(500))
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+
 class Configuracion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     clave = db.Column(db.String(200), unique=True, nullable=False)
