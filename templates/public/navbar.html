@@ -17,12 +17,6 @@
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav mx-auto">
                 <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'public_index' }}" href="{{ url_for('public_index') }}">Inicio</a></li>
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ['public_cursos', 'public_curso_detalle'] }}" href="#" role="button" data-bs-toggle="dropdown">Cursos</a>
-                  <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{{ url_for('public_cursos') }}">Todos los cursos</a></li>
-                  </ul>
-                </li>
                 <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'public_instructores' }}" href="{{ url_for('public_instructores') }}">Instructores</a></li>
                 <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'public_patrocinadores' }}" href="{{ url_for('public_patrocinadores') }}">Patrocinadores</a></li>
                 <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'public_nosotros' }}" href="{{ url_for('public_nosotros') }}">Nosotros</a></li>
