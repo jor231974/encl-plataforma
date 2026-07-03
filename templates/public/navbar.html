@@ -2,7 +2,7 @@
     <div class="container">
         <a class="navbar-brand" href="{{ url_for('public_index') }}">
             {% if get_config('site_logo') %}
-            <img src="{{ get_config('site_logo') }}" style="height: 40px;" alt="Logo">
+            <img src="{{ get_config('site_logo') }}" style="max-height: 50px; width: auto; object-fit: contain;" alt="Logo">
             {% else %}
             <i class="fas fa-graduation-cap" style="font-size: 2rem; color: var(--accent);"></i>
             <div class="brand-text">

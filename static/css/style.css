@@ -107,9 +107,9 @@ body {
 .navbar-encl .navbar-brand {
     display: flex;
     align-items: center;
-    padding: 12px 0;
+    padding: 8px 0;
 }
-.navbar-encl .navbar-brand img { height: 45px; margin-right: 12px; }
+.navbar-encl .navbar-brand img { max-height: 50px; width: auto; object-fit: contain; margin-right: 12px; }
 .navbar-encl .navbar-brand .brand-text {
     display: flex;
     flex-direction: column;
