@@ -1,39 +1,42 @@
 :root {
-    --primary: #1a237e;
-    --primary-light: #283593;
-    --primary-dark: #0d1b4a;
-    --secondary: #0d6efd;
-    --accent: #00c853;
-    --accent-light: #69f0ae;
-    --gold: #ffd700;
-    --dark: #0a0a1a;
-    --darker: #050510;
-    --gray-100: #f8f9fa;
-    --gray-200: #e9ecef;
-    --gray-300: #dee2e6;
-    --gray-600: #6c757d;
-    --gray-800: #343a40;
-    --gradient-primary: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
-    --gradient-hero: linear-gradient(135deg, #0d1b4a 0%, #1a237e 50%, #283593 100%);
-    --gradient-accent: linear-gradient(135deg, #00c853 0%, #00e676 100%);
-    --shadow-sm: 0 2px 8px rgba(0,0,0,0.1);
-    --shadow-md: 0 4px 20px rgba(0,0,0,0.12);
-    --shadow-lg: 0 8px 40px rgba(0,0,0,0.15);
-    --shadow-xl: 0 15px 60px rgba(0,0,0,0.2);
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 20px;
-    --radius-xl: 28px;
+    --primary: #0d1b2a;
+    --primary-light: #1b3a5c;
+    --primary-dark: #070f18;
+    --secondary: #1a3a5c;
+    --accent: #c9a84c;
+    --accent-light: #e8d5a3;
+    --gold: #d4af37;
+    --dark: #0a0f18;
+    --darker: #050810;
+    --gray-100: #f7f8fa;
+    --gray-200: #e8eaed;
+    --gray-300: #d1d5db;
+    --gray-600: #6b7280;
+    --gray-800: #374151;
+    --gradient-primary: linear-gradient(135deg, #0d1b2a 0%, #1b3a5c 50%, #2a4a7f 100%);
+    --gradient-hero: linear-gradient(135deg, #070f18 0%, #0d1b2a 50%, #1b3a5c 100%);
+    --gradient-accent: linear-gradient(135deg, #c9a84c 0%, #d4af37 50%, #e8d5a3 100%);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    --shadow-xl: 0 16px 48px rgba(0,0,0,0.15);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --font-sans: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    color: #333;
+    font-family: var(--font-sans);
+    color: var(--gray-800);
     background: #fff;
     overflow-x: hidden;
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -96,10 +99,10 @@ body {
 
 /* ==================== NAVBAR ==================== */
 .navbar-encl {
-    background: rgba(10, 10, 26, 0.95) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    background: rgba(10, 15, 24, 0.97) !important;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(201,168,76,0.1);
     padding: 0;
     transition: all 0.3s ease;
     z-index: 1000;
@@ -159,17 +162,17 @@ body {
 }
 .navbar-encl .btn-acceso {
     background: var(--gradient-accent);
-    color: #fff !important;
+    color: var(--primary-dark) !important;
     border: none;
     padding: 0.5rem 1.5rem !important;
     border-radius: 50px;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.85rem;
     transition: all 0.3s ease;
 }
 .navbar-encl .btn-acceso:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,200,83,0.4);
+    box-shadow: 0 4px 20px rgba(201,168,76,0.4);
 }
 .navbar-encl .dropdown-menu {
     background: rgba(10, 10, 26, 0.98);
@@ -193,7 +196,7 @@ body {
 /* ==================== HERO SECTION ==================== */
 .hero-section {
     position: relative;
-    min-height: 100vh;
+    min-height: 90vh;
     display: flex;
     align-items: center;
     overflow: hidden;
@@ -203,8 +206,8 @@ body {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.02)" d="M0,160L48,176C96,192,192,224,288,218.7C384,213,480,171,576,149.3C672,128,768,128,864,149.3C960,171,1056,213,1152,213.3C1248,213,1344,171,1392,149.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"/></svg>') no-repeat bottom;
-    background-size: cover;
+    background: radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(26,58,92,0.3) 0%, transparent 50%);
     pointer-events: none;
 }
 .hero-section .hero-bg-shapes {
@@ -240,14 +243,14 @@ body {
 }
 .hero-content .badge-hero {
     display: inline-block;
-    background: rgba(0,200,83,0.15);
-    border: 1px solid rgba(0,200,83,0.3);
+    background: rgba(201,168,76,0.12);
+    border: 1px solid rgba(201,168,76,0.3);
     color: var(--accent);
     padding: 0.4rem 1.2rem;
     border-radius: 50px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 1px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
     text-transform: uppercase;
     margin-bottom: 1.5rem;
     animation: fadeInUp 0.6s ease;
@@ -310,7 +313,10 @@ body {
 .hero-stats .stat-item h3 {
     font-size: 2.5rem;
     font-weight: 900;
-    color: var(--accent);
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 0;
 }
 .hero-stats .stat-item p {
@@ -327,13 +333,14 @@ body {
 }
 .section-header .section-badge {
     display: inline-block;
-    background: linear-gradient(135deg, rgba(26,35,126,0.1), rgba(0,200,83,0.1));
-    color: var(--primary);
+    background: rgba(201,168,76,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(201,168,76,0.2);
     padding: 0.3rem 1.2rem;
     border-radius: 50px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 1px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
     text-transform: uppercase;
     margin-bottom: 1rem;
 }
@@ -349,6 +356,13 @@ body {
     color: var(--gray-600);
     max-width: 600px;
     margin: 0 auto;
+    line-height: 1.7;
+}
+
+.section-header .section-badge {
+    background: linear-gradient(135deg, rgba(13,27,42,0.06), rgba(201,168,76,0.1));
+    color: var(--accent);
+    border: 1px solid rgba(201,168,76,0.2);
 }
 
 /* ==================== CATEGORIES ==================== */
@@ -445,12 +459,12 @@ body {
     position: absolute;
     top: 15px;
     right: 15px;
-    background: var(--accent);
-    color: #fff;
+    background: var(--gradient-accent);
+    color: var(--primary-dark);
     padding: 0.2rem 0.8rem;
     border-radius: 50px;
     font-size: 0.7rem;
-    font-weight: 600;
+    font-weight: 700;
 }
 .course-card .card-img .card-price {
     position: absolute;
@@ -505,8 +519,8 @@ body {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.03)" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,218.7C672,203,768,149,864,138.7C960,128,1056,160,1152,181.3C1248,203,1344,213,1392,218.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"/></svg>') no-repeat bottom;
-    background-size: cover;
+    background: radial-gradient(ellipse at 50% 100%, rgba(201,168,76,0.06) 0%, transparent 60%);
+    pointer-events: none;
 }
 .stat-card {
     text-align: center;
@@ -626,6 +640,7 @@ body {
     margin-bottom: 0.5rem;
 }
 .footer a:hover { color: var(--accent); padding-left: 5px; }
+.footer .footer-bottom { border-top-color: rgba(201,168,76,0.1); }
 .footer .footer-bottom {
     border-top: 1px solid rgba(255,255,255,0.05);
     padding: 1.5rem 0;
