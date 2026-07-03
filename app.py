@@ -481,7 +481,30 @@ def instructor_dashboard():
 @instructor_required
 def instructor_cursos():
     cursos = Curso.query.filter_by(instructor_id=current_user.id).all()
-    return render_template('instructor/cursos.html', cursos=cursos, **get_theme_config())
+    categorias = Categoria.query.filter_by(activo=True).all()
+    return render_template('instructor/cursos.html', cursos=cursos, categorias=categorias, **get_theme_config())
+
+@app.route('/instructor/curso/crear', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_crear_curso():
+    titulo = request.form.get('titulo')
+    slug = titulo.lower().replace(' ', '-').replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ñ','n')
+    slug = slug + '-' + str(int(datetime.utcnow().timestamp()))[-4:]
+    curso = Curso(
+        titulo=titulo, slug=slug,
+        descripcion_corta=request.form.get('descripcion_corta'),
+        descripcion_larga=request.form.get('descripcion_larga'),
+        categoria_id=request.form.get('categoria_id') or None,
+        instructor_id=current_user.id,
+        nivel=request.form.get('nivel', 'Principiante'),
+        duracion_horas=float(request.form.get('duracion_horas', 0)),
+        precio=float(request.form.get('precio', 0))
+    )
+    db.session.add(curso)
+    db.session.commit()
+    flash('Curso creado exitosamente. Ya puedes gestionarlo.', 'success')
+    return redirect(url_for('instructor_curso_detalle', curso_id=curso.id))
 
 @app.route('/instructor/curso/<int:curso_id>')
 @login_required
