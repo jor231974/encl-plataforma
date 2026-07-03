@@ -229,6 +229,16 @@ body {
     overflow: hidden;
     background: var(--gradient-hero);
 }
+.hero-carousel-img {
+    height: 520px;
+    object-fit: cover;
+}
+@media (max-width: 992px) {
+    .hero-carousel-img { height: 350px; }
+}
+@media (max-width: 576px) {
+    .hero-carousel-img { height: 250px; }
+}
 .hero-section::before {
     content: '';
     position: absolute;

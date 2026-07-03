@@ -32,7 +32,7 @@
                         {% for b in banners %}
                         <div class="carousel-item {% if loop.first %}active{% endif %}" data-bs-interval="{{ b.tiempo_ms }}">
                             {% if b.link %}<a href="{{ b.link }}" target="_blank">{% endif %}
-                            <img src="{{ b.imagen }}" class="d-block w-100" style="height: 450px; object-fit: cover;" alt="{{ b.titulo or '' }}">
+                            <img src="{{ b.imagen }}" class="d-block w-100 hero-carousel-img" alt="{{ b.titulo or '' }}">
                             {% if b.link %}</a>{% endif %}
                             {% if b.titulo or b.subtitulo %}
                             <div class="carousel-caption d-none d-md-block" style="background: rgba(0,0,0,0.5); border-radius: var(--radius-sm); padding: 1rem; bottom: 20px;">
