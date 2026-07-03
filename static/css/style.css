@@ -1,21 +1,21 @@
 :root {
-    --primary: #0f172a;
-    --primary-light: #1e293b;
-    --primary-dark: #0a0f18;
-    --secondary: #1e293b;
-    --accent: #0ea5e9;
+    --primary: #1e3a8a;
+    --primary-light: #2563eb;
+    --primary-dark: #172554;
+    --secondary: #2563eb;
+    --accent: #38bdf8;
     --accent-light: #7dd3fc;
     --gold: #f59e0b;
-    --dark: #0a0f18;
-    --darker: #050810;
+    --dark: #1e3a8a;
+    --darker: #172554;
     --gray-100: #f8fafc;
     --gray-200: #e2e8f0;
     --gray-300: #cbd5e1;
     --gray-600: #64748b;
     --gray-800: #334155;
-    --gradient-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-    --gradient-hero: linear-gradient(135deg, #0a0f18 0%, #0f172a 50%, #1e293b 100%);
-    --gradient-accent: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 50%, #7dd3fc 100%);
+    --gradient-primary: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
+    --gradient-hero: linear-gradient(135deg, #172554 0%, #1e3a8a 50%, #2563eb 100%);
+    --gradient-accent: linear-gradient(135deg, #38bdf8 0%, #7dd3fc 50%, #bae6fd 100%);
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
     --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
     --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
@@ -99,18 +99,39 @@ body {
 
 /* ==================== NAVBAR ==================== */
 .navbar-encl {
-    background: rgba(10, 15, 24, 0.97) !important;
+    background: rgba(255, 255, 255, 0.97) !important;
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border-bottom: 1px solid rgba(14,165,233,0.1);
+    border-bottom: 1px solid rgba(30, 58, 138, 0.08);
     padding: 0;
     transition: all 0.3s ease;
     z-index: 1000;
 }
 .navbar-encl .navbar-brand {
+    color: #1e3a8a !important;
+    font-weight: 800;
+    font-size: 1.3rem;
     display: flex;
     align-items: center;
-    padding: 8px 0;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+}
+
+.navbar-encl .navbar-brand .brand-text span {
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #1e3a8a;
+}
+
+.navbar-encl .navbar-brand .brand-text small {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 400;
+    opacity: 0.6;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #1e3a8a;
 }
 .navbar-encl .navbar-brand img { max-height: 50px; width: auto; object-fit: contain; margin-right: 12px; }
 .navbar-encl .navbar-brand .brand-text {
@@ -132,13 +153,16 @@ body {
     font-weight: 500;
 }
 .navbar-encl .nav-link {
-    color: rgba(255,255,255,0.8) !important;
-    font-size: 0.85rem;
+    color: rgba(30, 58, 138, 0.75) !important;
     font-weight: 500;
-    padding: 1.5rem 1rem !important;
-    transition: all 0.3s ease;
-    position: relative;
-    letter-spacing: 0.3px;
+    font-size: 0.88rem;
+    padding: 0.5rem 1rem !important;
+    transition: color 0.3s ease;
+}
+
+.navbar-encl .nav-link:hover,
+.navbar-encl .nav-link.active {
+    color: #1e3a8a !important;
 }
 .navbar-encl .nav-link:hover,
 .navbar-encl .nav-link.active {
@@ -161,7 +185,7 @@ body {
     width: 70%;
 }
 .navbar-encl .btn-acceso {
-    background: var(--gradient-accent);
+    background: var(--gradient-primary);
     color: #fff !important;
     border: none;
     padding: 0.5rem 1.5rem !important;
@@ -172,7 +196,7 @@ body {
 }
 .navbar-encl .btn-acceso:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(14,165,233,0.4);
+    box-shadow: 0 4px 20px rgba(30,58,138,0.3);
 }
 .navbar-encl .dropdown-menu {
     background: rgba(10, 10, 26, 0.98);
@@ -206,8 +230,8 @@ body {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(ellipse at 20% 50%, rgba(14,165,233,0.06) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 20%, rgba(30,41,59,0.3) 0%, transparent 50%);
+    background: radial-gradient(ellipse at 20% 50%, rgba(56,189,248,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(30,58,138,0.05) 0%, transparent 50%);
     pointer-events: none;
 }
 .hero-section .hero-bg-shapes {
@@ -243,9 +267,9 @@ body {
 }
 .hero-content .badge-hero {
     display: inline-block;
-    background: rgba(14,165,233,0.12);
-    border: 1px solid rgba(14,165,233,0.3);
-    color: var(--accent);
+    background: rgba(30,58,138,0.1);
+    border: 1px solid rgba(30,58,138,0.2);
+    color: var(--primary);
     padding: 0.4rem 1.2rem;
     border-radius: 50px;
     font-size: 0.75rem;
@@ -258,11 +282,9 @@ body {
 .hero-content h1 {
     font-size: 3.5rem;
     font-weight: 900;
-    color: #fff;
-    line-height: 1.15;
-    margin-bottom: 1.5rem;
-    animation: fadeInUp 0.8s ease;
-    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 1.2rem;
+    color: #1e3a8a;
 }
 .hero-content h1 span {
     background: var(--gradient-accent);
@@ -272,11 +294,10 @@ body {
 }
 .hero-content p {
     font-size: 1.2rem;
-    color: rgba(255,255,255,0.7);
-    line-height: 1.7;
-    margin-bottom: 2.5rem;
+    color: rgba(30,58,138,0.6);
     max-width: 600px;
-    animation: fadeInUp 1s ease;
+    margin-bottom: 2rem;
+    line-height: 1.8;
 }
 .hero-content .hero-buttons {
     animation: fadeInUp 1.2s ease;
@@ -333,9 +354,9 @@ body {
 }
 .section-header .section-badge {
     display: inline-block;
-    background: rgba(14,165,233,0.1);
-    color: var(--accent);
-    border: 1px solid rgba(14,165,233,0.2);
+    background: rgba(30,58,138,0.08);
+    color: var(--primary);
+    border: 1px solid rgba(30,58,138,0.15);
     padding: 0.3rem 1.2rem;
     border-radius: 50px;
     font-size: 0.75rem;
@@ -640,7 +661,9 @@ body {
     margin-bottom: 0.5rem;
 }
 .footer a:hover { color: var(--accent); padding-left: 5px; }
-.footer .footer-bottom { border-top-color: rgba(14,165,233,0.1); }
+.footer .footer-bottom { border-top-color: rgba(30,58,138,0.1); }
+.footer a { color: rgba(255,255,255,0.6); }
+.footer a:hover { color: #38bdf8; padding-left: 5px; }
 .footer .footer-bottom {
     border-top: 1px solid rgba(255,255,255,0.05);
     padding: 1.5rem 0;
