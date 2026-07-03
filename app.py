@@ -190,8 +190,6 @@ def public_cursos():
 @login_required
 def public_curso_detalle(slug):
     curso = Curso.query.filter_by(slug=slug, activo=True).first_or_404()
-    if slug == 'ingles-basico':
-        return redirect(url_for('public_curso_ingles'))
     tc = get_theme_config()
     return render_template('public/curso_detalle.html', curso=curso, **tc)
 

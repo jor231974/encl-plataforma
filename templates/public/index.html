@@ -153,11 +153,7 @@
                         <p>{{ curso.descripcion_corta[:100] }}{% if curso.descripcion_corta and curso.descripcion_corta|length > 100 %}...{% endif %}</p>
                         <div class="card-meta">
                             <span><i class="far fa-clock"></i> {{ curso.duracion_horas|int }}h</span>
-                            {% if curso.slug == 'ingles-basico' %}
-                            <a href="{{ url_for('public_curso_ingles') }}" class="btn btn-encl btn-encl-primary btn-encl-sm">Ver curso <i class="fas fa-external-link-alt ms-1"></i></a>
-                            {% else %}
                             <a href="{{ url_for('public_curso_detalle', slug=curso.slug) }}" class="btn btn-encl btn-encl-primary btn-encl-sm">Ver curso</a>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
