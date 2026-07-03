@@ -81,8 +81,8 @@ def seed_database():
         db.session.flush()
 
         instructores = []
-        instr_names = ['Carlos', 'María', 'José', 'Ana', 'Miguel', 'Sofía', 'Roberto', 'Laura', 'Fernando', 'Diana']
-        instr_last = ['Sánchez', 'García', 'Martínez', 'López', 'Hernández', 'González', 'Pérez', 'Rodríguez', 'Flores', 'Morales']
+        instr_names = ['Jacky', 'María', 'José', 'Ana', 'Miguel', 'Sofía', 'Roberto', 'Laura', 'Fernando', 'Diana']
+        instr_last = ['Jordain', 'García', 'Martínez', 'López', 'Hernández', 'González', 'Pérez', 'Rodríguez', 'Flores', 'Morales']
 
         i = 0
         for name, last in zip(instr_names, instr_last):
