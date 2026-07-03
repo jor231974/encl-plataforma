@@ -1099,8 +1099,8 @@ def admin_crear_banner():
     link = request.form.get('link')
     tiempo_ms = int(request.form.get('tiempo_ms', 5000))
     archivo = request.files.get('imagen')
-    url = ''
-    if archivo and archivo.filename:
+    url = request.form.get('imagen_url', '')
+    if not url and archivo and archivo.filename:
         fname = f'banner_{int(datetime.utcnow().timestamp())}_{archivo.filename}'
         upload_dir = app.config['UPLOAD_FOLDER']
         fmod.makedirs(upload_dir, exist_ok=True)

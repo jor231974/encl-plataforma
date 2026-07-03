@@ -56,7 +56,9 @@
             <div class="modal-content">
                 <div class="modal-header"><h5 class="modal-title">Nuevo Banner</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
-                    <div class="mb-2"><label class="form-label">Imagen</label><input type="file" name="imagen" class="form-control" accept="image/*" required></div>
+                    <div class="mb-2"><label class="form-label">Imagen (subir archivo)</label><input type="file" name="imagen" class="form-control" accept="image/*"></div>
+                    <div class="mb-2"><label class="form-label">O ruta de imagen (si ya existe en el servidor)</label>
+                        <input type="text" name="imagen_url" class="form-control" placeholder="/uploads/banner_test.png"></div>
                     <div class="mb-2"><label class="form-label">Título</label><input type="text" name="titulo" class="form-control" placeholder="Título del banner"></div>
                     <div class="mb-2"><label class="form-label">Subtítulo</label><input type="text" name="subtitulo" class="form-control" placeholder="Subtítulo"></div>
                     <div class="mb-2"><label class="form-label">Enlace (opcional)</label><input type="url" name="link" class="form-control" placeholder="https://..."></div>
