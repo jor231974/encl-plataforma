@@ -9,7 +9,8 @@
 <a href="{{ url_for('admin_certificados') }}"><i class="fas fa-certificate"></i>Certificados</a>
 <a href="{{ url_for('admin_becas') }}"><i class="fas fa-graduation-cap"></i>Becas</a>
 <a href="{{ url_for('admin_solicitudes_becas') }}"><i class="fas fa-file-alt"></i>Solicitudes</a>
-{% if current_user.role == 'superadmin' %}<a href="{{ url_for('admin_patrocinadores') }}"><i class="fas fa-handshake"></i>Patrocinadores</a>{% endif %}
+{% if current_user.role == 'superadmin' %}<a href="{{ url_for('admin_patrocinadores') }}"><i class="fas fa-handshake"></i>Patrocinadores</a>
+<a href="{{ url_for('admin_paginas_territoriales') }}"><i class="fas fa-globe-americas"></i>Páginas Territoriales</a>{% endif %}
 <a href="{{ url_for('admin_pagos') }}"><i class="fas fa-credit-card"></i>Pagos</a>
 <a href="{{ url_for('admin_banners') }}"><i class="fas fa-sliders-h"></i>Banners</a>
 <a href="{{ url_for('admin_imagenes') }}"><i class="fas fa-images"></i>Imágenes</a>

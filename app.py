@@ -1463,6 +1463,101 @@ def admin_reordenar_banners():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+# ==================== TERRITORIAL LANDING PAGES ====================
+
+@app.route('/territorial/<slug>')
+def territorial_page(slug):
+    page = TerritorialPage.query.filter_by(slug=slug, activo=True).first_or_404()
+    tc = get_theme_config()
+    return render_template('public/territorial.html', page=page, **tc)
+
+@app.route('/territorial/sergio-perez')
+def territorial_sergio_perez():
+    page = TerritorialPage.query.filter_by(slug='sergio-perez', activo=True).first_or_404()
+    tc = get_theme_config()
+    return render_template('public/territorial.html', page=page, **tc)
+
+@app.route('/admin/paginas-territoriales')
+@login_required
+@superadmin_required
+def admin_paginas_territoriales():
+    pages = TerritorialPage.query.order_by(TerritorialPage.fecha_creacion.desc()).all()
+    return render_template('admin/paginas_territoriales.html', pages=pages, **get_theme_config())
+
+@app.route('/admin/paginas-territoriales/crear', methods=['GET', 'POST'])
+@login_required
+@superadmin_required
+def admin_crear_pagina_territorial():
+    if request.method == 'POST':
+        slug = request.form.get('slug', '').strip().lower().replace(' ', '-')
+        if TerritorialPage.query.filter_by(slug=slug).first():
+            flash('El slug ya existe', 'error')
+            return redirect(url_for('admin_crear_pagina_territorial'))
+        page = TerritorialPage(slug=slug, nombre=request.form.get('nombre'), municipio=request.form.get('municipio'))
+        for field in ['foto', 'fondo', 'logo', 'emblema', 'codigo_qr', 'banner_url',
+                       'contacto_telefono', 'contacto_email', 'contacto_direccion',
+                       'meta_titulo', 'meta_descripcion']:
+            setattr(page, field, request.form.get(field, ''))
+        for field in ['mensaje', 'frase_institucional', 'acuerdo_colaboracion', 'mensaje_qr']:
+            setattr(page, field, request.form.get(field, ''))
+        for field in ['color_primario', 'color_secundario', 'color_fondo']:
+            v = request.form.get(field, '')
+            if v: setattr(page, field, v)
+        db.session.add(page)
+        db.session.commit()
+        flash(f'Página territorial "{page.nombre}" creada', 'success')
+        return redirect(url_for('admin_paginas_territoriales'))
+    return render_template('admin/pagina_territorial_form.html', page=None, **get_theme_config())
+
+@app.route('/admin/paginas-territoriales/editar/<int:page_id>', methods=['GET', 'POST'])
+@login_required
+@superadmin_required
+def admin_editar_pagina_territorial(page_id):
+    page = TerritorialPage.query.get_or_404(page_id)
+    if request.method == 'POST':
+        page.nombre = request.form.get('nombre')
+        page.municipio = request.form.get('municipio')
+        slug = request.form.get('slug', '').strip().lower().replace(' ', '-')
+        existing = TerritorialPage.query.filter_by(slug=slug).first()
+        if existing and existing.id != page_id:
+            flash('El slug ya está en uso', 'error')
+            return redirect(url_for('admin_editar_pagina_territorial', page_id=page_id))
+        page.slug = slug
+        for field in ['foto', 'fondo', 'logo', 'emblema', 'codigo_qr', 'banner_url',
+                       'contacto_telefono', 'contacto_email', 'contacto_direccion',
+                       'meta_titulo', 'meta_descripcion']:
+            setattr(page, field, request.form.get(field, ''))
+        for field in ['mensaje', 'frase_institucional', 'acuerdo_colaboracion', 'mensaje_qr']:
+            setattr(page, field, request.form.get(field, ''))
+        for field in ['color_primario', 'color_secundario', 'color_fondo']:
+            v = request.form.get(field, '')
+            if v: setattr(page, field, v)
+        page.activo = 'activo' in request.form
+        db.session.commit()
+        flash('Página actualizada', 'success')
+        return redirect(url_for('admin_paginas_territoriales'))
+    return render_template('admin/pagina_territorial_form.html', page=page, **get_theme_config())
+
+@app.route('/admin/paginas-territoriales/toggle/<int:page_id>')
+@login_required
+@superadmin_required
+def admin_toggle_pagina_territorial(page_id):
+    page = TerritorialPage.query.get_or_404(page_id)
+    page.activo = not page.activo
+    db.session.commit()
+    flash(f'Página {"activada" if page.activo else "desactivada"}', 'success')
+    return redirect(url_for('admin_paginas_territoriales'))
+
+@app.route('/admin/paginas-territoriales/eliminar/<int:page_id>')
+@login_required
+@superadmin_required
+def admin_eliminar_pagina_territorial(page_id):
+    page = TerritorialPage.query.get_or_404(page_id)
+    db.session.delete(page)
+    db.session.commit()
+    flash('Página eliminada', 'success')
+    return redirect(url_for('admin_paginas_territoriales'))
+
 # ==================== ERROR HANDLERS ====================
 
 @app.errorhandler(404)

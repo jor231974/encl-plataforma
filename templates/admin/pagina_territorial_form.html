@@ -1,0 +1,138 @@
+{% extends 'dashboard_base.html' %}
+{% block content %}
+<h4 class="mb-4"><i class="fas fa-{{ 'edit' if page else 'plus' }} me-2"></i>{{ 'Editar' if page else 'Nueva' }} página territorial</h4>
+
+<form method="POST" class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong><i class="fas fa-user-tie me-2"></i>Líder territorial</strong></div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Nombre completo</label>
+                    <input type="text" class="form-control" name="nombre" value="{{ page.nombre if page else '' }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Municipio</label>
+                    <input type="text" class="form-control" name="municipio" value="{{ page.municipio if page else '' }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Slug (URL)</label>
+                    <input type="text" class="form-control" name="slug" value="{{ page.slug if page else '' }}" placeholder="ej: sergio-perez" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Foto del líder (URL)</label>
+                    <input type="text" class="form-control" name="foto" value="{{ page.foto if page else '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Imagen de fondo (URL)</label>
+                    <input type="text" class="form-control" name="fondo" value="{{ page.fondo if page else '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mensaje del líder</label>
+                    <textarea class="form-control" name="mensaje" rows="3">{{ page.mensaje if page else '' }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong><i class="fas fa-palette me-2"></i>Personalización</strong></div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Logo (URL, opcional)</label>
+                    <input type="text" class="form-control" name="logo" value="{{ page.logo if page else '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Emblema institucional (URL)</label>
+                    <input type="text" class="form-control" name="emblema" value="{{ page.emblema if page else '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Frase institucional</label>
+                    <input type="text" class="form-control" name="frase_institucional" value="{{ page.frase_institucional if page else '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Acuerdo de colaboración</label>
+                    <input type="text" class="form-control" name="acuerdo_colaboracion" value="{{ page.acuerdo_colaboracion if page else '' }}">
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Color primario</label>
+                        <input type="color" class="form-control form-control-color" name="color_primario" value="{{ page.color_primario if page else '#021a48' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Color secundario</label>
+                        <input type="color" class="form-control form-control-color" name="color_secundario" value="{{ page.color_secundario if page else '#f4a807' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Color fondo</label>
+                        <input type="color" class="form-control form-control-color" name="color_fondo" value="{{ page.color_fondo if page else '#ffffff' }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong><i class="fas fa-qrcode me-2"></i>QR y contacto</strong></div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Código QR (URL de imagen)</label>
+                    <input type="text" class="form-control" name="codigo_qr" value="{{ page.codigo_qr if page else '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mensaje del QR</label>
+                    <input type="text" class="form-control" name="mensaje_qr" value="{{ page.mensaje_qr if page else '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Banner URL</label>
+                    <input type="text" class="form-control" name="banner_url" value="{{ page.banner_url if page else '' }}">
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <label class="form-label">Teléfono de contacto</label>
+                    <input type="text" class="form-control" name="contacto_telefono" value="{{ page.contacto_telefono if page else '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email de contacto</label>
+                    <input type="email" class="form-control" name="contacto_email" value="{{ page.contacto_email if page else '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Dirección</label>
+                    <input type="text" class="form-control" name="contacto_direccion" value="{{ page.contacto_direccion if page else '' }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong><i class="fas fa-cog me-2"></i>Configuración</strong></div>
+            <div class="card-body">
+                {% if page %}
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="activo" id="activo" {% if page.activo %}checked{% endif %}>
+                    <label class="form-check-label" for="activo">Página activa</label>
+                </div>
+                {% endif %}
+                <div class="mb-3">
+                    <label class="form-label">Meta título (SEO)</label>
+                    <input type="text" class="form-control" name="meta_titulo" value="{{ page.meta_titulo if page else '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Meta descripción (SEO)</label>
+                    <textarea class="form-control" name="meta_descripcion" rows="2">{{ page.meta_descripcion if page else '' }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-encl btn-encl-primary">
+            <i class="fas fa-save me-2"></i>{{ 'Guardar cambios' if page else 'Crear página' }}
+        </button>
+        <a href="{{ url_for('admin_paginas_territoriales') }}" class="btn btn-encl btn-encl-secondary ms-2">Cancelar</a>
+    </div>
+</form>
+{% endblock %}

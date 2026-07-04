@@ -329,6 +329,20 @@ def seed_database():
             conf = Configuracion(clave=clave, valor=valor)
             db.session.add(conf)
 
+        # === Territorial Pages ===
+        if not TerritorialPage.query.first():
+            sergio = TerritorialPage(
+                slug='sergio-perez',
+                nombre='Sergio Pérez',
+                municipio='Almoloya del Río',
+                foto='/uploads/lider_sergio_perez.jpg',
+                mensaje='Trabajamos juntos por el desarrollo de nuestra gente a través de la educación.',
+                frase_institucional='Transformando personas, fortaleciendo comunidades',
+                acuerdo_colaboracion='Acuerdo de Colaboración Territorial - Almoloya del Río',
+                activo=True
+            )
+            db.session.add(sergio)
+
         db.session.commit()
         print("Database seeded successfully!")
 

@@ -344,3 +344,44 @@ class SolicitudBeca(db.Model):
     alumno = db.relationship('User', foreign_keys=[alumno_id], backref='solicitudes_becas')
     curso = db.relationship('Curso', backref='solicitudes_becas')
     resolvedor = db.relationship('User', foreign_keys=[resuelto_por], backref='resoluciones_becas')
+
+class TerritorialPage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(200), unique=True, nullable=False)
+    activo = db.Column(db.Boolean, default=True)
+
+    # Líder
+    nombre = db.Column(db.String(300), nullable=False)
+    municipio = db.Column(db.String(200), nullable=False)
+    foto = db.Column(db.String(500))
+    mensaje = db.Column(db.Text)
+    fondo = db.Column(db.String(500))
+
+    # Marca
+    logo = db.Column(db.String(500))
+    emblema = db.Column(db.String(500))
+    frase_institucional = db.Column(db.Text)
+    acuerdo_colaboracion = db.Column(db.Text)
+
+    # QR
+    codigo_qr = db.Column(db.String(500))
+    mensaje_qr = db.Column(db.Text)
+
+    # Colores
+    color_primario = db.Column(db.String(20), default='#021a48')
+    color_secundario = db.Column(db.String(20), default='#f4a807')
+    color_fondo = db.Column(db.String(20), default='#ffffff')
+
+    # Banner
+    banner_url = db.Column(db.String(500))
+
+    # Contacto
+    contacto_telefono = db.Column(db.String(50))
+    contacto_email = db.Column(db.String(200))
+    contacto_direccion = db.Column(db.Text)
+
+    # SEO
+    meta_titulo = db.Column(db.String(300))
+    meta_descripcion = db.Column(db.Text)
+
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
