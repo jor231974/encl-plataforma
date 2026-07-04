@@ -7,210 +7,101 @@
     <meta name="description" content="{{ page.meta_descripcion or '' }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/territorial.css') }}" rel="stylesheet">
     <style>
-        :root {
-            --tp-primary: {{ page.color_primario }};
-            --tp-secondary: {{ page.color_secundario }};
-            --tp-bg: {{ page.color_fondo }};
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            background: url('{{ page.foto or "/uploads/sergio perez.jpeg" }}') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 2rem;
+        }
+        .tp-access-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+        }
+        .tp-access-card h3 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: {{ page.color_primario or '#021a48' }};
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .tp-input {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            width: 100%;
+            transition: border-color 0.3s;
+        }
+        .tp-input:focus {
+            border-color: {{ page.color_secundario or '#f4a807' }};
+            box-shadow: 0 0 0 3px rgba(244,168,7,0.15);
+            outline: none;
+        }
+        .tp-btn-primary {
+            width: 100%;
+            background: {{ page.color_primario or '#021a48' }} !important;
+            color: #fff !important;
+            border: none !important;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .tp-btn-primary:hover {
+            background: #0a2a6a !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(2,26,72,0.3);
+        }
+        .tp-access-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+        .tp-access-links a {
+            color: {{ page.color_primario or '#021a48' }};
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .tp-access-links a:hover { color: {{ page.color_secundario or '#f4a807' }}; }
+        @media (max-width: 768px) {
+            body { justify-content: center; padding: 1rem; }
+            .tp-access-card { max-width: 100%; padding: 1.5rem; }
         }
     </style>
 </head>
 <body>
-    <!-- HEADER -->
-    <header class="tp-header">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-3 text-center text-md-start">
-                    <img src="{{ page.logo or '/uploads/logo_oficial.jpeg' }}" alt="ENCL" class="tp-logo">
-                </div>
-                <div class="col-md-6 text-center">
-                    <p class="tp-frase">{{ page.frase_institucional or 'Transformando personas, fortaleciendo comunidades' }}</p>
-                </div>
-                <div class="col-md-3 text-center text-md-end">
-                    {% if page.emblema %}
-                    <img src="{{ page.emblema }}" alt="Emblema" class="tp-emblema">
-                    {% endif %}
-                </div>
+    <div class="tp-access-card">
+        <h3><i class="fas fa-sign-in-alt me-2"></i>Iniciar sesión</h3>
+        <form action="{{ url_for('public_login') }}" method="POST">
+            <div class="mb-3">
+                <label class="form-label" style="font-weight:600;font-size:0.9rem;">Usuario o correo</label>
+                <input type="text" class="tp-input" name="username" placeholder="Ingresa tu usuario o correo" required>
             </div>
+            <div class="mb-3">
+                <label class="form-label" style="font-weight:600;font-size:0.9rem;">Contraseña</label>
+                <input type="password" class="tp-input" name="password" placeholder="Ingresa tu contraseña" required>
+            </div>
+            <button type="submit" class="tp-btn-primary"><i class="fas fa-arrow-right me-2"></i>Iniciar sesión</button>
+        </form>
+        <div class="tp-access-links">
+            <a href="{{ url_for('public_registro') }}"><i class="fas fa-user-plus me-1"></i>Registrarme</a>
+            <a href="{{ url_for('public_login') }}"><i class="fas fa-key me-1"></i>Recuperar contraseña</a>
         </div>
-    </header>
-
-    <!-- HERO - LÍDER TERRITORIAL -->
-    <section class="tp-hero" style="background-image: url('{{ page.fondo or '' }}');">
-        <div class="tp-hero-overlay"></div>
-        <div class="container tp-hero-content">
-            <div class="row g-4 align-items-center">
-                <div class="col-lg-6">
-                    <div class="tp-leader-img-wrapper">
-                        <img src="{{ page.foto or '/static/img/default-user.png' }}" alt="{{ page.nombre }}" class="tp-leader-img">
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <h1 class="tp-leader-name">{{ page.nombre }}</h1>
-                    <p class="tp-leader-municipio"><i class="fas fa-map-marker-alt me-2"></i>{{ page.municipio }}</p>
-                    <div class="tp-leader-message">
-                        <p>"{{ page.mensaje or 'Trabajamos juntos por el desarrollo de nuestra gente a través de la educación.' }}"</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- PANEL DE ACCESO + CÓDIGO -->
-    <section class="tp-access-section">
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-lg-7">
-                    <div class="tp-access-card">
-                        <h3><i class="fas fa-sign-in-alt me-2"></i>Iniciar sesión</h3>
-                        <form action="{{ url_for('public_login') }}" method="POST">
-                            <div class="mb-3">
-                                <label class="form-label">Usuario o correo</label>
-                                <input type="text" class="form-control tp-input" name="username" placeholder="Ingresa tu usuario o correo" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Contraseña</label>
-                                <input type="password" class="form-control tp-input" name="password" placeholder="Ingresa tu contraseña" required>
-                            </div>
-                            <button type="submit" class="btn tp-btn-primary w-100"><i class="fas fa-arrow-right me-2"></i>Iniciar sesión</button>
-                        </form>
-                        <div class="tp-access-links">
-                            <a href="{{ url_for('public_registro') }}"><i class="fas fa-user-plus me-1"></i>Registrarme</a>
-                            <a href="{{ url_for('public_login') }}"><i class="fas fa-key me-1"></i>Recuperar contraseña</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-5">
-                    <div class="tp-code-card">
-                        <h3><i class="fas fa-qrcode me-2"></i>Acceso por código</h3>
-                        <p class="tp-code-desc">Ingresa el código proporcionado por tu líder territorial.</p>
-                        <div class="mb-3">
-                            <input type="text" class="form-control tp-input" placeholder="Ingresa tu código" disabled>
-                        </div>
-                        <button class="btn tp-btn-secondary w-100" disabled><i class="fas fa-check-circle me-2"></i>Acceder</button>
-                        <small class="d-block text-center mt-2 text-muted">Próximamente disponible</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ACUERDO DE COLABORACIÓN -->
-    <section class="tp-agreement-section">
-        <div class="container text-center">
-            <div class="tp-agreement-badge">
-                <i class="fas fa-handshake me-2"></i>
-                {{ page.acuerdo_colaboracion or 'Acuerdo de Colaboración Territorial' }}
-            </div>
-        </div>
-    </section>
-
-    <!-- BENEFICIOS -->
-    <section class="tp-benefits-section">
-        <div class="container">
-            <h2 class="tp-section-title">Beneficios</h2>
-            <div class="row g-4">
-                <div class="col-md-3 col-6">
-                    <div class="tp-benefit-card">
-                        <div class="tp-benefit-icon"><i class="fas fa-graduation-cap"></i></div>
-                        <h4>Educación de calidad</h4>
-                        <p>Programas diseñados por expertos</p>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="tp-benefit-card">
-                        <div class="tp-benefit-icon"><i class="fas fa-laptop"></i></div>
-                        <h4>Cursos 100% en línea</h4>
-                        <p>Estudia desde cualquier lugar</p>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="tp-benefit-card">
-                        <div class="tp-benefit-icon"><i class="fas fa-certificate"></i></div>
-                        <h4>Certificación al finalizar</h4>
-                        <p>Respaldada por ENCL</p>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="tp-benefit-card">
-                        <div class="tp-benefit-icon"><i class="fas fa-users"></i></div>
-                        <h4>Transformamos comunidades</h4>
-                        <p>Impacto social real</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- QR + BENEFICIOS ADICIONALES -->
-    <section class="tp-extras-section">
-        <div class="container">
-            <div class="row g-4 align-items-center">
-                <div class="col-lg-5 text-center">
-                    <div class="tp-qr-area">
-                        {% if page.codigo_qr %}
-                        <img src="{{ page.codigo_qr }}" alt="QR" class="tp-qr-img">
-                        {% else %}
-                        <div class="tp-qr-placeholder">
-                            <i class="fas fa-qrcode" style="font-size: 4rem; color: var(--tp-primary);"></i>
-                            <p>QR del líder</p>
-                        </div>
-                        {% endif %}
-                        <p class="tp-qr-message">{{ page.mensaje_qr or 'Escanea para acceder' }}</p>
-                        <button class="btn tp-btn-primary"><i class="fas fa-camera me-2"></i>Escanear QR</button>
-                    </div>
-                </div>
-                <div class="col-lg-7">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="tp-extra-card">
-                                <i class="fas fa-shield-alt"></i>
-                                <h5>Pago seguro</h5>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="tp-extra-card">
-                                <i class="fas fa-bolt"></i>
-                                <h5>Acceso inmediato</h5>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="tp-extra-card">
-                                <i class="fas fa-book-open"></i>
-                                <h5>Cursos disponibles</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- PIE DE PÁGINA -->
-    <footer class="tp-footer">
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <h5><i class="fas fa-handshake me-2"></i>Acuerdo de colaboración</h5>
-                    <p>{{ page.acuerdo_colaboracion or 'Acuerdo de Colaboración Territorial' }}</p>
-                </div>
-                <div class="col-md-4">
-                    <h5><i class="fas fa-address-card me-2"></i>Contacto</h5>
-                    {% if page.contacto_telefono %}<p><i class="fas fa-phone me-2"></i>{{ page.contacto_telefono }}</p>{% endif %}
-                    {% if page.contacto_email %}<p><i class="fas fa-envelope me-2"></i>{{ page.contacto_email }}</p>{% endif %}
-                    {% if page.contacto_direccion %}<p><i class="fas fa-map-pin me-2"></i>{{ page.contacto_direccion }}</p>{% endif %}
-                </div>
-                <div class="col-md-4">
-                    <h5><i class="fas fa-user-tie me-2"></i>Líder territorial</h5>
-                    <p><strong>{{ page.nombre }}</strong></p>
-                    <p><i class="fas fa-map-marker-alt me-2"></i>{{ page.municipio }}</p>
-                </div>
-            </div>
-            <div class="tp-footer-bottom">
-                <p>&copy; 2026 Escuela Nacional de Capacitación en Línea. Todos los derechos reservados.</p>
-            </div>
-        </div>
-    </footer>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
