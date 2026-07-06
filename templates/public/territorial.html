@@ -12,7 +12,8 @@
         body {
             min-height: 100vh;
             background: url('{{ page.foto or "/uploads/sergio perez.jpeg" }}') no-repeat center center fixed;
-            background-size: cover;
+            background-size: contain;
+            background-color: {{ page.color_primario or '#021a48' }};
             font-family: 'Segoe UI', system-ui, sans-serif;
             display: flex;
             align-items: center;
@@ -83,7 +84,8 @@
                 align-items: flex-end;
                 padding: 1rem;
                 background-size: contain;
-                background-position: top center;
+                background-position: center;
+                background-color: {{ page.color_primario or '#021a48' }};
             }
             .tp-access-card {
                 max-width: 100%;
@@ -95,7 +97,7 @@
             .tp-btn-primary { padding: 0.6rem 1rem; font-size: 0.9rem; }
         }
         @media (max-width: 480px) {
-            body { padding: 0.5rem; background-size: contain; }
+            body { padding: 0.5rem; background-size: contain; background-color: {{ page.color_primario or '#021a48' }}; }
             .tp-access-card { padding: 1rem; border-radius: 12px; }
             .tp-access-links { flex-direction: column; gap: 0.4rem; align-items: center; }
         }
