@@ -69,6 +69,27 @@
                         <input type="color" class="form-control form-control-color" name="color_fondo" value="{{ page.color_fondo if page else '#ffffff' }}">
                     </div>
                 </div>
+                <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                        <label class="form-label">Posición de imagen</label>
+                        <select class="form-select" name="bg_position">
+                            <option value="center" {% if page and page.bg_position == 'center' %}selected{% endif %}>Centrada</option>
+                            <option value="top" {% if page and page.bg_position == 'top' %}selected{% endif %}>Arriba</option>
+                            <option value="bottom" {% if page and page.bg_position == 'bottom' %}selected{% endif %}>Abajo</option>
+                            <option value="left" {% if page and page.bg_position == 'left' %}selected{% endif %}>Izquierda</option>
+                            <option value="right" {% if page and page.bg_position == 'right' %}selected{% endif %}>Derecha</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Ajuste de imagen</label>
+                        <select class="form-select" name="bg_size">
+                            <option value="contain" {% if page and page.bg_size == 'contain' %}selected{% endif %}>Completa (contener)</option>
+                            <option value="cover" {% if page and page.bg_size == 'cover' %}selected{% endif %}>Cubrir pantalla</option>
+                            <option value="auto 100%" {% if page and page.bg_size == 'auto 100%' %}selected{% endif %}>Llenar alto</option>
+                            <option value="100% auto" {% if page and page.bg_size == '100% auto' %}selected{% endif %}>Llenar ancho</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

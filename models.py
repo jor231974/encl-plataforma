@@ -371,6 +371,8 @@ class TerritorialPage(db.Model):
     color_primario = db.Column(db.String(20), default='#021a48')
     color_secundario = db.Column(db.String(20), default='#f4a807')
     color_fondo = db.Column(db.String(20), default='#ffffff')
+    bg_position = db.Column(db.String(50), default='center')
+    bg_size = db.Column(db.String(50), default='contain')
 
     # Banner
     banner_url = db.Column(db.String(500))

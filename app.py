@@ -1500,7 +1500,7 @@ def admin_crear_pagina_territorial():
             setattr(page, field, request.form.get(field, ''))
         for field in ['mensaje', 'frase_institucional', 'acuerdo_colaboracion', 'mensaje_qr']:
             setattr(page, field, request.form.get(field, ''))
-        for field in ['color_primario', 'color_secundario', 'color_fondo']:
+        for field in ['color_primario', 'color_secundario', 'color_fondo', 'bg_position', 'bg_size']:
             v = request.form.get(field, '')
             if v: setattr(page, field, v)
         db.session.add(page)
@@ -1529,7 +1529,7 @@ def admin_editar_pagina_territorial(page_id):
             setattr(page, field, request.form.get(field, ''))
         for field in ['mensaje', 'frase_institucional', 'acuerdo_colaboracion', 'mensaje_qr']:
             setattr(page, field, request.form.get(field, ''))
-        for field in ['color_primario', 'color_secundario', 'color_fondo']:
+        for field in ['color_primario', 'color_secundario', 'color_fondo', 'bg_position', 'bg_size']:
             v = request.form.get(field, '')
             if v: setattr(page, field, v)
         page.activo = 'activo' in request.form
