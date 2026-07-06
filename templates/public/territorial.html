@@ -78,8 +78,26 @@
         }
         .tp-access-links a:hover { color: {{ page.color_secundario or '#f4a807' }}; }
         @media (max-width: 768px) {
-            body { justify-content: center; padding: 1rem; }
-            .tp-access-card { max-width: 100%; padding: 1.5rem; }
+            body {
+                justify-content: center;
+                align-items: flex-end;
+                padding: 1rem;
+                background-size: contain;
+                background-position: top center;
+            }
+            .tp-access-card {
+                max-width: 100%;
+                padding: 1.2rem;
+                margin-bottom: 1rem;
+            }
+            .tp-access-card h3 { font-size: 1.1rem; }
+            .tp-input { padding: 0.6rem 0.8rem; font-size: 0.85rem; }
+            .tp-btn-primary { padding: 0.6rem 1rem; font-size: 0.9rem; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 0.5rem; background-size: contain; }
+            .tp-access-card { padding: 1rem; border-radius: 12px; }
+            .tp-access-links { flex-direction: column; gap: 0.4rem; align-items: center; }
         }
     </style>
 </head>
