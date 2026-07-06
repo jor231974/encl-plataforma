@@ -38,6 +38,7 @@
                         <a href="{{ url_for('admin_toggle_pagina_territorial', page_id=p.id) }}" class="btn btn-outline-{{ 'success' if not p.activo else 'secondary' }}" title="{{ 'Activar' if not p.activo else 'Desactivar' }}">
                             <i class="fas fa-{{ 'check' if not p.activo else 'pause' }}"></i>
                         </a>
+                        <a href="{{ url_for('admin_duplicar_pagina_territorial', page_id=p.id) }}" class="btn btn-outline-info" title="Duplicar"><i class="fas fa-copy"></i></a>
                         <a href="{{ url_for('admin_eliminar_pagina_territorial', page_id=p.id) }}" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar esta página?')" title="Eliminar"><i class="fas fa-trash"></i></a>
                     </div>
                 </td>

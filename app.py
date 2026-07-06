@@ -1558,6 +1558,31 @@ def admin_eliminar_pagina_territorial(page_id):
     flash('Página eliminada', 'success')
     return redirect(url_for('admin_paginas_territoriales'))
 
+@app.route('/admin/paginas-territoriales/duplicar/<int:page_id>')
+@login_required
+@superadmin_required
+def admin_duplicar_pagina_territorial(page_id):
+    original = TerritorialPage.query.get_or_404(page_id)
+    base_slug = original.slug + '-copia'
+    slug = base_slug
+    cont = 1
+    while TerritorialPage.query.filter_by(slug=slug).first():
+        cont += 1
+        slug = f'{base_slug}{cont}'
+    copia = TerritorialPage(slug=slug, nombre=original.nombre + ' (copia)', municipio=original.municipio,
+        foto=original.foto, fondo=original.fondo, logo=original.logo, emblema=original.emblema,
+        frase_institucional=original.frase_institucional, acuerdo_colaboracion=original.acuerdo_colaboracion,
+        codigo_qr=original.codigo_qr, mensaje_qr=original.mensaje_qr, banner_url=original.banner_url,
+        color_primario=original.color_primario, color_secundario=original.color_secundario,
+        color_fondo=original.color_fondo, bg_position=original.bg_position, bg_size=original.bg_size,
+        contacto_telefono=original.contacto_telefono, contacto_email=original.contacto_email,
+        contacto_direccion=original.contacto_direccion, meta_titulo=original.meta_titulo,
+        meta_descripcion=original.meta_descripcion, activo=True)
+    db.session.add(copia)
+    db.session.commit()
+    flash(f'Página duplicada como "{copia.nombre}" — edítala para personalizar', 'success')
+    return redirect(url_for('admin_editar_pagina_territorial', page_id=copia.id))
+
 # ==================== ERROR HANDLERS ====================
 
 @app.errorhandler(404)
