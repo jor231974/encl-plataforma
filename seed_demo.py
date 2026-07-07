@@ -113,29 +113,38 @@ def seed_demo():
         # === ALUMNOS DEMO (agregar si no existen) ===
         existing_demos = User.query.filter(User.username.like('demo.alumno%')).count()
         if existing_demos == 0:
-            for username, email, nombre, apellidos, telefono, progreso in [
-                ('demo.alumno1', 'demo1@encl.edu.mx', 'Carlos', 'Martínez López', '55530001', 45.0),
-                ('demo.alumno2', 'demo2@encl.edu.mx', 'Ana', 'García Hernández', '55530002', 78.5),
-                ('demo.alumno3', 'demo3@encl.edu.mx', 'Luis', 'Rodríguez Pérez', '55530003', 92.0),
-                ('demo.alumno4', 'demo4@encl.edu.mx', 'Sofía', 'Ramírez Cruz', '55530004', 30.0),
-                ('demo.alumno5', 'demo5@encl.edu.mx', 'Miguel', 'Torres Díaz', '55530005', 100.0),
+            for username, email, nombre, apellidos, telefono in [
+                ('demo.alumno1', 'demo1@encl.edu.mx', 'Carlos', 'Martínez López', '55530001'),
+                ('demo.alumno2', 'demo2@encl.edu.mx', 'Ana', 'García Hernández', '55530002'),
+                ('demo.alumno3', 'demo3@encl.edu.mx', 'Luis', 'Rodríguez Pérez', '55530003'),
+                ('demo.alumno4', 'demo4@encl.edu.mx', 'Sofía', 'Ramírez Cruz', '55530004'),
+                ('demo.alumno5', 'demo5@encl.edu.mx', 'Miguel', 'Torres Díaz', '55530005'),
             ]:
                 alumno = User(username=username, email=email, password_hash=generate_password_hash('demo123'),
                     role='alumno', nombre=nombre, apellidos=apellidos, telefono=telefono,
-                    nivel='Principiante', progreso_general=progreso, activo=True)
+                    nivel='Principiante', progreso_general=100.0, activo=True)
                 db.session.add(alumno); db.session.flush()
 
-                db.session.add(Inscripcion(alumno_id=alumno.id, curso_id=curso.id, progreso=progreso, completado=progreso >= 100))
+                db.session.add(Inscripcion(alumno_id=alumno.id, curso_id=curso.id, progreso=100.0, completado=True))
 
-                for cl in Clase.query.filter_by(curso_id=curso.id).limit(3).all():
+                # Asistencia a todas las clases
+                for cl in Clase.query.filter_by(curso_id=curso.id).all():
                     db.session.add(Asistencia(clase_id=cl.id, alumno_id=alumno.id,
-                        presente=random.choice([True, True, False]),
+                        presente=True,
                         fecha=datetime.utcnow() - timedelta(days=random.randint(1, 14))))
 
-                if progreso >= 100:
-                    db.session.add(Certificado(folio=f'DEMO-ENCL-{alumno.id:04d}-{curso.id:04d}',
-                        alumno_id=alumno.id, curso_id=curso.id, instructor_id=instructor.id,
-                        codigo_qr=f'https://encl.edu.mx/validar/DEMO-ENCL-{alumno.id:04d}-{curso.id:04d}', valido=True))
+                # Entrega de tarea
+                tarea = Tarea.query.filter_by(curso_id=curso.id).first()
+                if tarea:
+                    db.session.add(EntregaTarea(tarea_id=tarea.id, alumno_id=alumno.id,
+                        comentario='Tarea entregada y completada.',
+                        calificacion=random.randint(8, 10),
+                        fecha_entrega=datetime.utcnow() - timedelta(days=1)))
+
+                # Certificado para todos
+                db.session.add(Certificado(folio=f'DEMO-ENCL-{alumno.id:04d}-{curso.id:04d}',
+                    alumno_id=alumno.id, curso_id=curso.id, instructor_id=instructor.id,
+                    codigo_qr=f'https://encl.edu.mx/validar/DEMO-ENCL-{alumno.id:04d}-{curso.id:04d}', valido=True))
 
             print(f'[DEMO] 5 alumnos demo creados con inscripciones, asistencias y progreso')
         else:
