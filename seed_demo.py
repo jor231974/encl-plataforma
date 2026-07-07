@@ -1,6 +1,5 @@
 """
-Contenido de demostración para presentación del proyecto.
-Identificado con tag [DEMO] para fácil reemplazo posterior.
+Carga contenido inicial de la plataforma: instructor, curso, alumnos y evaluaciones.
 Ejecutar: python3 seed_demo.py
 """
 from app import app, db
@@ -20,13 +19,13 @@ try:
     HAS_REPORTLAB = True
 except ImportError:
     HAS_REPORTLAB = False
-    print('[DEMO] reportlab no instalado, PDF básico')
+    print('reportlab no instalado, PDF básico')
 
 
 def _generar_pdf(pdf_path):
     if not HAS_REPORTLAB:
         with open(pdf_path, 'wb') as f:
-            f.write(b'%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj\n4 0 obj<</Length 44>>stream\nBT /F1 18 Tf 50 700 Td (Guia DEMO - ENCL) Tj ET\nendstream\nendobj\n5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\nxref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000266 00000 n \n0000000362 00000 n \ntrailer<</Size 6/Root 1 0 R>>\nstartxref\n419\n%%EOF')
+            f.write(b'%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj\n4 0 obj<</Length 44>>stream\nBT /F1 18 Tf 50 700 Td (Guia de Herramientas Digitales) Tj ET\nendstream\nendobj\n5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\nxref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000266 00000 n \n0000000362 00000 n \ntrailer<</Size 6/Root 1 0 R>>\nstartxref\n419\n%%EOF')
         return
 
     doc = SimpleDocTemplate(pdf_path, pagesize=letter,
@@ -55,17 +54,17 @@ def _generar_pdf(pdf_path):
     # Portada
     story.append(Spacer(1, 2.5 * inch))
     story.append(Paragraph('GUÍA DE HERRAMIENTAS DIGITALES', styles['CoverTitle']))
-    story.append(Paragraph('Curso de Demostración — ENCL', styles['CoverSub']))
+    story.append(Paragraph('Escuela Nacional de Capacitación en Línea', styles['CoverSub']))
     story.append(Spacer(1, 0.3 * inch))
     story.append(Paragraph(
         'Escuela Nacional de Capacitación en Línea<br/>'
         'Material didáctico de apoyo para el curso<br/>'
-        '<b>Herramientas Digitales e Informática [DEMO]</b>',
+        '<b>Herramientas Digitales e Informática</b>',
         styles['CoverSub']))
     story.append(Spacer(1, 0.5 * inch))
     story.append(Paragraph(
-        'Este documento contiene el resumen de los 5 módulos del curso<br/>'
-        'y un ejercicio de Verdadero / Falso al final.',
+        'Resumen de los 5 módulos del curso con contenido teórico<br/>'
+        'y un ejercicio de Verdadero / Falso para reforzar el aprendizaje.',
         ParagraphStyle('small', parent=styles['Normal'], fontSize=9,
                         textColor=HexColor('#999999'), alignment=TA_CENTER)))
     story.append(PageBreak())
@@ -164,21 +163,34 @@ def _generar_pdf(pdf_path):
     story.append(Spacer(1, 0.2 * inch))
     story.append(Paragraph(
         '<i>Nota: Las respuestas se muestran en la columna derecha para facilitar la revisión. '
-        'En un examen real, el alumno debe escribir su respuesta sin ver la solución.</i>',
+        'En una evaluación en línea, el alumno debe seleccionar su respuesta sin ver la solución.</i>',
         ParagraphStyle('nota', parent=styles['Normal'], fontSize=8,
                         textColor=HexColor('#999999'))))
 
     doc.build(story)
-    print('[DEMO] PDF generado con reportlab (%d páginas)' % (len(modulos) + 3))
+    print('PDF generado con reportlab (%d páginas)' % (len(modulos) + 3))
 
 
 def seed_demo():
     with app.app_context():
         db.create_all()
-        print("=== INICIANDO CARGA DE CONTENIDO DEMO [DEMO] ===")
+        print("=== CARGANDO CONTENIDO INICIAL ===")
 
         upload_dir = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
         os.makedirs(upload_dir, exist_ok=True)
+
+        # Limpiar   de registros existentes
+        for c in Curso.query.filter(Curso.titulo.like('% %')).all():
+            c.titulo = c.titulo.replace('  ', '')
+        for c in Clase.query.filter(Clase.titulo.like('% %')).all():
+            c.titulo = c.titulo.replace('  ', '')
+        for m in MaterialClase.query.filter(MaterialClase.titulo.like('% %')).all():
+            m.titulo = m.titulo.replace('  ', '')
+        for t in Tarea.query.filter(Tarea.titulo.like('% %')).all():
+            t.titulo = t.titulo.replace('  ', '')
+        for e in Examen.query.filter(Examen.titulo.like('% %')).all():
+            e.titulo = e.titulo.replace('  ', '')
+        db.session.commit()
 
         cat = Categoria.query.filter_by(nombre='Tecnología').first()
         if not cat:
@@ -196,9 +208,9 @@ def seed_demo():
                 foto='instructor-jorge.jpg', telefono='55559999', activo=True
             )
             db.session.add(instructor); db.session.flush()
-            print('[DEMO] Instructor creado: Jorge Flores')
+            print('Instructor creado: Jorge Flores')
         else:
-            print('[DEMO] Instructor ya existe')
+            print('Instructor ya existe')
 
         # Foto del instructor
         foto_path = os.path.join(upload_dir, 'instructor-jorge.jpg')
@@ -216,9 +228,9 @@ def seed_demo():
                 draw.text(((400 - tw) // 2, (400 - th) // 2 - 10), 'JF',
                           fill='white', font=font)
                 img.save(foto_path, 'JPEG', quality=85)
-                print('[DEMO] Foto instructor creada')
+                print('Foto instructor creada')
             except ImportError:
-                print('[DEMO] PIL no disponible, sin foto')
+                print('PIL no disponible, sin foto')
 
         # === CREAR/TOMAR CURSO DEMO ===
         create_all = False
@@ -226,35 +238,35 @@ def seed_demo():
         if not curso:
             create_all = True
             curso = Curso(
-                titulo='Herramientas Digitales e Informática [DEMO]',
+                titulo='Herramientas Digitales e Informática',
                 slug='herramientas-digitales-e-informatica',
-                descripcion_corta='Curso de demostración sobre herramientas digitales, informática básica y transformación tecnológica.',
-                descripcion_larga='Curso demo de la presentación. Cubre fundamentos de herramientas digitales, informática y transformación tecnológica. Contiene materiales, ejercicios, examen y certificación.',
+                descripcion_corta='Aprende herramientas digitales, informática básica y transformación tecnológica para potenciar tu desarrollo profesional.',
+                descripcion_larga='Curso completo que cubre los fundamentos de herramientas digitales, informática y transformación tecnológica. Incluye materiales de estudio, ejercicios prácticos, examen de certificación y acompañamiento de instructor especializado.',
                 categoria_id=cat.id, instructor_id=instructor.id,
                 nivel='Principiante', duracion_horas=40, precio=0,
                 modalidad='En línea', activo=True, tiene_certificado=True,
                 temario={'modulos': ['Módulo 1: Introducción a la Informática', 'Módulo 2: Herramientas Digitales Básicas', 'Módulo 3: Internet y Comunicación Digital', 'Módulo 4: Seguridad Digital', 'Módulo 5: Transformación Tecnológica']}
             )
             db.session.add(curso); db.session.flush()
-            print('[DEMO] Curso creado: Herramientas Digitales e Informática [DEMO]')
+            print('Curso creado: Herramientas Digitales e Informática')
 
         # === CLASES (solo si curso nuevo) ===
         if create_all:
             for titulo, desc, tipo, duracion in [
-                ('Introducción a la Informática [DEMO]', 'Conceptos básicos de informática, hardware y software.', 'grabada', 25),
-                ('Sistemas Operativos [DEMO]', 'Conoce los principales sistemas operativos y su funcionamiento.', 'grabada', 30),
-                ('Suite de Oficina [DEMO]', 'Uso de procesador de texto, hoja de cálculo y presentaciones.', 'grabada', 35),
-                ('Navegación en Internet [DEMO]', 'Uso seguro y eficiente de navegadores web.', 'grabada', 20),
-                ('Correo Electrónico [DEMO]', 'Gestión profesional del correo electrónico.', 'grabada', 25),
-                ('Herramientas de Colaboración [DEMO]', 'Plataformas de trabajo colaborativo en la nube.', 'vivo', 40),
-                ('Seguridad Digital [DEMO]', 'Buenas prácticas de seguridad informática.', 'grabada', 30),
-                ('Transformación Digital [DEMO]', 'El impacto de la tecnología en la sociedad y el trabajo.', 'vivo', 35),
+                ('Introducción a la Informática', 'Conceptos básicos de informática, hardware y software.', 'grabada', 25),
+                ('Sistemas Operativos', 'Conoce los principales sistemas operativos y su funcionamiento.', 'grabada', 30),
+                ('Suite de Oficina', 'Uso de procesador de texto, hoja de cálculo y presentaciones.', 'grabada', 35),
+                ('Navegación en Internet', 'Uso seguro y eficiente de navegadores web.', 'grabada', 20),
+                ('Correo Electrónico', 'Gestión profesional del correo electrónico.', 'grabada', 25),
+                ('Herramientas de Colaboración', 'Plataformas de trabajo colaborativo en la nube.', 'vivo', 40),
+                ('Seguridad Digital', 'Buenas prácticas de seguridad informática.', 'grabada', 30),
+                ('Transformación Digital', 'El impacto de la tecnología en la sociedad y el trabajo.', 'vivo', 35),
             ]:
                 db.session.add(Clase(curso_id=curso.id, titulo=titulo, descripcion=desc, tipo=tipo,
                     url_video='https://www.youtube.com/embed/dQw4w9WgXcQ' if tipo == 'grabada' else '',
                     duracion_minutos=duracion, activo=True))
             db.session.flush()
-            print('[DEMO] 8 clases creadas')
+            print('8 clases creadas')
 
         # === MATERIAL PDF ===
         pdf_path = os.path.join(upload_dir, 'demo_guia_herramientas_digitales.pdf')
@@ -264,23 +276,23 @@ def seed_demo():
         if not MaterialClase.query.filter(MaterialClase.clase_id == Clase.id).join(Clase).filter(Clase.curso_id == curso.id).first():
             primera = Clase.query.filter_by(curso_id=curso.id).first()
             if primera:
-                db.session.add(MaterialClase(clase_id=primera.id, titulo='Guía de Herramientas Digitales [DEMO]',
+                db.session.add(MaterialClase(clase_id=primera.id, titulo='Guía de Herramientas Digitales',
                     tipo='PDF', archivo_url='/uploads/demo_guia_herramientas_digitales.pdf'))
-                print('[DEMO] Material PDF registro creado')
+                print('Material PDF registro creado')
 
         # === TAREA (agregar si no existe) ===
         if not Tarea.query.filter_by(curso_id=curso.id).first():
             db.session.add(Tarea(curso_id=curso.id,
-                titulo='Ejercicio práctico: Diagnóstico digital [DEMO]',
+                titulo='Ejercicio práctico: Diagnóstico digital',
                 descripcion='Realiza un diagnóstico de tus habilidades digitales actuales y elabora un plan de mejora.',
                 fecha_entrega=datetime.utcnow() + timedelta(days=30), activo=True))
-            print('[DEMO] Tarea creada')
+            print('Tarea creada')
 
         # === EXAMEN MIXTO (opción múltiple + verdadero/falso) ===
-        examen = Examen.query.filter_by(curso_id=curso.id, titulo='Evaluación - Herramientas Digitales [DEMO]').first()
+        examen = Examen.query.filter_by(curso_id=curso.id, titulo='Evaluación - Herramientas Digitales').first()
         if not examen:
-            examen = Examen(curso_id=curso.id, titulo='Evaluación - Herramientas Digitales [DEMO]',
-                descripcion='Examen de demostración: opción múltiple y verdadero/falso.',
+            examen = Examen(curso_id=curso.id, titulo='Evaluación - Herramientas Digitales',
+                descripcion='Examen de opción múltiple y verdadero/falso para evaluar los conocimientos adquiridos en el curso.',
                 tiempo_limite_minutos=30, calificacion_minima=6.0, activo=True)
             db.session.add(examen); db.session.flush()
 
@@ -298,12 +310,12 @@ def seed_demo():
             ]
             for texto, opciones, correcta in preguntas:
                 db.session.add(Pregunta(examen_id=examen.id, texto=texto, opciones=opciones, respuesta_correcta=correcta))
-            print(f'[DEMO] Examen creado con {len(preguntas)} preguntas')
+            print(f'Examen creado con {len(preguntas)} preguntas')
 
         # === EJERCICIO DEDICADO DE FALSO Y VERDADERO ===
-        ejercicio_fv = Examen.query.filter_by(curso_id=curso.id, titulo='Ejercicio de Falso y Verdadero [DEMO]').first()
+        ejercicio_fv = Examen.query.filter_by(curso_id=curso.id, titulo='Ejercicio de Falso y Verdadero').first()
         if not ejercicio_fv:
-            ejercicio_fv = Examen(curso_id=curso.id, titulo='Ejercicio de Falso y Verdadero [DEMO]',
+            ejercicio_fv = Examen(curso_id=curso.id, titulo='Ejercicio de Falso y Verdadero',
                 descripcion='10 afirmaciones para evaluar conocimientos básicos de informática y herramientas digitales.',
                 tiempo_limite_minutos=10, calificacion_minima=6.0, activo=True)
             db.session.add(ejercicio_fv); db.session.flush()
@@ -322,7 +334,7 @@ def seed_demo():
             ]
             for texto, opciones, correcta in fv_preguntas:
                 db.session.add(Pregunta(examen_id=ejercicio_fv.id, texto=texto, opciones=opciones, respuesta_correcta=correcta))
-            print(f'[DEMO] Ejercicio Falso/Verdadero creado con {len(fv_preguntas)} preguntas')
+            print(f'Ejercicio Falso/Verdadero creado con {len(fv_preguntas)} preguntas')
 
         # === ALUMNOS DEMO (agregar si no existen) ===
         existing_demos = User.query.filter(User.username.like('demo.alumno%')).count()
@@ -354,17 +366,17 @@ def seed_demo():
                         fecha_entrega=datetime.utcnow() - timedelta(days=1)))
 
                 from datetime import datetime as _dt
-                folio = f'DEMO-{int(_dt.utcnow().timestamp())}-{alumno.id:04d}'
+                folio = f'ENCL-{int(_dt.utcnow().timestamp())}-{alumno.id:04d}'
                 db.session.add(Certificado(folio=folio,
                     alumno_id=alumno.id, curso_id=curso.id, instructor_id=instructor.id,
-                    codigo_qr=f'https://encl.edu.mx/validar/{folio}', valido=True))
+                    codigo_qr=f'https://jor231974.pythonanywhere.com/validar/{folio}', valido=True))
 
-            print(f'[DEMO] 5 alumnos demo creados con inscripciones, asistencias y progreso')
+            print(f'5 alumnos creados con inscripciones, asistencias y progreso')
         else:
-            print(f'[DEMO] Alumnos demo ya existen ({existing_demos})')
+            print(f'Alumnos demo ya existen ({existing_demos})')
 
         db.session.commit()
-        print("=== CONTENIDO DEMO CARGADO EXITOSAMENTE ===")
+        print("=== CONTENIDO CARGADO EXITOSAMENTE ===")
 
 if __name__ == '__main__':
     seed_demo()
