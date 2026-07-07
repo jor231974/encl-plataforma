@@ -179,17 +179,20 @@ def seed_demo():
         upload_dir = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
         os.makedirs(upload_dir, exist_ok=True)
 
-        # Limpiar   de registros existentes
+        # Limpiar tag   de registros existentes y actualizar descripciones viejas
         for c in Curso.query.filter(Curso.titulo.like('% %')).all():
-            c.titulo = c.titulo.replace('  ', '')
+            c.titulo = c.titulo.replace('  ', '').strip()
+            if 'demostración' in c.descripcion_corta or 'demostración' in c.descripcion_larga:
+                c.descripcion_corta = 'Aprende herramientas digitales, informática básica y transformación tecnológica para potenciar tu desarrollo profesional.'
+                c.descripcion_larga = 'Curso completo que cubre los fundamentos de herramientas digitales, informática y transformación tecnológica. Incluye materiales de estudio, ejercicios prácticos, examen de certificación y acompañamiento de instructor especializado.'
         for c in Clase.query.filter(Clase.titulo.like('% %')).all():
-            c.titulo = c.titulo.replace('  ', '')
+            c.titulo = c.titulo.replace('  ', '').strip()
         for m in MaterialClase.query.filter(MaterialClase.titulo.like('% %')).all():
-            m.titulo = m.titulo.replace('  ', '')
+            m.titulo = m.titulo.replace('  ', '').strip()
         for t in Tarea.query.filter(Tarea.titulo.like('% %')).all():
-            t.titulo = t.titulo.replace('  ', '')
+            t.titulo = t.titulo.replace('  ', '').strip()
         for e in Examen.query.filter(Examen.titulo.like('% %')).all():
-            e.titulo = e.titulo.replace('  ', '')
+            e.titulo = e.titulo.replace('  ', '').strip()
         db.session.commit()
 
         cat = Categoria.query.filter_by(nombre='Tecnología').first()
