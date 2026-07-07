@@ -1,0 +1,75 @@
+=== GUÍA DE REVISIÓN - PLATAFORMA ENCL ===
+=== Escuela Nacional de Capacitación en Línea ===
+
+Sitio web: https://jor231974.pythonanywhere.com
+
+--- ACCESOS DE PRUEBA ---
+
+1. Super Administrador:
+   Usuario: superadmin
+   Contraseña: superadmin123
+   Acceso total a la plataforma (admin, usuarios, cursos, etc.)
+
+2. Administrador:
+   Usuario: admin
+   Contraseña: admin123
+   Gestión de cursos, usuarios y contenido.
+
+3. Instructor (Jorge Flores):
+   Usuario: jorge.flores
+   Contraseña: instructor123
+   Panel de instructor, gestión de clases, calificaciones.
+
+4. Alumnos demo (todos con progreso 100%):
+   demo.alumno1 / demo123  — Carlos Martínez
+   demo.alumno2 / demo123  — Ana García
+   demo.alumno3 / demo123  — Luis Rodríguez
+   demo.alumno4 / demo123  — Sofía Ramírez
+   demo.alumno5 / demo123  — Miguel Torres
+
+--- QUÉ REVISAR ---
+
+A) PÁGINA PRINCIPAL
+   - Hero con imagen de encabezado
+   - Carrusel de banners promocionales
+   - Categorías de cursos
+   - Estadísticas (cursos, alumnos, instructores)
+   - Cursos destacados (aparece el curso demo)
+   - Sección "Nuestros instructores" (Jorge Flores con foto)
+   - Patrocinadores
+
+B) CURSO DEMO
+   - https://jor231974.pythonanywhere.com/curso/herramientas-digitales-e-informatica
+   - Ver detalle del curso (descripción, temario, módulos)
+   - Iniciar sesión como instructor (jorge.flores) para ver el panel
+   - Iniciar sesión como alumno (demo.alumno1) para ver clases, descargar PDF,
+     realizar el examen y el ejercicio de Falso y Verdadero
+
+C) MATERIAL PDF
+   - https://jor231974.pythonanywhere.com/uploads/demo_guia_herramientas_digitales.pdf
+   - Guía de estudio con 5 módulos y ejercicio de Verdadero/Falso
+
+D) EJERCICIO DE FALSO Y VERDADERO
+   - Dentro del curso demo, hay un examen dedicado solo a preguntas de
+     Verdadero/Falso (10 afirmaciones)
+
+E) PÁGINAS TERRITORIALES
+   - https://jor231974.pythonanywhere.com/territorial/sergio-perez
+   - https://jor231974.pythonanywhere.com/territorial/julieta
+   - Landing page con imagen de fondo y formulario de inicio de sesión
+
+F) PANEL ADMINISTRATIVO
+   - Iniciar sesión como superadmin
+   - /admin — Dashboard
+   - /admin/usuarios — Gestión de usuarios
+   - /admin/cursos — CRUD de cursos
+   - /admin/paginas-territoriales — Páginas territoriales
+   - /admin/respaldar — Copia de seguridad
+
+--- NOTAS ---
+- Todo el contenido demo está etiquetado con [DEMO] para fácil identificación
+  y reemplazo posterior con contenido oficial.
+- El curso es gratuito (precio $0).
+- Los alumnos demo ya tienen certificados generados, asistencia al 100%,
+  tarea entregada y examen aprobado.
+- La plataforma está en fase de demostración.

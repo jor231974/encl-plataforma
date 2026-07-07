@@ -179,7 +179,11 @@
             <div class="col-lg-3 col-md-6 animate-on-scroll">
                 <div class="instructor-card">
                     <div class="instructor-avatar">
+                        {% if instr.foto and instr.foto != 'default-user.png' %}
+                        <img src="/uploads/{{ instr.foto }}" alt="{{ instr.nombre }} {{ instr.apellidos }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        {% else %}
                         <i class="fas fa-user-tie"></i>
+                        {% endif %}
                     </div>
                     <h5>{{ instr.nombre }} {{ instr.apellidos }}</h5>
                     <p><i class="fas fa-chalkboard-teacher me-1" style="color: var(--accent);"></i> Instructor certificado</p>
