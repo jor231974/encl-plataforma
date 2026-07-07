@@ -527,7 +527,13 @@ def instructor_curso_detalle(curso_id):
     horarios = Horario.query.filter_by(curso_id=curso_id, activo=True).all()
     enlaces = EnlaceExterno.query.filter_by(curso_id=curso_id, activo=True).all()
     grupos = Grupo.query.all()
-    asistencias = {a.clase_id: {a.alumno_id: a.presente for a in Asistencia.query.filter(Asistencia.clase_id.in_([c.id for c in clases])).all()} for c in clases}
+    clase_ids = [c.id for c in clases]
+    asistencias = {}
+    if clase_ids:
+        for a in Asistencia.query.filter(Asistencia.clase_id.in_(clase_ids)).all():
+            if a.clase_id not in asistencias:
+                asistencias[a.clase_id] = {}
+            asistencias[a.clase_id][a.alumno_id] = a.presente
     return render_template('instructor/curso_detalle.html', curso=curso,
                          inscripciones=inscripciones, clases=clases, examenes=examenes,
                          horarios=horarios, enlaces=enlaces, grupos=grupos,
