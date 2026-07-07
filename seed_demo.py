@@ -72,39 +72,21 @@ def seed_demo():
             print('[DEMO] 8 clases creadas')
 
         # === MATERIAL (agregar si no existe) ===
+        # Crear el PDF físico siempre que no exista
+        pdf_path = os.path.join(os.path.dirname(__file__), 'static', 'uploads', 'demo_guia_herramientas_digitales.pdf')
+        if not os.path.exists(pdf_path):
+            os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+            with open(pdf_path, 'wb') as f:
+                f.write(b'%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj\n4 0 obj<</Length 44>>stream\nBT /F1 18 Tf 50 700 Td (Guia DEMO - ENCL) Tj ET\nendstream\nendobj\n5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\nxref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000266 00000 n \n0000000362 00000 n \ntrailer<</Size 6/Root 1 0 R>>\nstartxref\n419\n%%EOF')
+            print('[DEMO] PDF file created on disk')
+
+        # Crear el registro en BD si no existe
         if not MaterialClase.query.filter(MaterialClase.clase_id == Clase.id).join(Clase).filter(Clase.curso_id == curso.id).first():
             primera = Clase.query.filter_by(curso_id=curso.id).first()
             if primera:
-                pdf_path = os.path.join(os.path.dirname(__file__), 'static', 'uploads', 'demo_guia_herramientas_digitales.pdf')
-                if not os.path.exists(pdf_path):
-                    os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
-                    pdf_content = b'''%PDF-1.4
-1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
-3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj
-4 0 obj<</Length 74>>stream
-BT /F1 18 Tf 50 700 Td (Guia DEMO - Herramientas Digitales) Tj
-0 -30 Td (Escuela Nacional de Capacitacion en Linea) Tj ET
-endstream
-endobj
-5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj
-xref
-0 6
-0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
-0000000115 00000 n 
-0000000280 00000 n 
-0000000376 00000 n 
-trailer<</Size 6/Root 1 0 R>>
-startxref
-433
-%%EOF'''
-                    with open(pdf_path, 'wb') as f:
-                        f.write(pdf_content)
                 db.session.add(MaterialClase(clase_id=primera.id, titulo='Guía de Herramientas Digitales [DEMO]',
                     tipo='PDF', archivo_url='/uploads/demo_guia_herramientas_digitales.pdf'))
-                print('[DEMO] Material PDF creado')
+                print('[DEMO] Material PDF registro creado')
 
         # === TAREA (agregar si no existe) ===
         if not Tarea.query.filter_by(curso_id=curso.id).first():
