@@ -30,7 +30,6 @@ def seed_demo():
                 role='instructor',
                 nombre='Jorge',
                 apellidos='Flores',
-                cargo='Instructor de Herramientas Digitales e Informática',
                 foto='instructor-jorge.jpg',
                 telefono='55559999',
                 activo=True
