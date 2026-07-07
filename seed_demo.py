@@ -92,8 +92,9 @@ def seed_demo():
             print(f'[DEMO] 8 clases creadas')
 
             # === MATERIAL DESCARGABLE ===
+            primera_clase = Clase.query.filter_by(curso_id=curso.id).first()
             material = MaterialClase(
-                curso_id=curso.id,
+                clase_id=primera_clase.id,
                 titulo='Guía de Herramientas Digitales [DEMO]',
                 tipo='PDF',
                 archivo_url='/uploads/demo_guia_herramientas_digitales.pdf'
