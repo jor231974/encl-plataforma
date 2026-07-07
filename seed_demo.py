@@ -142,9 +142,11 @@ def seed_demo():
                         fecha_entrega=datetime.utcnow() - timedelta(days=1)))
 
                 # Certificado para todos
-                db.session.add(Certificado(folio=f'DEMO-ENCL-{alumno.id:04d}-{curso.id:04d}',
+                from datetime import datetime as _dt
+                folio = f'DEMO-{int(_dt.utcnow().timestamp())}-{alumno.id:04d}'
+                db.session.add(Certificado(folio=folio,
                     alumno_id=alumno.id, curso_id=curso.id, instructor_id=instructor.id,
-                    codigo_qr=f'https://encl.edu.mx/validar/DEMO-ENCL-{alumno.id:04d}-{curso.id:04d}', valido=True))
+                    codigo_qr=f'https://encl.edu.mx/validar/{folio}', valido=True))
 
             print(f'[DEMO] 5 alumnos demo creados con inscripciones, asistencias y progreso')
         else:
