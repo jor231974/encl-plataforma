@@ -70,53 +70,185 @@
                     </div>
                 </div>
                 <hr class="my-3">
-                <h6 class="fw-bold mb-3"><i class="fas fa-crop-alt me-2"></i>Ajuste interactivo de imagen</h6>
+                <h6 class="fw-bold mb-3"><i class="fas fa-crop-alt me-2"></i>Ajuste visual de imagen</h6>
                 {% set ox = page.bg_offset_x if page and page.bg_offset_x is not none else 50 %}
                 {% set oy = page.bg_offset_y if page and page.bg_offset_y is not none else 50 %}
                 {% set oz = page.bg_zoom if page and page.bg_zoom is not none else 100 %}
-                <div class="tp-adjust-preview" id="adjustPreview" style="width:100%;height:220px;border-radius:8px;margin-bottom:1rem;border:2px solid #dee2e6;background:{{ page.color_primario if page else '#021a48' }};overflow:hidden;">
-                    <div id="adjustInner" style="width:100%;height:100%;background:url('{{ page.foto if page else '' }}') no-repeat;background-position:{{ ox }}% {{ oy }}%;background-size:{{ oz }}% auto;"></div>
-                </div>
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label class="form-label small">Horizontal <span id="xLabel">{{ ox }}</span>%</label>
-                        <input type="range" class="form-range" id="offsetX" min="0" max="100" value="{{ ox }}" oninput="updateAdjust()">
-                        <input type="hidden" name="bg_offset_x" id="bg_offset_x" value="{{ ox }}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small">Vertical <span id="yLabel">{{ oy }}</span>%</label>
-                        <input type="range" class="form-range" id="offsetY" min="0" max="100" value="{{ oy }}" oninput="updateAdjust()">
-                        <input type="hidden" name="bg_offset_y" id="bg_offset_y" value="{{ oy }}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small">Zoom</label>
-                        <input type="range" class="form-range" id="zoom" min="50" max="200" value="{{ oz }}" oninput="updateAdjust()">
-                        <input type="hidden" name="bg_zoom" id="bg_zoom" value="{{ oz }}">
-                        <div class="d-flex justify-content-between small text-muted"><span>50%</span><span id="zoomLabel">{{ oz }}%</span><span>200%</span></div>
-                    </div>
-                </div>
-                <div class="d-flex gap-2 mt-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('offsetX').value=50;document.getElementById('offsetY').value=50;document.getElementById('zoom').value=100;updateAdjust()"><i class="fas fa-undo me-1"></i>Restablecer</button>
-                </div>
                 <input type="hidden" name="bg_position" value="center">
                 <input type="hidden" name="bg_size" value="contain">
+                <input type="hidden" name="bg_offset_x" id="bg_offset_x" value="{{ ox }}">
+                <input type="hidden" name="bg_offset_y" id="bg_offset_y" value="{{ oy }}">
+                <input type="hidden" name="bg_zoom" id="bg_zoom" value="{{ oz }}">
+                <div class="tp-visual-editor">
+                    <div class="tp-vw-canvas" id="vwCanvas">
+                        <img id="vwImg" src="{{ page.foto if page else '' }}" alt="Previsualización" style="display:none;">
+                        <div class="tp-vw-overlay">
+                            <div class="tp-vw-zoom-info" id="vwZoomInfo">{{ oz }}%</div>
+                        </div>
+                    </div>
+                    <div class="tp-vw-toolbar">
+                        <button type="button" class="tp-vw-btn" onclick="vwCenter()" title="Centrar"><i class="fas fa-crosshairs"></i></button>
+                        <button type="button" class="tp-vw-btn" onclick="vwFit()" title="Ajustar"><i class="fas fa-arrows-alt"></i></button>
+                        <button type="button" class="tp-vw-btn" onclick="vwFill()" title="Llenar espacio"><i class="fas fa-expand"></i></button>
+                        <button type="button" class="tp-vw-btn" onclick="vwFull()" title="Imagen completa"><i class="fas fa-image"></i></button>
+                        <span class="tp-vw-sep"></span>
+                        <button type="button" class="tp-vw-btn" onclick="vwZoomIn()" title="Acercar"><i class="fas fa-search-plus"></i></button>
+                        <span class="tp-vw-zoom-pct" id="vwZoomLabel">{{ oz }}%</span>
+                        <button type="button" class="tp-vw-btn" onclick="vwZoomOut()" title="Alejar"><i class="fas fa-search-minus"></i></button>
+                        <span class="tp-vw-sep"></span>
+                        <button type="button" class="tp-vw-btn tp-vw-btn-danger" onclick="vwReset()" title="Restablecer"><i class="fas fa-undo"></i></button>
+                    </div>
+                </div>
+                <style>
+                .tp-visual-editor { margin-top:0.5rem; }
+                .tp-vw-canvas { position:relative; width:100%; height:300px; border-radius:10px; overflow:hidden; border:2px solid #dee2e6; background:{{ page.color_primario if page else '#021a48' }}; cursor:grab; user-select:none; }
+                .tp-vw-canvas:active { cursor:grabbing; }
+                .tp-vw-canvas img { position:absolute; top:50%; left:50%; transform-origin:center center; max-width:none; max-height:none; pointer-events:none; }
+                .tp-vw-overlay { position:absolute; inset:0; pointer-events:none; }
+                .tp-vw-zoom-info { position:absolute; bottom:8px; right:10px; background:rgba(0,0,0,0.55); color:#fff; font-size:0.75rem; padding:2px 8px; border-radius:4px; font-weight:600; }
+                .tp-vw-toolbar { display:flex; align-items:center; gap:4px; margin-top:8px; flex-wrap:wrap; }
+                .tp-vw-btn { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border:1px solid #d0d5dd; border-radius:6px; background:#fff; color:#344054; font-size:0.85rem; cursor:pointer; transition:all .15s; }
+                .tp-vw-btn:hover { background:#f2f4f7; border-color:#98a2b3; }
+                .tp-vw-btn-danger:hover { background:#fee2e2; border-color:#fca5a5; color:#dc2626; }
+                .tp-vw-sep { width:1px; height:24px; background:#e5e7eb; margin:0 4px; }
+                .tp-vw-zoom-pct { font-size:0.85rem; font-weight:700; color:#344054; min-width:42px; text-align:center; }
+                </style>
                 <script>
-                function updateAdjust(){
-                    var x=document.getElementById('offsetX').value;
-                    var y=document.getElementById('offsetY').value;
-                    var z=document.getElementById('zoom').value;
-                    document.getElementById('bg_offset_x').value=x;
-                    document.getElementById('bg_offset_y').value=y;
-                    document.getElementById('bg_zoom').value=z;
-                    var zl=document.getElementById('zoomLabel');
-                    if(zl) zl.textContent=z+'%';
-                    var xl=document.getElementById('xLabel');
-                    if(xl) xl.textContent=x;
-                    var yl=document.getElementById('yLabel');
-                    if(yl) yl.textContent=y;
-                    var inner=document.getElementById('adjustInner');
-                    if(inner) { inner.style.backgroundPosition=x+'% '+y+'%'; inner.style.backgroundSize=z+'% auto'; }
-                }
+                (function(){
+                    var img = document.getElementById('vwImg');
+                    var canvas = document.getElementById('vwCanvas');
+                    var ox = {{ ox }}, oy = {{ oy }}, oz = {{ oz }};
+                    var panX = 0, panY = 0, scale = oz / 100;
+                    var imgW = 0, imgH = 0, loaded = false;
+
+                    function initStateFromPct(){
+                        if(!imgW||!imgH) return;
+                        scale = oz / 100;
+                        panX = (50 - ox) / 100 * scale * imgW;
+                        panY = (50 - oy) / 100 * scale * imgH;
+                        applyTransform();
+                    }
+
+                    function saveToFields(){
+                        if(!imgW||!imgH) return;
+                        ox = Math.max(0, Math.min(100, 50 - (panX / (scale * imgW)) * 100));
+                        oy = Math.max(0, Math.min(100, 50 - (panY / (scale * imgH)) * 100));
+                        oz = Math.round(scale * 100);
+                        document.getElementById('bg_offset_x').value = Math.round(ox);
+                        document.getElementById('bg_offset_y').value = Math.round(oy);
+                        document.getElementById('bg_zoom').value = oz;
+                        var zl = document.getElementById('vwZoomInfo');
+                        if(zl) zl.textContent = oz + '%';
+                        var zl2 = document.getElementById('vwZoomLabel');
+                        if(zl2) zl2.textContent = oz + '%';
+                    }
+
+                    function applyTransform(){
+                        var imgEl = document.getElementById('vwImg');
+                        if(!imgEl || !loaded) return;
+                        imgEl.style.transform = 'translate(-50%,-50%) translate('+panX+'px,'+panY+'px) scale('+scale+')';
+                        saveToFields();
+                    }
+
+                    img.onload = function(){
+                        imgW = img.naturalWidth;
+                        imgH = img.naturalHeight;
+                        loaded = true;
+                        img.style.display = 'block';
+                        initStateFromPct();
+                    };
+                    if(img.complete && img.naturalWidth){
+                        imgW = img.naturalWidth;
+                        imgH = img.naturalHeight;
+                        loaded = true;
+                        img.style.display = 'block';
+                        initStateFromPct();
+                    }
+
+                    // Drag
+                    var dragging = false, startX = 0, startY = 0, startPanX = 0, startPanY = 0;
+                    canvas.addEventListener('mousedown', function(e){
+                        if(e.button !== 0) return;
+                        dragging = true;
+                        startX = e.clientX; startY = e.clientY;
+                        startPanX = panX; startPanY = panY;
+                        e.preventDefault();
+                    });
+                    document.addEventListener('mousemove', function(e){
+                        if(!dragging) return;
+                        panX = startPanX + (e.clientX - startX);
+                        panY = startPanY + (e.clientY - startY);
+                        applyTransform();
+                    });
+                    document.addEventListener('mouseup', function(){ dragging = false; });
+
+                    // Touch
+                    var touchId = null;
+                    canvas.addEventListener('touchstart', function(e){
+                        var t = e.changedTouches[0];
+                        touchId = t.identifier;
+                        startX = t.clientX; startY = t.clientY;
+                        startPanX = panX; startPanY = panY;
+                        dragging = true;
+                        e.preventDefault();
+                    }, {passive:false});
+                    document.addEventListener('touchmove', function(e){
+                        if(!dragging) return;
+                        for(var i=0;i<e.changedTouches.length;i++){
+                            var t = e.changedTouches[i];
+                            if(t.identifier === touchId){
+                                panX = startPanX + (t.clientX - startX);
+                                panY = startPanY + (t.clientY - startY);
+                                applyTransform();
+                                e.preventDefault();
+                                return;
+                            }
+                        }
+                    }, {passive:false});
+                    document.addEventListener('touchend', function(e){ dragging = false; touchId = null; });
+
+                    // Wheel zoom
+                    canvas.addEventListener('wheel', function(e){
+                        e.preventDefault();
+                        var dir = e.deltaY > 0 ? -1 : 1;
+                        scale = Math.max(0.3, Math.min(5, scale + dir * 0.1 * scale));
+                        applyTransform();
+                    }, {passive:false});
+
+                    // Buttons
+                    window.vwCenter = function(){
+                        panX = 0; panY = 0;
+                        applyTransform();
+                    };
+                    window.vwFit = function(){
+                        if(!imgW||!imgH) return;
+                        var cw = canvas.clientWidth, ch = canvas.clientHeight;
+                        scale = Math.min(cw / imgW, ch / imgH);
+                        panX = 0; panY = 0;
+                        applyTransform();
+                    };
+                    window.vwFill = function(){
+                        if(!imgW||!imgH) return;
+                        var cw = canvas.clientWidth, ch = canvas.clientHeight;
+                        scale = Math.max(cw / imgW, ch / imgH);
+                        panX = 0; panY = 0;
+                        applyTransform();
+                    };
+                    window.vwFull = function(){ vwFit(); };
+                    window.vwReset = function(){
+                        ox = 50; oy = 50; oz = 100;
+                        panX = 0; panY = 0; scale = 1;
+                        applyTransform();
+                    };
+                    window.vwZoomIn = function(){
+                        scale = Math.min(5, scale * 1.2);
+                        applyTransform();
+                    };
+                    window.vwZoomOut = function(){
+                        scale = Math.max(0.3, scale / 1.2);
+                        applyTransform();
+                    };
+                })();
                 </script>
             </div>
         </div>
