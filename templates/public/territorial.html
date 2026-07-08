@@ -13,7 +13,7 @@
             position: fixed;
             inset: 0;
             z-index: -1;
-            background: url('{{ page.foto or "/uploads/sergio perez.jpeg" }}') no-repeat;
+            background: url('{{ page.foto or "" }}') no-repeat;
             background-position: {{ page.bg_offset_x or 50 }}% {{ page.bg_offset_y or 50 }}%;
             background-size: {{ page.bg_zoom or 100 }}% auto;
             background-color: {{ page.color_primario or '#021a48' }};
