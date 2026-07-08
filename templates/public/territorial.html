@@ -13,8 +13,9 @@
             position: fixed;
             inset: 0;
             z-index: -1;
-            background: url('{{ page.foto or "/uploads/sergio perez.jpeg" }}') no-repeat {{ page.bg_position or 'center' }} top;
-            background-size: {{ page.bg_size or 'contain' }};
+            background: url('{{ page.foto or "/uploads/sergio perez.jpeg" }}') no-repeat;
+            background-position: {{ page.bg_offset_x or 50 }}% {{ page.bg_offset_y or 50 }}%;
+            background-size: {{ page.bg_zoom or 100 }}% auto;
             background-color: {{ page.color_primario or '#021a48' }};
         }
         body {
@@ -97,8 +98,8 @@
                 padding: 1rem;
             }
             .tp-bg {
-                background-position: {{ page.bg_position or 'center' }} center;
-                background-size: contain;
+                background-position: {{ page.bg_offset_x or 50 }}% {{ page.bg_offset_y or 50 }}%;
+                background-size: {{ page.bg_zoom or 100 }}% auto;
                 background-color: {{ page.color_primario or '#021a48' }};
             }
             .tp-access-card {

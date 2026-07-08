@@ -69,27 +69,55 @@
                         <input type="color" class="form-control form-control-color" name="color_fondo" value="{{ page.color_fondo if page else '#ffffff' }}">
                     </div>
                 </div>
-                <div class="row g-3 mt-2">
-                    <div class="col-md-6">
-                        <label class="form-label">Posición de imagen</label>
-                        <select class="form-select" name="bg_position">
-                            <option value="center" {% if page and page.bg_position == 'center' %}selected{% endif %}>Centrada</option>
-                            <option value="top" {% if page and page.bg_position == 'top' %}selected{% endif %}>Arriba</option>
-                            <option value="bottom" {% if page and page.bg_position == 'bottom' %}selected{% endif %}>Abajo</option>
-                            <option value="left" {% if page and page.bg_position == 'left' %}selected{% endif %}>Izquierda</option>
-                            <option value="right" {% if page and page.bg_position == 'right' %}selected{% endif %}>Derecha</option>
-                        </select>
+                <hr class="my-3">
+                <h6 class="fw-bold mb-3"><i class="fas fa-crop-alt me-2"></i>Ajuste interactivo de imagen</h6>
+                {% set ox = page.bg_offset_x if page and page.bg_offset_x is not none else 50 %}
+                {% set oy = page.bg_offset_y if page and page.bg_offset_y is not none else 50 %}
+                {% set oz = page.bg_zoom if page and page.bg_zoom is not none else 100 %}
+                <div class="tp-adjust-preview" id="adjustPreview" style="width:100%;height:220px;border-radius:8px;margin-bottom:1rem;border:2px solid #dee2e6;background:{{ page.color_primario if page else '#021a48' }};overflow:hidden;">
+                    <div id="adjustInner" style="width:100%;height:100%;background:url('{{ page.foto if page else '' }}') no-repeat;background-position:{{ ox }}% {{ oy }}%;background-size:{{ oz }}% auto;"></div>
+                </div>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small">Horizontal <span id="xLabel">{{ ox }}</span>%</label>
+                        <input type="range" class="form-range" id="offsetX" min="0" max="100" value="{{ ox }}" oninput="updateAdjust()">
+                        <input type="hidden" name="bg_offset_x" id="bg_offset_x" value="{{ ox }}">
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Ajuste de imagen</label>
-                        <select class="form-select" name="bg_size">
-                            <option value="contain" {% if page and page.bg_size == 'contain' %}selected{% endif %}>Completa (contener)</option>
-                            <option value="cover" {% if page and page.bg_size == 'cover' %}selected{% endif %}>Cubrir pantalla</option>
-                            <option value="auto 100%" {% if page and page.bg_size == 'auto 100%' %}selected{% endif %}>Llenar alto</option>
-                            <option value="100% auto" {% if page and page.bg_size == '100% auto' %}selected{% endif %}>Llenar ancho</option>
-                        </select>
+                    <div class="col-md-4">
+                        <label class="form-label small">Vertical <span id="yLabel">{{ oy }}</span>%</label>
+                        <input type="range" class="form-range" id="offsetY" min="0" max="100" value="{{ oy }}" oninput="updateAdjust()">
+                        <input type="hidden" name="bg_offset_y" id="bg_offset_y" value="{{ oy }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Zoom</label>
+                        <input type="range" class="form-range" id="zoom" min="50" max="200" value="{{ oz }}" oninput="updateAdjust()">
+                        <input type="hidden" name="bg_zoom" id="bg_zoom" value="{{ oz }}">
+                        <div class="d-flex justify-content-between small text-muted"><span>50%</span><span id="zoomLabel">{{ oz }}%</span><span>200%</span></div>
                     </div>
                 </div>
+                <div class="d-flex gap-2 mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('offsetX').value=50;document.getElementById('offsetY').value=50;document.getElementById('zoom').value=100;updateAdjust()"><i class="fas fa-undo me-1"></i>Restablecer</button>
+                </div>
+                <input type="hidden" name="bg_position" value="center">
+                <input type="hidden" name="bg_size" value="contain">
+                <script>
+                function updateAdjust(){
+                    var x=document.getElementById('offsetX').value;
+                    var y=document.getElementById('offsetY').value;
+                    var z=document.getElementById('zoom').value;
+                    document.getElementById('bg_offset_x').value=x;
+                    document.getElementById('bg_offset_y').value=y;
+                    document.getElementById('bg_zoom').value=z;
+                    var zl=document.getElementById('zoomLabel');
+                    if(zl) zl.textContent=z+'%';
+                    var xl=document.getElementById('xLabel');
+                    if(xl) xl.textContent=x;
+                    var yl=document.getElementById('yLabel');
+                    if(yl) yl.textContent=y;
+                    var inner=document.getElementById('adjustInner');
+                    if(inner) { inner.style.backgroundPosition=x+'% '+y+'%'; inner.style.backgroundSize=z+'% auto'; }
+                }
+                </script>
             </div>
         </div>
     </div>

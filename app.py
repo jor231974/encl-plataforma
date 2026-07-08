@@ -1509,6 +1509,9 @@ def admin_crear_pagina_territorial():
         for field in ['color_primario', 'color_secundario', 'color_fondo', 'bg_position', 'bg_size']:
             v = request.form.get(field, '')
             if v: setattr(page, field, v)
+        for field in ['bg_offset_x', 'bg_offset_y', 'bg_zoom']:
+            v = request.form.get(field, '')
+            if v: setattr(page, field, int(v))
         db.session.add(page)
         db.session.commit()
         flash(f'Página territorial "{page.nombre}" creada', 'success')
@@ -1538,6 +1541,9 @@ def admin_editar_pagina_territorial(page_id):
         for field in ['color_primario', 'color_secundario', 'color_fondo', 'bg_position', 'bg_size']:
             v = request.form.get(field, '')
             if v: setattr(page, field, v)
+        for field in ['bg_offset_x', 'bg_offset_y', 'bg_zoom']:
+            v = request.form.get(field, '')
+            if v: setattr(page, field, int(v))
         page.activo = 'activo' in request.form
         db.session.commit()
         flash('Página actualizada', 'success')
@@ -1581,6 +1587,7 @@ def admin_duplicar_pagina_territorial(page_id):
         codigo_qr=original.codigo_qr, mensaje_qr=original.mensaje_qr, banner_url=original.banner_url,
         color_primario=original.color_primario, color_secundario=original.color_secundario,
         color_fondo=original.color_fondo, bg_position=original.bg_position, bg_size=original.bg_size,
+        bg_offset_x=original.bg_offset_x, bg_offset_y=original.bg_offset_y, bg_zoom=original.bg_zoom,
         contacto_telefono=original.contacto_telefono, contacto_email=original.contacto_email,
         contacto_direccion=original.contacto_direccion, meta_titulo=original.meta_titulo,
         meta_descripcion=original.meta_descripcion, activo=True)
