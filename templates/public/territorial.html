@@ -9,38 +9,47 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            min-height: 100vh;
-            background: url('{{ page.foto or "/uploads/sergio perez.jpeg" }}') no-repeat {{ page.bg_position or 'center' }} center fixed;
+        .tp-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: url('{{ page.foto or "/uploads/sergio perez.jpeg" }}') no-repeat {{ page.bg_position or 'center' }} top;
             background-size: {{ page.bg_size or 'contain' }};
             background-color: {{ page.color_primario or '#021a48' }};
+        }
+        body {
+            min-height: 100vh;
             font-family: 'Segoe UI', system-ui, sans-serif;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: flex-end;
             padding: 2rem;
+            position: relative;
         }
         .tp-access-card {
             background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
             border-radius: 16px;
-            padding: 2.5rem;
+            padding: 2rem;
             width: 100%;
-            max-width: 420px;
+            max-width: 350px;
+            margin-top: 15vh;
+            margin-right: 1rem;
+            margin-bottom: 2rem;
             box-shadow: 0 8px 40px rgba(0,0,0,0.2);
         }
         .tp-access-card h3 {
-            font-size: 1.4rem;
+            font-size: 1.25rem;
             font-weight: 800;
             color: {{ page.color_primario or '#021a48' }};
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
             text-align: center;
         }
         .tp-input {
             border: 2px solid #e5e7eb;
             border-radius: 10px;
-            padding: 0.75rem 1rem;
-            font-size: 0.95rem;
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
             width: 100%;
             transition: border-color 0.3s;
         }
@@ -54,10 +63,10 @@
             background: {{ page.color_primario or '#021a48' }} !important;
             color: #fff !important;
             border: none !important;
-            padding: 0.8rem 1.5rem;
+            padding: 0.65rem 1.5rem;
             border-radius: 10px;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: all 0.3s;
             cursor: pointer;
         }
@@ -69,27 +78,34 @@
         .tp-access-links {
             display: flex;
             justify-content: space-between;
-            margin-top: 1rem;
+            margin-top: 0.85rem;
         }
         .tp-access-links a {
             color: {{ page.color_primario or '#021a48' }};
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
             text-decoration: none;
         }
         .tp-access-links a:hover { color: {{ page.color_secundario or '#f4a807' }}; }
+        @media (max-width: 992px) {
+            .tp-access-card { max-width: 320px; margin-top: 12vh; }
+        }
         @media (max-width: 768px) {
             body {
                 justify-content: center;
                 align-items: flex-end;
                 padding: 1rem;
-                background-size: {{ page.bg_size or 'contain' }};
-                background-position: {{ page.bg_position or 'center' }};
+            }
+            .tp-bg {
+                background-position: {{ page.bg_position or 'center' }} center;
+                background-size: contain;
                 background-color: {{ page.color_primario or '#021a48' }};
             }
             .tp-access-card {
                 max-width: 100%;
                 padding: 1.2rem;
+                margin-top: 0;
+                margin-right: 0;
                 margin-bottom: 1rem;
             }
             .tp-access-card h3 { font-size: 1.1rem; }
@@ -97,13 +113,15 @@
             .tp-btn-primary { padding: 0.6rem 1rem; font-size: 0.9rem; }
         }
         @media (max-width: 480px) {
-            body { padding: 0.5rem; background-size: contain; background-color: {{ page.color_primario or '#021a48' }}; }
+            body { padding: 0.5rem; }
+            .tp-bg { background-size: contain; background-color: {{ page.color_primario or '#021a48' }}; }
             .tp-access-card { padding: 1rem; border-radius: 12px; }
             .tp-access-links { flex-direction: column; gap: 0.4rem; align-items: center; }
         }
     </style>
 </head>
 <body>
+    <div class="tp-bg"></div>
     <div class="tp-access-card">
         <h3><i class="fas fa-sign-in-alt me-2"></i>Iniciar sesión</h3>
         <form action="{{ url_for('public_login') }}" method="POST">
