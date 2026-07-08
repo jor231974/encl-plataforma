@@ -30,27 +30,27 @@
         .tp-access-card {
             background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 2rem;
+            border-radius: 14px;
+            padding: 1.5rem;
             width: 100%;
-            max-width: 350px;
-            margin-top: 15vh;
+            max-width: 290px;
+            margin-top: 18vh;
             margin-right: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             box-shadow: 0 8px 40px rgba(0,0,0,0.2);
         }
         .tp-access-card h3 {
-            font-size: 1.25rem;
+            font-size: 1.05rem;
             font-weight: 800;
             color: {{ page.color_primario or '#021a48' }};
-            margin-bottom: 1.25rem;
+            margin-bottom: 1rem;
             text-align: center;
         }
         .tp-input {
             border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 0.6rem 1rem;
-            font-size: 0.9rem;
+            border-radius: 9px;
+            padding: 0.5rem 0.85rem;
+            font-size: 0.82rem;
             width: 100%;
             transition: border-color 0.3s;
         }
@@ -64,10 +64,10 @@
             background: {{ page.color_primario or '#021a48' }} !important;
             color: #fff !important;
             border: none !important;
-            padding: 0.65rem 1.5rem;
-            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            border-radius: 9px;
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             transition: all 0.3s;
             cursor: pointer;
         }
@@ -79,17 +79,17 @@
         .tp-access-links {
             display: flex;
             justify-content: space-between;
-            margin-top: 0.85rem;
+            margin-top: 0.65rem;
         }
         .tp-access-links a {
             color: {{ page.color_primario or '#021a48' }};
-            font-size: 0.8rem;
+            font-size: 0.72rem;
             font-weight: 600;
             text-decoration: none;
         }
         .tp-access-links a:hover { color: {{ page.color_secundario or '#f4a807' }}; }
         @media (max-width: 992px) {
-            .tp-access-card { max-width: 320px; margin-top: 12vh; }
+            .tp-access-card { max-width: 270px; margin-top: 14vh; }
         }
         @media (max-width: 768px) {
             body {
@@ -104,20 +104,20 @@
             }
             .tp-access-card {
                 max-width: 100%;
-                padding: 1.2rem;
+                padding: 1rem;
                 margin-top: 0;
                 margin-right: 0;
                 margin-bottom: 1rem;
             }
-            .tp-access-card h3 { font-size: 1.1rem; }
-            .tp-input { padding: 0.6rem 0.8rem; font-size: 0.85rem; }
-            .tp-btn-primary { padding: 0.6rem 1rem; font-size: 0.9rem; }
+            .tp-access-card h3 { font-size: 0.95rem; }
+            .tp-input { padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+            .tp-btn-primary { padding: 0.5rem 0.9rem; font-size: 0.82rem; }
         }
         @media (max-width: 480px) {
             body { padding: 0.5rem; }
             .tp-bg { background-size: contain; background-color: {{ page.color_primario or '#021a48' }}; }
-            .tp-access-card { padding: 1rem; border-radius: 12px; }
-            .tp-access-links { flex-direction: column; gap: 0.4rem; align-items: center; }
+            .tp-access-card { padding: 0.85rem; border-radius: 11px; }
+            .tp-access-links { flex-direction: column; gap: 0.35rem; align-items: center; }
         }
     </style>
 </head>
