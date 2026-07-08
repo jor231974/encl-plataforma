@@ -100,7 +100,7 @@
                         <span class="tp-cr-sep"></span>
                         <button type="button" class="tp-cr-btn tp-cr-btn-warn" onclick="crReset()" title="Restablecer"><i class="fas fa-undo"></i></button>
                     </div>
-                    <p class="text-muted small mt-2 mb-0"><i class="fas fa-info-circle me-1"></i>Arrastra la imagen para moverla, usa la rueda del mouse para zoom, o arrastra las esquinas del recuadro para reencuadrar.</p>
+                    <p class="text-muted small mt-2 mb-0"><i class="fas fa-info-circle me-1"></i>Arrastra el recuadro para moverlo, arrastra las esquinas para estirarlo, rueda del mouse para zoom.</p>
                 </div>
                 <style>
                 .tp-cropper-wrap { margin-top:0.5rem; }
@@ -146,9 +146,9 @@
                         if(cropper) { cropper.destroy(); cropper = null; }
                         cropper = new Cropper(img, {
                             viewMode: 2,
-                            dragMode: 'move',
+                            dragMode: 'crop',
                             autoCrop: true,
-                            cropBoxMovable: false,
+                            cropBoxMovable: true,
                             cropBoxResizable: true,
                             toggleDragModeOnDblclick: false,
                             background: false,
@@ -183,7 +183,10 @@
                     if(img.src === '' || img.src === window.location.href) { /* no image */ }
 
                     window.crMove = function(dx, dy){
-                        if(cropper) cropper.move(dx, dy);
+                        if(!cropper) return;
+                        var d = cropper.getData(true);
+                        cropper.setData({ x: d.x + dx, y: d.y + dy, width: d.width, height: d.height });
+                        saveToFields();
                     };
                     window.crZoom = function(r){
                         if(cropper) cropper.zoom(r);
