@@ -104,16 +104,19 @@
                 </div>
                 <style>
                 .tp-cropper-wrap { margin-top:0.5rem; }
-                .tp-cropper-wrap img { max-width:100%; }
                 .tp-cr-toolbar { display:flex; align-items:center; gap:4px; margin-top:10px; flex-wrap:wrap; }
                 .tp-cr-btn { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border:1px solid #d0d5dd; border-radius:6px; background:#fff; color:#344054; font-size:0.85rem; cursor:pointer; transition:all .15s; }
                 .tp-cr-btn:hover { background:#f2f4f7; border-color:#98a2b3; }
                 .tp-cr-btn-warn:hover { background:#fee2e2; border-color:#fca5a5; color:#dc2626; }
                 .tp-cr-sep { width:1px; height:24px; background:#e5e7eb; margin:0 6px; }
                 .tp-cr-zoom { font-size:0.85rem; font-weight:700; color:#344054; min-width:46px; text-align:center; }
-                /* Cropper.js overrides */
-                .cropper-crop-box, .cropper-view-box { border-radius:6px; }
-                .cropper-view-box { outline-color:rgba(255,255,255,0.75); }
+                /* Cropper.js - bigger handles, clear visual */
+                .cropper-crop-box, .cropper-view-box { border-radius:4px; }
+                .cropper-view-box { outline:2px solid rgba(255,255,255,0.8); outline-offset:-1px; }
+                .cropper-point { width:12px; height:12px; background:#fff; border:2px solid #1a73e8; border-radius:2px; opacity:1; }
+                .cropper-point.point-se { width:16px; height:16px; border-radius:0 4px 0 0; }
+                .cropper-line { background:rgba(26,115,232,0.35) !important; }
+                .cropper-center::after, .cropper-center::before { background:rgba(255,255,255,0.6); }
                 </style>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
                 <script>
