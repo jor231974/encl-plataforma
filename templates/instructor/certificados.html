@@ -1,0 +1,41 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'instructor/sidebar.html' %}{% endblock %}
+{% block page_title %}Certificados{% endblock %}
+{% block page_subtitle %}Certificados emitidos en tus cursos{% endblock %}
+
+{% block content %}
+<div class="dashboard-card">
+    <div class="table-responsive">
+        <table class="table table-encl">
+            <thead>
+                <tr>
+                    <th>Folio</th>
+                    <th>Alumno</th>
+                    <th>Curso</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cert in certificados %}
+                <tr>
+                    <td><code>{{ cert.folio[:12] }}...</code></td>
+                    <td><strong>{{ cert.alumno.nombre }} {{ cert.alumno.apellidos }}</strong></td>
+                    <td>{{ cert.curso.titulo }}</td>
+                    <td>{{ cert.fecha_emision.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        {% if cert.valido %}
+                        <span class="badge bg-success">Válido</span>
+                        {% else %}
+                        <span class="badge bg-danger">Revocado</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No hay certificados emitidos</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

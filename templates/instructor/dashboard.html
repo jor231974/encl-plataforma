@@ -1,11 +1,5 @@
 {% extends 'dashboard_base.html' %}
-{% block sidebar_menu %}
-<div class="nav-section">Navegación</div>
-<a href="{{ url_for('instructor_dashboard') }}" class="active"><i class="fas fa-home"></i>Inicio</a>
-<a href="{{ url_for('instructor_cursos') }}"><i class="fas fa-book-open"></i>Mis cursos</a>
-<a href="{{ url_for('alumno_mensajes') }}"><i class="fas fa-envelope"></i>Mensajes</a>
-<a href="{{ url_for('alumno_perfil') }}"><i class="fas fa-user-cog"></i>Perfil</a>
-{% endblock %}
+{% block sidebar_menu %}{% include 'instructor/sidebar.html' %}{% endblock %}
 
 {% block page_title %}Panel del Instructor{% endblock %}
 {% block page_subtitle %}Gestiona tus cursos, clases y alumnos{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'instructor/sidebar.html' %}{% endblock %}
+{% block page_title %}Mensajes{% endblock %}
+{% block page_subtitle %}Bandeja de entrada y mensajes enviados{% endblock %}
+
+{% block content %}
+<ul class="nav nav-tabs mb-4" id="msgTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="recibidos-tab" data-bs-toggle="tab" data-bs-target="#recibidos" type="button"><i class="fas fa-inbox me-1"></i>Recibidos <span class="badge bg-danger ms-1">{{ recibidos|selectattr('leido','equalto',false)|list|length }}</span></button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="enviados-tab" data-bs-toggle="tab" data-bs-target="#enviados" type="button"><i class="fas fa-paper-plane me-1"></i>Enviados</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="nuevo-tab" data-bs-toggle="tab" data-bs-target="#nuevo" type="button"><i class="fas fa-plus me-1"></i>Nuevo mensaje</button>
+    </li>
+</ul>
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="recibidos">
+        <div class="dashboard-card">
+            {% for msg in recibidos %}
+            <div class="d-flex align-items-center justify-content-between p-3 {% if not loop.last %}border-bottom{% endif %} {% if not msg.leido %}bg-light{% endif %}" style="cursor:pointer;" onclick="leerMensaje({{ msg.id }})">
+                <div>
+                    <strong>{{ msg.remitente.nombre }} {{ msg.remitente.apellidos }}</strong>
+                    <p class="mb-0 text-muted small">{{ msg.asunto }}</p>
+                </div>
+                <small class="text-muted">{{ msg.fecha_envio.strftime('%d/%m/%Y') }}</small>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4 mb-0">No hay mensajes recibidos</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="tab-pane fade" id="enviados">
+        <div class="dashboard-card">
+            {% for msg in enviados %}
+            <div class="d-flex align-items-center justify-content-between p-3 {% if not loop.last %}border-bottom{% endif %}">
+                <div>
+                    <strong>Para: {{ msg.destinatario.nombre }} {{ msg.destinatario.apellidos }}</strong>
+                    <p class="mb-0 text-muted small">{{ msg.asunto }}</p>
+                </div>
+                <small class="text-muted">{{ msg.fecha_envio.strftime('%d/%m/%Y') }}</small>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4 mb-0">No has enviado mensajes</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="tab-pane fade" id="nuevo">
+        <div class="dashboard-card">
+            <form method="POST" action="{{ url_for('instructor_enviar_mensaje') }}">
+                <div class="mb-3">
+                    <label class="form-label">Destinatario</label>
+                    <select class="form-select" name="destinatario_id" required>
+                        <option value="">Seleccionar...</option>
+                        {% for u in User.query.filter(User.role.in_(['admin','superadmin'])).all() %}
+                        <option value="{{ u.id }}">{{ u.nombre }} {{ u.apellidos }} ({{ u.role }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Asunto</label>
+                    <input type="text" class="form-control" name="asunto" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mensaje</label>
+                    <textarea class="form-control" name="contenido" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-encl btn-encl-primary"><i class="fas fa-paper-plane me-1"></i>Enviar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="msgModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="msgAsunto"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small" id="msgRemitente"></p>
+                <p id="msgContenido"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function leerMensaje(id) {
+    fetch('/instructor/leer-mensaje/' + id).then(function(r){ return r.json(); }).then(function(d){
+        document.getElementById('msgAsunto').textContent = d.asunto;
+        document.getElementById('msgRemitente').textContent = 'De: ' + d.remitente + ' - ' + d.fecha;
+        document.getElementById('msgContenido').textContent = d.contenido;
+        var modal = new bootstrap.Modal(document.getElementById('msgModal'));
+        modal.show();
+        if(document.getElementById('recibidos-tab')) location.reload();
+    });
+}
+</script>
+{% endblock %}

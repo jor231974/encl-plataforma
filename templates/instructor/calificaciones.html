@@ -1,0 +1,56 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'instructor/sidebar.html' %}{% endblock %}
+{% block page_title %}Calificaciones{% endblock %}
+{% block page_subtitle %}Captura y seguimiento de calificaciones{% endblock %}
+
+{% block content %}
+{% for curso in cursos %}
+<div class="dashboard-card mb-4">
+    <h5 style="font-weight:700;color:var(--primary);"><i class="fas fa-book-open me-2"></i>{{ curso.titulo }}</h5>
+    <div class="table-responsive mt-3">
+        <table class="table table-encl">
+            <thead>
+                <tr>
+                    <th>Alumno</th>
+                    {% for examen in curso.examenes %}
+                    <th>{{ examen.titulo }}</th>
+                    {% endfor %}
+                    <th>Promedio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set inscripciones = curso.inscripciones %}
+                {% for insc in inscripciones %}
+                {% set alumno = insc.alumno %}
+                <tr>
+                    <td><strong>{{ alumno.nombre }} {{ alumno.apellidos }}</strong></td>
+                    {% for examen in curso.examenes %}
+                    {% set intento = examen.intentos|selectattr('alumno_id','equalto',alumno.id)|first %}
+                    <td>
+                        {% if intento %}
+                        <span class="badge bg-{{ 'success' if intento.aprobado else 'danger' }}">{{ intento.calificacion }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                    {% set califs = [] %}
+                    {% for examen in curso.examenes %}
+                    {% set intento = examen.intentos|selectattr('alumno_id','equalto',alumno.id)|first %}
+                    {% if intento %}{% set _ = califs.append(intento.calificacion) %}{% endif %}
+                    {% endfor %}
+                    <td><strong>{{ (califs|sum / califs|length)|round(1) if califs else '—' }}</strong></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="99" class="text-center text-muted">Sin alumnos inscritos</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="dashboard-card">
+    <p class="text-muted text-center py-4 mb-0">No tienes cursos asignados</p>
+</div>
+{% endfor %}
+{% endblock %}

@@ -19,6 +19,14 @@ from models import *
 
 db.init_app(app)
 
+with app.app_context():
+    db.create_all()
+    try:
+        db.session.execute('ALTER TABLE user ADD COLUMN video_bienvenida VARCHAR(500)')
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'public_login'
@@ -170,10 +178,36 @@ def public_nosotros():
 @app.route('/contacto', methods=['GET', 'POST'])
 def public_contacto():
     if request.method == 'POST':
+        msg = ContactoMensaje(
+            nombre=request.form.get('nombre'),
+            email=request.form.get('email'),
+            telefono=request.form.get('telefono'),
+            asunto=request.form.get('asunto'),
+            mensaje=request.form.get('mensaje')
+        )
+        db.session.add(msg)
+        db.session.commit()
         flash('Mensaje enviado correctamente. Nos pondremos en contacto pronto.', 'success')
         return redirect(url_for('public_contacto'))
     tc = get_theme_config()
     return render_template('public/contacto.html', **tc)
+
+@app.route('/recuperar', methods=['GET', 'POST'])
+def public_recuperar():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        user = None
+        if username:
+            user = User.query.filter_by(username=username).first()
+        elif email:
+            user = User.query.filter_by(email=email).first()
+        if user:
+            flash(f'Tu usuario es: {user.username}. Tu contraseña es la que registraste al crear tu cuenta. Si no la recuerdas, contacta al administrador para restablecerla.', 'info')
+        else:
+            flash('No se encontró una cuenta con esos datos', 'error')
+        return redirect(url_for('public_recuperar'))
+    return render_template('recuperar.html', **get_theme_config())
 
 @app.route('/instructores')
 def public_instructores():
@@ -483,6 +517,32 @@ def instructor_dashboard():
                          total_alumnos=total_alumnos, clases_proximas=clases_proximas,
                          **get_theme_config())
 
+@app.route('/instructor/perfil', methods=['GET', 'POST'])
+@login_required
+@instructor_required
+def instructor_perfil():
+    if request.method == 'POST':
+        video = request.files.get('video_bienvenida')
+        if video and video.filename:
+            ext = video.filename.rsplit('.', 1)[1].lower() if '.' in video.filename else 'mp4'
+            filename = f'video_{current_user.id}_{int(datetime.utcnow().timestamp())}.{ext}'
+            path = os.path.join('static/uploads', filename)
+            video.save(path)
+            current_user.video_bienvenida = filename
+            db.session.commit()
+            flash('Video de bienvenida subido correctamente', 'success')
+        foto = request.files.get('foto')
+        if foto and foto.filename:
+            ext = foto.filename.rsplit('.', 1)[1].lower() if '.' in foto.filename else 'jpg'
+            filename = f'foto_{current_user.id}_{int(datetime.utcnow().timestamp())}.{ext}'
+            path = os.path.join('static/uploads', filename)
+            foto.save(path)
+            current_user.foto = filename
+            db.session.commit()
+            flash('Foto actualizada correctamente', 'success')
+        return redirect(url_for('instructor_perfil'))
+    return render_template('instructor/perfil.html', **get_theme_config())
+
 @app.route('/instructor/cursos')
 @login_required
 @instructor_required
@@ -686,6 +746,59 @@ def instructor_crear_enlace():
     db.session.commit()
     flash('Enlace agregado', 'success')
     return redirect(url_for('instructor_curso_detalle', curso_id=enlace.curso_id))
+
+@app.route('/instructor/mensajes')
+@login_required
+@instructor_required
+def instructor_mensajes():
+    mensajes_recibidos = Mensaje.query.filter_by(destinatario_id=current_user.id).order_by(Mensaje.fecha_envio.desc()).all()
+    mensajes_enviados = Mensaje.query.filter_by(remitente_id=current_user.id).order_by(Mensaje.fecha_envio.desc()).all()
+    return render_template('instructor/mensajes.html', recibidos=mensajes_recibidos, enviados=mensajes_enviados, **get_theme_config())
+
+@app.route('/instructor/enviar-mensaje', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_enviar_mensaje():
+    destinatario = User.query.get(request.form.get('destinatario_id'))
+    if not destinatario:
+        flash('Destinatario no encontrado', 'error')
+    else:
+        msg = Mensaje(
+            remitente_id=current_user.id,
+            destinatario_id=destinatario.id,
+            asunto=request.form.get('asunto'),
+            contenido=request.form.get('contenido')
+        )
+        db.session.add(msg)
+        db.session.commit()
+        flash('Mensaje enviado', 'success')
+    return redirect(url_for('instructor_mensajes'))
+
+@app.route('/instructor/leer-mensaje/<int:mensaje_id>')
+@login_required
+@instructor_required
+def instructor_leer_mensaje(mensaje_id):
+    msg = Mensaje.query.get_or_404(mensaje_id)
+    if msg.destinatario_id == current_user.id:
+        msg.leido = True
+        db.session.commit()
+    return jsonify({'status': 'ok', 'asunto': msg.asunto, 'contenido': msg.contenido,
+                    'remitente': msg.remitente.nombre + ' ' + msg.remitente.apellidos,
+                    'fecha': msg.fecha_envio.strftime('%d/%m/%Y %H:%M')})
+
+@app.route('/instructor/calificaciones')
+@login_required
+@instructor_required
+def instructor_calificaciones():
+    cursos = Curso.query.filter_by(instructor_id=current_user.id).all()
+    return render_template('instructor/calificaciones.html', cursos=cursos, **get_theme_config())
+
+@app.route('/instructor/certificados')
+@login_required
+@instructor_required
+def instructor_certificados():
+    certificados = Certificado.query.filter_by(instructor_id=current_user.id).order_by(Certificado.fecha_emision.desc()).all()
+    return render_template('instructor/certificados.html', certificados=certificados, **get_theme_config())
 
 # ==================== ADMIN ROUTES ====================
 

@@ -14,6 +14,7 @@ class User(UserMixin, db.Model):
     nombre = db.Column(db.String(200), nullable=False)
     apellidos = db.Column(db.String(200), nullable=False)
     foto = db.Column(db.String(500), default='default-user.png')
+    video_bienvenida = db.Column(db.String(500))
     telefono = db.Column(db.String(20))
     direccion = db.Column(db.Text)
     fecha_nacimiento = db.Column(db.Date)
@@ -210,6 +211,16 @@ class Mensaje(db.Model):
     fecha_envio = db.Column(db.DateTime, default=datetime.utcnow)
     remitente = db.relationship('User', foreign_keys=[remitente_id], backref='mensajes_enviados')
     destinatario = db.relationship('User', foreign_keys=[destinatario_id], backref='mensajes_recibidos')
+
+class ContactoMensaje(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(200), nullable=False)
+    telefono = db.Column(db.String(20))
+    asunto = db.Column(db.String(200))
+    mensaje = db.Column(db.Text, nullable=False)
+    leido = db.Column(db.Boolean, default=False)
+    fecha_envio = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Asistencia(db.Model):
     id = db.Column(db.Integer, primary_key=True)
