@@ -31,10 +31,7 @@
                 {% endif %}
                 <div class="card-meta mt-2">
                     <span><i class="fas fa-chalkboard-teacher"></i> {{ insc.curso.instructor.nombre if insc.curso.instructor else 'Instructor' }}</span>
-                    <div>
-                        <a href="{{ url_for('alumno_clases_grabadas') }}" class="btn btn-encl btn-encl-primary btn-encl-sm"><i class="fas fa-play"></i></a>
-                        <a href="{{ url_for('alumno_examenes') }}" class="btn btn-encl btn-encl-success btn-encl-sm"><i class="fas fa-tasks"></i></a>
-                    </div>
+                    <a href="{{ url_for('alumno_aula', curso_id=insc.curso.id) }}" class="btn btn-encl btn-encl-primary btn-encl-sm"><i class="fas fa-door-open me-1"></i>Entrar al aula</a>
                 </div>
             </div>
         </div>

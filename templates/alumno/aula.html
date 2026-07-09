@@ -1,0 +1,181 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'alumno/sidebar.html' %}{% endblock %}
+{% block page_title %}{{ curso.titulo }}{% endblock %}
+{% block page_subtitle %}Aula Digital — {{ curso.nivel }}{% endblock %}
+
+{% block content %}
+{% if tiene_video and not inscripcion.video_bienvenida_visto %}
+<div class="modal fade" id="videoBienvenidaModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;background:#0a0a1a;">
+            <div class="encl-video-header" style="display:flex;align-items:center;gap:1rem;padding:1rem 1.5rem;background:linear-gradient(135deg,#1a237e,#0d47a1);color:#fff;">
+                <img src="/uploads/logo_clean.svg" alt="ENCL" style="height:32px;filter:brightness(10);">
+                <div style="font-size:0.9rem;">
+                    <strong>{{ curso.instructor.nombre }} {{ curso.instructor.apellidos }}</strong><br>
+                    <span style="font-size:0.7rem;opacity:0.7;">Video de bienvenida — {{ curso.titulo }}</span>
+                </div>
+            </div>
+            <div style="background:#000;">
+                <video id="modalVideo" autoplay controls style="width:100%;display:block;max-height:400px;">
+                    <source src="/uploads/{{ curso.instructor.video_bienvenida }}" type="video/mp4">
+                </video>
+            </div>
+            <div style="padding:1rem 1.5rem;background:#1a237e;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+                <span style="color:rgba(255,255,255,0.6);font-size:0.7rem;letter-spacing:1px;">ESCUELA NACIONAL DE CAPACITACIÓN Y CURSOS EN LÍNEA</span>
+                <div style="display:flex;gap:0.5rem;">
+                    <button type="button" class="btn btn-encl btn-encl-primary" onclick="marcarVisto()" style="font-size:0.85rem;"><i class="fas fa-play me-1"></i>Comenzar curso</button>
+                    <button type="button" class="btn btn-encl btn-encl-secondary" onclick="marcarVisto()" style="font-size:0.85rem;">Omitir video</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="dashboard-card mb-4">
+            <h5 style="font-weight:700;color:var(--primary);margin-bottom:1rem;"><i class="fas fa-info-circle me-2"></i>Acerca del curso</h5>
+            <p>{{ curso.descripcion_larga }}</p>
+            <div class="d-flex flex-wrap gap-3 mt-3">
+                <span class="badge bg-primary"><i class="fas fa-signal me-1"></i>{{ curso.nivel }}</span>
+                <span class="badge bg-info"><i class="far fa-clock me-1"></i>{{ curso.duracion_horas }} horas</span>
+                <span class="badge bg-success"><i class="fas fa-chalkboard-teacher me-1"></i>{{ curso.instructor.nombre if curso.instructor else 'Instructor' }}</span>
+                {% if curso.tiene_certificado %}<span class="badge bg-warning text-dark"><i class="fas fa-certificate me-1"></i>Certificación</span>{% endif %}
+            </div>
+        </div>
+
+        <div class="dashboard-card mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 style="font-weight:700;color:var(--primary);margin:0;"><i class="fas fa-list me-2"></i>Clases del curso</h5>
+                <span class="badge bg-secondary">{{ clases|length }} clases</span>
+            </div>
+            {% if clases %}
+            <div class="accordion" id="clasesAccordion">
+                {% for clase in clases %}
+                <div class="accordion-item" style="border:1px solid #eef2f6;margin-bottom:0.5rem;border-radius:8px !important;overflow:hidden;">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#clase{{ clase.id }}" style="font-weight:600;font-size:0.9rem;padding:0.75rem 1rem;">
+                            <i class="fas {% if clase.tipo == 'vivo' %}fa-video{% else %}fa-play-circle{% endif %} me-2" style="color:var(--primary);"></i>
+                            {{ clase.titulo }}
+                            <span class="ms-auto me-2 badge bg-light text-dark" style="font-size:0.7rem;">{{ clase.duracion_minutos }} min</span>
+                        </button>
+                    </h2>
+                    <div id="clase{{ clase.id }}" class="accordion-collapse collapse" data-bs-parent="#clasesAccordion">
+                        <div class="accordion-body" style="padding:1rem;">
+                            <p class="small text-muted">{{ clase.descripcion }}</p>
+                            {% if clase.url_video %}
+                            <div class="ratio ratio-16x9 mt-2">
+                                <iframe src="{{ clase.url_video }}" allowfullscreen></iframe>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-film" style="font-size:2rem;color:var(--gray-300);"></i>
+                <p class="text-muted mt-2">No hay clases disponibles aún.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="dashboard-card mb-4">
+            <h6 style="font-weight:700;color:var(--primary);"><i class="fas fa-chart-line me-2"></i>Mi progreso</h6>
+            <div class="mt-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <small>Avance</small>
+                    <small>{{ inscripcion.progreso|int }}%</small>
+                </div>
+                <div class="progress-encl mb-3">
+                    <div class="progress-bar-encl" style="width: {{ inscripcion.progreso }}%;"></div>
+                </div>
+                {% if inscripcion.completado %}
+                <span class="badge bg-success w-100 py-2"><i class="fas fa-check me-1"></i>Completado</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="dashboard-card mb-4">
+            <h6 style="font-weight:700;color:var(--primary);"><i class="fas fa-file-alt me-2"></i>Material de estudio</h6>
+            {% if materiales %}
+            <div class="list-group list-group-flush mt-2">
+                {% for mat in materiales %}
+                <a href="{{ mat.archivo_url }}" class="list-group-item list-group-item-action d-flex align-items-center gap-2 px-0" target="_blank">
+                    <i class="fas fa-file-pdf" style="color:#e74c3c;"></i>
+                    <span style="font-size:0.85rem;">{{ mat.titulo }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted small mt-2">No hay materiales disponibles.</p>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-card mb-4">
+            <h6 style="font-weight:700;color:var(--primary);"><i class="fas fa-tasks me-2"></i>Exámenes</h6>
+            {% if examenes %}
+            <div class="list-group list-group-flush mt-2">
+                {% for ex in examenes %}
+                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span style="font-size:0.85rem;">{{ ex.titulo }}</span>
+                        <small class="d-block text-muted">{{ ex.preguntas|length }} preguntas · {{ ex.tiempo_limite_minutos }} min</small>
+                    </div>
+                    <a href="{{ url_for('alumno_realizar_examen', examen_id=ex.id) }}" class="btn btn-encl btn-encl-sm btn-encl-primary">Iniciar</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted small mt-2">No hay exámenes disponibles.</p>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-card">
+            <h6 style="font-weight:700;color:var(--primary);"><i class="fas fa-video me-2"></i>Video del instructor</h6>
+            {% if tiene_video %}
+            <p class="text-muted small mt-2">Video de bienvenida de {{ curso.instructor.nombre }} {{ curso.instructor.apellidos }}</p>
+            <button class="btn btn-encl btn-encl-primary btn-encl-sm w-100" onclick="document.getElementById('videoBienvenidaModal')?.classList.add('show');document.getElementById('videoBienvenidaModal')?.style.setProperty('display','block');">
+                <i class="fas fa-play me-1"></i>Ver video
+            </button>
+            {% else %}
+            <p class="text-muted small mt-2">El instructor aún no ha subido su video de bienvenida.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function marcarVisto() {
+    fetch('{{ url_for("alumno_marcar_video_visto", curso_id=curso.id) }}', {method:'POST'})
+        .then(function(r){return r.json()})
+        .then(function(d){
+            if(d.ok){
+                var modal = new bootstrap.Modal(document.getElementById('videoBienvenidaModal'));
+                modal.hide();
+                var v = document.getElementById('modalVideo');
+                if(v) v.pause();
+            }
+        });
+}
+{% if tiene_video and not inscripcion.video_bienvenida_visto %}
+document.addEventListener('DOMContentLoaded', function(){
+    var el = document.getElementById('videoBienvenidaModal');
+    if(el) { var modal = new bootstrap.Modal(el); modal.show(); }
+});
+{% endif %}
+</script>
+
+<style>
+.modal-backdrop.show { opacity: 0.8; }
+.accordion-button:not(.collapsed) { background: rgba(13,110,253,0.05); color: var(--primary); }
+.accordion-button:focus { box-shadow: none; }
+.list-group-item { border-left: none; border-right: none; }
+.list-group-item:first-child { border-top: none; }
+.list-group-item:last-child { border-bottom: none; }
+</style>
+{% endblock %}

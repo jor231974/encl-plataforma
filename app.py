@@ -32,6 +32,11 @@ with app.app_context():
         db.session.commit()
     except Exception:
         db.session.rollback()
+    try:
+        db.session.execute(text('ALTER TABLE inscripcion ADD COLUMN video_bienvenida_visto BOOLEAN DEFAULT 0'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -327,6 +332,27 @@ def alumno_dashboard():
 def alumno_cursos():
     inscripciones = Inscripcion.query.filter_by(alumno_id=current_user.id).all()
     return render_template('alumno/mis_cursos.html', inscripciones=inscripciones, **get_theme_config())
+
+@app.route('/alumno/aula/<int:curso_id>')
+@login_required
+def alumno_aula(curso_id):
+    inscripcion = Inscripcion.query.filter_by(alumno_id=current_user.id, curso_id=curso_id).first_or_404()
+    curso = inscripcion.curso
+    clases = Clase.query.filter_by(curso_id=curso.id, activo=True).order_by(Clase.id).all()
+    examenes = Examen.query.filter_by(curso_id=curso.id, activo=True).all()
+    materiales = MaterialClase.query.join(Clase).filter(Clase.curso_id == curso.id).all()
+    tiene_video = curso.instructor and curso.instructor.video_bienvenida
+    return render_template('alumno/aula.html', inscripcion=inscripcion, curso=curso,
+                         clases=clases, examenes=examenes, materiales=materiales,
+                         tiene_video=tiene_video, **get_theme_config())
+
+@app.route('/alumno/aula/<int:curso_id>/marcar-video-visto', methods=['POST'])
+@login_required
+def alumno_marcar_video_visto(curso_id):
+    inscripcion = Inscripcion.query.filter_by(alumno_id=current_user.id, curso_id=curso_id).first_or_404()
+    inscripcion.video_bienvenida_visto = True
+    db.session.commit()
+    return jsonify({'ok': True})
 
 @app.route('/alumno/clases-vivo')
 @login_required

@@ -117,6 +117,7 @@ class Inscripcion(db.Model):
     progreso = db.Column(db.Float, default=0.0)
     completado = db.Column(db.Boolean, default=False)
     calificacion_final = db.Column(db.Float)
+    video_bienvenida_visto = db.Column(db.Boolean, default=False)
 
     alumno = db.relationship('User', backref='inscripciones')
     curso = db.relationship('Curso', backref='inscripciones')
