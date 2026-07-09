@@ -32,43 +32,35 @@ def main():
             f.write(base64.b64decode(DEMO_MP4_B64))
         print(f"Demo video written: {demo_path} ({os.path.getsize(demo_path)} bytes)")
 
-        # 3. Assign to revisor.instructor
+        # 3. Ensure revisor.instructor user exists
+        from werkzeug.security import generate_password_hash
         user = User.query.filter_by(username='revisor.instructor').first()
-        if user:
-            user.video_bienvenida = 'demo_bienvenida.mp4'
-            db.session.commit()
-            print(f"Assigned to user: {user.username} ({user.nombre} {user.apellidos})")
-            print(f"video_bienvenida now = {user.video_bienvenida}")
-        else:
-            # Try any instructor
-            user = User.query.filter_by(role='instructor').first()
-            if user:
-                user.video_bienvenida = 'demo_bienvenida.mp4'
-                db.session.commit()
-                print(f"Assigned to instructor: {user.username} ({user.nombre} {user.apellidos})")
-            else:
-                print("WARNING: No instructor user found. Creating one...")
-                from werkzeug.security import generate_password_hash
-                user = User(
-                    username='revisor.instructor',
-                    email='revisor.instructor@encl.edu.mx',
-                    password_hash=generate_password_hash('instructor123'),
-                    role='instructor',
-                    nombre='Instructor',
-                    apellidos='Demo',
-                    video_bienvenida='demo_bienvenida.mp4'
-                )
-                db.session.add(user)
-                db.session.commit()
-                print(f"Created instructor user. video_bienvenida = {user.video_bienvenida}")
+        if not user:
+            user = User(
+                username='revisor.instructor',
+                email='revisor.instructor@encl.edu.mx',
+                password_hash=generate_password_hash('instructor123'),
+                role='instructor',
+                nombre='Instructor',
+                apellidos='Revisor',
+                activo=True
+            )
+            db.session.add(user)
+            db.session.flush()
+            print("Created user: revisor.instructor / instructor123")
 
-        # 4. Verify
-        user = User.query.filter_by(username=user.username).first()
+        # 4. Assign demo video
+        user.video_bienvenida = 'demo_bienvenida.mp4'
+        db.session.commit()
+        print(f"Assigned video to: {user.username} ({user.nombre} {user.apellidos})")
+
+        # 5. Verify
         print(f"\nFinal verification:")
         print(f"  username: {user.username}")
         print(f"  video_bienvenida: {user.video_bienvenida}")
         print(f"  file exists: {os.path.exists(os.path.join(uploads_dir, user.video_bienvenida))}")
-        print("\nDONE. Now reload the web app on PythonAnywhere (Web -> Reload).")
+        print(f"\nCredentials: revisor.instructor / instructor123")
+        print("DONE. Now reload the web app on PythonAnywhere (Web -> Reload).")
 
 if __name__ == '__main__':
     main()
