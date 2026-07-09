@@ -549,6 +549,32 @@ def instructor_perfil():
         return redirect(url_for('instructor_perfil'))
     return render_template('instructor/perfil.html', **get_theme_config())
 
+@app.route('/instructor/video', methods=['GET', 'POST'])
+@login_required
+@instructor_required
+def instructor_video():
+    if request.method == 'POST':
+        video = request.files.get('video_bienvenida')
+        if video and video.filename:
+            ext = video.filename.rsplit('.', 1)[1].lower() if '.' in video.filename else 'mp4'
+            filename = f'video_{current_user.id}_{int(datetime.utcnow().timestamp())}.{ext}'
+            path = os.path.join('static/uploads', filename)
+            video.save(path)
+            current_user.video_bienvenida = filename
+            db.session.commit()
+            flash('Video de bienvenida subido correctamente', 'success')
+        foto = request.files.get('foto')
+        if foto and foto.filename:
+            ext = foto.filename.rsplit('.', 1)[1].lower() if '.' in foto.filename else 'jpg'
+            filename = f'foto_{current_user.id}_{int(datetime.utcnow().timestamp())}.{ext}'
+            path = os.path.join('static/uploads', filename)
+            foto.save(path)
+            current_user.foto = filename
+            db.session.commit()
+            flash('Foto actualizada correctamente', 'success')
+        return redirect(url_for('instructor_video'))
+    return render_template('instructor/video.html', **get_theme_config())
+
 @app.route('/instructor/cursos')
 @login_required
 @instructor_required
