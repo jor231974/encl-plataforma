@@ -11,18 +11,18 @@
         <div class="row align-items-center">
             <div class="col-lg-5">
                 <img src="/uploads/logo_clean.svg" alt="ENCABEZADO" style="width: 50%; height: auto; margin-bottom: 1.5rem;">
-                <h1 style="font-size: 2.2rem;">{{ hero_title|default('ESCUELA NACIONAL DE<br>CAPACITACIÓN <span>Y CURSOS EN LÍNEA</span>')|safe }}</h1>
-                <p style="font-size: 1rem; max-width: 100%;">{{ hero_subtitle|default('Transformando personas, fortaleciendo comunidades y desarrollando talento para el futuro.') }}</p>
+                <h1>{{ hero_title|default('ESCUELA NACIONAL DE<br>CAPACITACIÓN <span>Y CURSOS EN LÍNEA</span>')|safe }}</h1>
+                <p>{{ hero_subtitle|default('Transformando personas, fortaleciendo comunidades y desarrollando talento para el futuro.') }}</p>
                 <div class="hero-buttons">
-                    <a href="{{ url_for('public_cursos') }}" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;"><i class="fas fa-play me-2"></i>Comenzar ahora</a>
-                    <a href="{{ url_for('public_cursos') }}" class="btn btn-outline-light" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;"><i class="fas fa-book me-2"></i>Ver cursos</a>
-                    <a href="{{ url_for('public_login') }}" class="btn btn-outline-light" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;"><i class="fas fa-sign-in-alt me-2"></i>Iniciar sesión</a>
+                    <a href="{{ url_for('public_cursos') }}" class="btn btn-primary"><i class="fas fa-play me-2"></i>Comenzar ahora</a>
+                    <a href="{{ url_for('public_cursos') }}" class="btn btn-outline-light"><i class="fas fa-book me-2"></i>Ver cursos</a>
+                    <a href="{{ url_for('public_login') }}" class="btn btn-outline-light"><i class="fas fa-sign-in-alt me-2"></i>Iniciar sesión</a>
                 </div>
-                <div class="hero-stats" style="gap: 1rem;">
-                    <div class="stat-item"><h3 style="font-size: 1.8rem;"><span class="stat-counter" data-target="{{ total_cursos }}">0</span>+</h3><p>Cursos</p></div>
-                    <div class="stat-item"><h3 style="font-size: 1.8rem;"><span class="stat-counter" data-target="{{ total_alumnos }}">0</span>+</h3><p>Alumnos</p></div>
-                    <div class="stat-item"><h3 style="font-size: 1.8rem;"><span class="stat-counter" data-target="{{ total_instructores }}">0</span>+</h3><p>Instructores</p></div>
-                    <div class="stat-item"><h3 style="font-size: 1.8rem;"><span class="stat-counter" data-target="32">0</span></h3><p>Estados</p></div>
+                <div class="hero-stats">
+                    <div class="stat-item"><h3><span class="stat-counter" data-target="{{ total_cursos }}">0</span>+</h3><p>Cursos</p></div>
+                    <div class="stat-item"><h3><span class="stat-counter" data-target="{{ total_alumnos }}">0</span>+</h3><p>Alumnos</p></div>
+                    <div class="stat-item"><h3><span class="stat-counter" data-target="{{ total_instructores }}">0</span>+</h3><p>Instructores</p></div>
+                    <div class="stat-item"><h3><span class="stat-counter" data-target="32">0</span></h3><p>Estados</p></div>
                 </div>
             </div>
             <div class="col-lg-7 d-none d-lg-block">
@@ -207,7 +207,7 @@
             {% for pat in patrocinadores %}
             <div class="col-lg-2 col-md-3 col-6 animate-on-scroll">
                 <div class="sponsor-card">
-                    <div class="sponsor-logo"><i class="fas fa-handshake"></i></div>
+                    <div class="sponsor-logo"><span style="font-size:1.8rem;font-weight:800;color:var(--primary);letter-spacing:-1px;">{{ pat.nombre[:2]|upper }}</span></div>
                     <h6>{{ pat.nombre }}</h6>
                     <p>"{{ pat.lema[:50] }}"</p>
                 </div>

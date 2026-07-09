@@ -2,7 +2,7 @@
     --primary: #021a48;
     --primary-light: #1a3a6b;
     --primary-dark: #010e2e;
-    --secondary: #1a3a6b;
+    --secondary: #0d9488;
     --accent: #f4a807;
     --accent-light: #fcd34d;
     --gold: #f4a807;
@@ -163,11 +163,7 @@ body {
 
 .navbar-encl .nav-link:hover,
 .navbar-encl .nav-link.active {
-    color: var(--primary) !important;
-}
-.navbar-encl .nav-link:hover,
-.navbar-encl .nav-link.active {
-    color: #fff !important;
+    color: var(--accent) !important;
 }
 .navbar-encl .nav-link::after {
     content: '';
@@ -329,11 +325,11 @@ body {
     background: var(--gradient-accent);
     border: none;
     color: #fff;
-    box-shadow: 0 4px 20px rgba(0,200,83,0.3);
+    box-shadow: 0 4px 20px rgba(244,168,7,0.3);
 }
 .hero-content .hero-buttons .btn-primary:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 30px rgba(0,200,83,0.4);
+    box-shadow: 0 8px 30px rgba(244,168,7,0.4);
 }
 .hero-content .hero-buttons .btn-outline-light:hover {
     background: rgba(255,255,255,0.1);
