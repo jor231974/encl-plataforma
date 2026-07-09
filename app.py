@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'encl-secret-key-2026-mexico')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///encl.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 from models import *
@@ -1561,19 +1561,35 @@ def admin_banners():
 @login_required
 @superadmin_required
 def admin_crear_banner():
+    from werkzeug.utils import secure_filename
     import os as fmod
     titulo = request.form.get('titulo')
     subtitulo = request.form.get('subtitulo')
     link = request.form.get('link')
     tiempo_ms = int(request.form.get('tiempo_ms', 5000))
     archivo = request.files.get('imagen')
-    url = request.form.get('imagen_url', '')
-    if not url and archivo and archivo.filename:
-        fname = f'banner_{int(datetime.utcnow().timestamp())}_{archivo.filename}'
-        upload_dir = app.config['UPLOAD_FOLDER']
+    imagen_url = request.form.get('imagen_url', '').strip()
+    url = ''
+    if imagen_url:
+        url = imagen_url
+    elif archivo and archivo.filename:
+        safe_name = secure_filename(archivo.filename) or 'banner.png'
+        fname = f'banner_{int(datetime.utcnow().timestamp())}_{safe_name}'
+        upload_dir = fmod.path.join(fmod.dirname(__file__), 'static', 'uploads')
         fmod.makedirs(upload_dir, exist_ok=True)
-        archivo.save(fmod.path.join(upload_dir, fname))
-        url = f'/uploads/{fname}'
+        save_path = fmod.path.join(upload_dir, fname)
+        try:
+            archivo.save(save_path)
+            if fmod.path.getsize(save_path) > 0:
+                url = f'/uploads/{fname}'
+            else:
+                fmod.remove(save_path)
+                flash('El archivo subido está vacío', 'error')
+        except Exception as e:
+            flash(f'Error al guardar la imagen: {e}', 'error')
+    else:
+        flash('Debes subir una imagen o proporcionar una URL', 'error')
+        return redirect(url_for('admin_banners'))
     max_orden = db.session.query(db.func.max(Banner.orden)).scalar() or 0
     banner = Banner(titulo=titulo, subtitulo=subtitulo, imagen=url, link=link, tiempo_ms=tiempo_ms, orden=max_orden + 1)
     db.session.add(banner)
@@ -1594,11 +1610,16 @@ def admin_editar_banner(banner_id):
     banner.activo = request.form.get('activo', '1') == '1'
     archivo = request.files.get('imagen')
     if archivo and archivo.filename:
-        fname = f'banner_{int(datetime.utcnow().timestamp())}_{archivo.filename}'
-        upload_dir = app.config['UPLOAD_FOLDER']
+        from werkzeug.utils import secure_filename
+        safe_name = secure_filename(archivo.filename) or 'banner.png'
+        fname = f'banner_{int(datetime.utcnow().timestamp())}_{safe_name}'
+        upload_dir = fmod.path.join(fmod.dirname(__file__), 'static', 'uploads')
         fmod.makedirs(upload_dir, exist_ok=True)
-        archivo.save(fmod.path.join(upload_dir, fname))
-        banner.imagen = f'/uploads/{fname}'
+        try:
+            archivo.save(fmod.path.join(upload_dir, fname))
+            banner.imagen = f'/uploads/{fname}'
+        except Exception as e:
+            flash(f'Error al guardar la imagen: {e}', 'error')
     db.session.commit()
     flash('Banner actualizado', 'success')
     return redirect(url_for('admin_banners'))
