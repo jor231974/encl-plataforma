@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import json
 import uuid
+from sqlalchemy import text
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'encl-secret-key-2026-mexico')
@@ -22,7 +23,12 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
     try:
-        db.session.execute('ALTER TABLE user ADD COLUMN video_bienvenida VARCHAR(500)')
+        db.session.execute(text('ALTER TABLE user ADD COLUMN video_bienvenida VARCHAR(500)'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    try:
+        db.session.execute(text('ALTER TABLE user ADD COLUMN reset_token VARCHAR(200)'))
         db.session.commit()
     except Exception:
         db.session.rollback()
