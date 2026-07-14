@@ -132,6 +132,74 @@ class Inscripcion(db.Model):
     curso = db.relationship('Curso', backref='inscripciones')
     grupo_curso = db.relationship('GrupoCurso', backref='inscripciones')
 
+class CursoSemana(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'), nullable=False)
+    numero = db.Column(db.Integer, nullable=False)
+    titulo = db.Column(db.String(300), nullable=False)
+    objetivo = db.Column(db.Text)
+    activo = db.Column(db.Boolean, default=True)
+    orden = db.Column(db.Integer, default=0)
+    curso = db.relationship('Curso', backref='semanas')
+
+class SemanaSesion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    semana_id = db.Column(db.Integer, db.ForeignKey('curso_semana.id'), nullable=False)
+    numero = db.Column(db.Integer, nullable=False)
+    titulo = db.Column(db.String(300), nullable=False)
+    contenidos = db.Column(db.Text)
+    activo = db.Column(db.Boolean, default=True)
+    orden = db.Column(db.Integer, default=0)
+    semana = db.relationship('CursoSemana', backref='sesiones')
+
+class Actividad(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sesion_id = db.Column(db.Integer, db.ForeignKey('semana_sesion.id'), nullable=False)
+    tipo = db.Column(db.String(50), nullable=False)
+    titulo = db.Column(db.String(300), nullable=False)
+    instrucciones = db.Column(db.Text)
+    config = db.Column(db.Text, default='{}')
+    calificacion_minima = db.Column(db.Float, default=70.0)
+    max_intentos = db.Column(db.Integer, default=3)
+    tiempo_limite_minutos = db.Column(db.Integer)
+    orden = db.Column(db.Integer, default=0)
+    activo = db.Column(db.Boolean, default=True)
+    sesion = db.relationship('SemanaSesion', backref='actividades')
+
+class IntentoActividad(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    alumno_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    actividad_id = db.Column(db.Integer, db.ForeignKey('actividad.id'))
+    intento_num = db.Column(db.Integer, default=1)
+    respuesta = db.Column(db.Text)
+    calificacion = db.Column(db.Float)
+    retroalimentacion = db.Column(db.Text)
+    completado = db.Column(db.Boolean, default=False)
+    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+    alumno = db.relationship('User', backref='intentos')
+    actividad = db.relationship('Actividad', backref='intentos')
+
+class BancoPreguntas(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    instructor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'))
+    tipo = db.Column(db.String(50), nullable=False)
+    texto = db.Column(db.Text, nullable=False)
+    opciones = db.Column(db.Text)
+    respuesta = db.Column(db.Text)
+    tema = db.Column(db.String(200))
+    activo = db.Column(db.Boolean, default=True)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+
+class ProgresoSemana(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    alumno_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    semana_id = db.Column(db.Integer, db.ForeignKey('curso_semana.id'))
+    completado = db.Column(db.Boolean, default=False)
+    fecha_completado = db.Column(db.DateTime)
+    alumno = db.relationship('User', backref='progreso_semanas')
+    semana = db.relationship('CursoSemana', backref='progreso')
+
 class Examen(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'))
