@@ -6,10 +6,22 @@ from flask_login import (LoginManager, login_user, logout_user,
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import json
-import uuid
-from sqlalchemy import text
 
 app = Flask(__name__)
+
+@app.template_filter('enumerate')
+def enumerate_filter(iterable):
+    return enumerate(iterable)
+
+@app.template_filter('fromjson')
+def fromjson_filter(value):
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except (ValueError, TypeError):
+            return {}
+    return value or {}
+
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'encl-secret-key-2026-mexico')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///encl.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -347,9 +359,12 @@ def alumno_aula(curso_id):
     examenes = Examen.query.filter_by(curso_id=curso.id, activo=True).all()
     materiales = MaterialClase.query.join(Clase).filter(Clase.curso_id == curso.id).all()
     tiene_video = curso.instructor and curso.instructor.video_bienvenida
+    semanas = CursoSemana.query.filter_by(curso_id=curso.id, activo=True).order_by(CursoSemana.orden).all()
+    progreso_semanas = {p.semana_id: p for p in ProgresoSemana.query.filter_by(alumno_id=current_user.id).join(CursoSemana).filter(CursoSemana.curso_id == curso.id).all()}
     return render_template('alumno/aula.html', inscripcion=inscripcion, curso=curso,
                          clases=clases, examenes=examenes, materiales=materiales,
-                         tiene_video=tiene_video, **get_theme_config())
+                         tiene_video=tiene_video, semanas=semanas,
+                         progreso_semanas=progreso_semanas, **get_theme_config())
 
 @app.route('/alumno/aula/<int:curso_id>/marcar-video-visto', methods=['POST'])
 @login_required
@@ -358,6 +373,96 @@ def alumno_marcar_video_visto(curso_id):
     inscripcion.video_bienvenida_visto = True
     db.session.commit()
     return jsonify({'ok': True})
+
+@app.route('/alumno/actividad/<int:actividad_id>')
+@login_required
+def alumno_actividad(actividad_id):
+    actividad = Actividad.query.get_or_404(actividad_id)
+    sesion = actividad.sesion
+    curso = sesion.semana.curso
+    inscripcion = Inscripcion.query.filter_by(alumno_id=current_user.id, curso_id=curso.id).first_or_404()
+    intentos = IntentoActividad.query.filter_by(alumno_id=current_user.id, actividad_id=actividad.id).order_by(IntentoActividad.intento_num).all()
+    puede_intentar = len(intentos) < actividad.max_intentos
+    ultimo_intento = intentos[-1] if intentos else None
+    return render_template('alumno/actividad.html', actividad=actividad, sesion=sesion,
+                         curso=curso, intentos=intentos, puede_intentar=puede_intentar,
+                         ultimo_intento=ultimo_intento, **get_theme_config())
+
+@app.route('/alumno/actividad/<int:actividad_id>/enviar', methods=['POST'])
+@login_required
+def alumno_enviar_actividad(actividad_id):
+    actividad = Actividad.query.get_or_404(actividad_id)
+    curso = actividad.sesion.semana.curso
+    inscripcion = Inscripcion.query.filter_by(alumno_id=current_user.id, curso_id=curso.id).first_or_404()
+    intentos = IntentoActividad.query.filter_by(alumno_id=current_user.id, actividad_id=actividad.id).count()
+    if intentos >= actividad.max_intentos:
+        return jsonify({'error': 'Límite de intentos alcanzado'}), 400
+    respuesta = request.form.get('respuesta') or request.get_data(as_text=True)
+    intento = IntentoActividad(
+        alumno_id=current_user.id, actividad_id=actividad.id,
+        intento_num=intentos + 1, respuesta=respuesta
+    )
+    config = json.loads(actividad.config) if actividad.config else {}
+    calificacion = auto_calificar(actividad.tipo, respuesta, config)
+    intento.calificacion = calificacion
+    intento.completado = calificacion >= actividad.calificacion_minima
+    if actividad.tiempo_limite_minutos and 'tiempo_inicio' in request.form:
+        elapsed = (datetime.utcnow() - datetime.fromtimestamp(float(request.form['tiempo_inicio']))).total_seconds()
+        if elapsed > actividad.tiempo_limite_minutos * 60:
+            intento.calificacion = 0
+            intento.completado = False
+    db.session.add(intento)
+    if intento.completado:
+        verificar_progreso_semana(current_user.id, actividad.sesion.semana_id)
+    db.session.commit()
+    return jsonify({'ok': True, 'calificacion': calificacion, 'completado': intento.completado})
+
+def auto_calificar(tipo, respuesta, config):
+    if tipo in ('multiple', 'verdadero_falso', 'seleccion_imagenes'):
+        return 100 if respuesta.strip() == config.get('respuesta', '').strip() else 0
+    elif tipo == 'completar':
+        correctas = config.get('respuestas', [])
+        dadas = json.loads(respuesta) if isinstance(respuesta, str) and respuesta.startswith('{') else {}
+        aciertos = sum(1 for k, v in dadas.items() if k in correctas and v.strip().lower() == correctas[k].strip().lower())
+        return round((aciertos / len(correctas)) * 100) if correctas else 0
+    elif tipo == 'relacionar':
+        pares = config.get('pares', [])
+        dadas = json.loads(respuesta) if isinstance(respuesta, str) and respuesta.startswith('{') else {}
+        aciertos = sum(1 for k, v in dadas.items() if k in pares and v == pares[k])
+        return round((aciertos / len(pares)) * 100) if pares else 0
+    elif tipo == 'ordenar':
+        correcto = config.get('orden', [])
+        dadas = json.loads(respuesta) if isinstance(respuesta, str) else []
+        return 100 if dadas == correcto else 0
+    return 0
+
+def verificar_progreso_semana(alumno_id, semana_id):
+    semana = CursoSemana.query.get(semana_id)
+    if not semana:
+        return
+    total = Actividad.query.join(SemanaSesion).filter(SemanaSesion.semana_id == semana_id, Actividad.activo == True).count()
+    if total == 0:
+        return
+    completadas = db.session.query(IntentoActividad).join(Actividad).join(SemanaSesion).filter(
+        SemanaSesion.semana_id == semana_id, IntentoActividad.alumno_id == alumno_id,
+        IntentoActividad.completado == True
+    ).distinct(IntentoActividad.actividad_id).count()
+    progreso = ProgresoSemana.query.filter_by(alumno_id=alumno_id, semana_id=semana_id).first()
+    if not progreso:
+        progreso = ProgresoSemana(alumno_id=alumno_id, semana_id=semana_id)
+        db.session.add(progreso)
+    progreso.completado = completadas >= total
+    if progreso.completado:
+        progreso.fecha_completado = datetime.utcnow()
+    # Actualizar progreso general del curso
+    curso_id = semana.curso_id
+    total_semanas = CursoSemana.query.filter_by(curso_id=curso_id).count()
+    completadas_sem = ProgresoSemana.query.filter_by(alumno_id=alumno_id, completado=True).join(CursoSemana).filter(CursoSemana.curso_id == curso_id).count()
+    insc = Inscripcion.query.filter_by(alumno_id=alumno_id, curso_id=curso_id).first()
+    if insc:
+        insc.progreso = round((completadas_sem / total_semanas) * 100) if total_semanas else 0
+        if insc.progreso >= 100:
+            insc.completado = True
 
 @app.route('/alumno/clases-vivo')
 @login_required
@@ -439,6 +544,27 @@ def alumno_enviar_examen(examen_id):
 def alumno_certificados():
     certificados = Certificado.query.filter_by(alumno_id=current_user.id).all()
     return render_template('alumno/certificados.html', certificados=certificados, **get_theme_config())
+
+@app.route('/alumno/certificado/<int:curso_id>')
+@login_required
+def alumno_generar_certificado(curso_id):
+    inscripcion = Inscripcion.query.filter_by(alumno_id=current_user.id, curso_id=curso_id).first_or_404()
+    if not inscripcion.completado:
+        flash('Debes completar el curso para obtener el certificado', 'error')
+        return redirect(url_for('alumno_aula', curso_id=curso_id))
+    existente = Certificado.query.filter_by(alumno_id=current_user.id, curso_id=curso_id).first()
+    if existente:
+        flash('Ya tienes un certificado para este curso', 'success')
+        return redirect(url_for('alumno_certificados'))
+    cert = Certificado(
+        alumno_id=current_user.id, curso_id=curso_id,
+        fecha_emision=datetime.utcnow(),
+        codigo=f'CERT-{curso_id}-{current_user.id}-{int(datetime.utcnow().timestamp())}'
+    )
+    db.session.add(cert)
+    db.session.commit()
+    flash('Certificado generado exitosamente', 'success')
+    return redirect(url_for('alumno_certificados'))
 
 @app.route('/alumno/material')
 @login_required
@@ -851,6 +977,104 @@ def instructor_crear_enlace():
     db.session.commit()
     flash('Enlace agregado', 'success')
     return redirect(url_for('instructor_curso_detalle', curso_id=enlace.curso_id))
+
+@app.route('/instructor/constructor/<int:curso_id>')
+@login_required
+@instructor_required
+def instructor_constructor(curso_id):
+    curso = Curso.query.get_or_404(curso_id)
+    if curso.instructor_id != current_user.id and current_user.role != 'admin':
+        flash('Acceso no autorizado', 'error')
+        return redirect(url_for('instructor_dashboard'))
+    semanas = CursoSemana.query.filter_by(curso_id=curso_id, activo=True).order_by(CursoSemana.orden).all()
+    preguntas = BancoPreguntas.query.filter_by(instructor_id=current_user.id, curso_id=curso_id, activo=True).order_by(BancoPreguntas.fecha_creacion.desc()).all()
+    return render_template('instructor/constructor.html', curso=curso, semanas=semanas, preguntas=preguntas, **get_theme_config())
+
+@app.route('/instructor/constructor/crear-actividad', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_crear_actividad():
+    sesion_id = request.form.get('sesion_id', type=int)
+    sesion = SemanaSesion.query.get_or_404(sesion_id)
+    curso = sesion.semana.curso
+    if curso.instructor_id != current_user.id and current_user.role != 'admin':
+        flash('Acceso no autorizado', 'error')
+        return redirect(url_for('instructor_dashboard'))
+    tipo = request.form.get('tipo')
+    titulo = request.form.get('titulo')
+    instrucciones = request.form.get('instrucciones')
+    config = {}
+    if tipo == 'multiple':
+        preguntas_raw = request.form.getlist('pregunta')
+        opciones_raw = request.form.getlist('opciones_raw')
+        respuesta_idx = request.form.get('respuesta_idx', type=int)
+        if preguntas_raw and opciones_raw:
+            config = {'pregunta': preguntas_raw[0], 'opciones': opciones_raw, 'respuesta': str(respuesta_idx)}
+    elif tipo == 'verdadero_falso':
+        config = {'pregunta': request.form.get('pregunta'), 'respuesta': request.form.get('respuesta')}
+    elif tipo == 'completar':
+        plantilla = {}
+        labels = request.form.getlist('label')
+        respuestas = request.form.getlist('respuesta')
+        for i, (l, r) in enumerate(zip(labels, respuestas)):
+            plantilla[f'campo_{i}'] = {'label': l, 'respuesta': r}
+        config = {'plantilla': plantilla, 'respuestas': {f'campo_{i}': r for i, r in enumerate(respuestas)}}
+    elif tipo == 'relacionar':
+        izquierda = request.form.getlist('izquierda')
+        derecha = request.form.getlist('derecha')
+        pares = {}
+        for i, (izq, der) in enumerate(zip(izquierda, derecha)):
+            pares[f'item_{i}'] = der
+        config = {'pares': pares, 'opciones_derecha': list(set(derecha))}
+    elif tipo == 'ordenar':
+        config = {'items': request.form.getlist('items'), 'orden': request.form.getlist('items')}
+    elif tipo in ('flashcard', 'vocabulario'):
+        config = {'frontal': request.form.get('frontal'), 'reverso': request.form.get('reverso')}
+    elif tipo == 'audio':
+        config = {'audio_url': request.form.get('audio_url'), 'pregunta': request.form.get('pregunta'), 'respuesta': request.form.get('respuesta')}
+    elif tipo == 'pronunciacion':
+        config = {'texto': request.form.get('texto'), 'palabra': request.form.get('palabra')}
+    else:
+        config = {'pregunta': request.form.get('pregunta'), 'respuesta': request.form.get('respuesta')}
+    calif_min = float(request.form.get('calificacion_minima', 70))
+    max_int = int(request.form.get('max_intentos', 3))
+    from models import Actividad as Act
+    act = Act(
+        sesion_id=sesion_id, tipo=tipo, titulo=titulo,
+        instrucciones=instrucciones, config=json.dumps(config),
+        calificacion_minima=calif_min, max_intentos=max_int,
+        orden=Act.query.filter_by(sesion_id=sesion_id).count() + 1
+    )
+    db.session.add(act)
+    db.session.commit()
+    flash(f'Actividad "{titulo}" creada', 'success')
+    return redirect(url_for('instructor_constructor', curso_id=curso.id))
+
+@app.route('/instructor/constructor/banco', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_banco_guardar():
+    curso_id = request.form.get('curso_id', type=int)
+    pregunta_id = request.form.get('pregunta_id', type=int)
+    if pregunta_id:
+        bp = BancoPreguntas.query.get_or_404(pregunta_id)
+        if bp.instructor_id != current_user.id:
+            return redirect(url_for('instructor_constructor', curso_id=bp.curso_id))
+        bp.texto = request.form.get('texto', bp.texto)
+        bp.opciones = request.form.get('opciones', bp.opciones)
+        bp.respuesta = request.form.get('respuesta', bp.respuesta)
+        bp.tema = request.form.get('tema', bp.tema)
+    else:
+        bp = BancoPreguntas(
+            instructor_id=current_user.id, curso_id=curso_id,
+            tipo=request.form.get('tipo'), texto=request.form.get('texto'),
+            opciones=request.form.get('opciones'), respuesta=request.form.get('respuesta'),
+            tema=request.form.get('tema')
+        )
+        db.session.add(bp)
+    db.session.commit()
+    flash('Pregunta guardada en el banco', 'success')
+    return redirect(url_for('instructor_constructor', curso_id=curso_id))
 
 @app.route('/instructor/mensajes')
 @login_required

@@ -34,53 +34,65 @@
 
 <div class="row g-4">
     <div class="col-lg-8">
-        <div class="dashboard-card mb-4">
-            <h5 style="font-weight:700;color:var(--primary);margin-bottom:1rem;"><i class="fas fa-info-circle me-2"></i>Acerca del curso</h5>
-            <p>{{ curso.descripcion_larga }}</p>
-            <div class="d-flex flex-wrap gap-3 mt-3">
-                <span class="badge bg-primary"><i class="fas fa-signal me-1"></i>{{ curso.nivel }}</span>
-                <span class="badge bg-info"><i class="far fa-clock me-1"></i>{{ curso.duracion_horas }} horas</span>
-                <span class="badge bg-success"><i class="fas fa-chalkboard-teacher me-1"></i>{{ curso.instructor.nombre if curso.instructor else 'Instructor' }}</span>
-                {% if curso.tiene_certificado %}<span class="badge bg-warning text-dark"><i class="fas fa-certificate me-1"></i>Certificación</span>{% endif %}
-            </div>
-        </div>
-
-        <div class="dashboard-card mb-4">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h5 style="font-weight:700;color:var(--primary);margin:0;"><i class="fas fa-list me-2"></i>Clases del curso</h5>
-                <span class="badge bg-secondary">{{ clases|length }} clases</span>
-            </div>
-            {% if clases %}
-            <div class="accordion" id="clasesAccordion">
-                {% for clase in clases %}
-                <div class="accordion-item" style="border:1px solid #eef2f6;margin-bottom:0.5rem;border-radius:8px !important;overflow:hidden;">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#clase{{ clase.id }}" style="font-weight:600;font-size:0.9rem;padding:0.75rem 1rem;">
-                            <i class="fas {% if clase.tipo == 'vivo' %}fa-video{% else %}fa-play-circle{% endif %} me-2" style="color:var(--primary);"></i>
-                            {{ clase.titulo }}
-                            <span class="ms-auto me-2 badge bg-light text-dark" style="font-size:0.7rem;">{{ clase.duracion_minutos }} min</span>
-                        </button>
-                    </h2>
-                    <div id="clase{{ clase.id }}" class="accordion-collapse collapse" data-bs-parent="#clasesAccordion">
-                        <div class="accordion-body" style="padding:1rem;">
-                            <p class="small text-muted">{{ clase.descripcion }}</p>
-                            {% if clase.url_video %}
-                            <div class="ratio ratio-16x9 mt-2">
-                                <iframe src="{{ clase.url_video }}" allowfullscreen></iframe>
+        {% if semanas %}
+        <div class="accordion" id="semanasAccordion">
+            {% for semana in semanas %}
+            {% set ps = progreso_semanas.get(semana.id) %}
+            {% set bloqueada = loop.index > 1 and not (progreso_semanas.get(semanas[loop.index0 - 1].id) and progreso_semanas.get(semanas[loop.index0 - 1].id).completado) %}
+            {% set completada = ps and ps.completado %}
+            <div class="accordion-item" style="border:1px solid #eef2f6;margin-bottom:0.75rem;border-radius:12px !important;overflow:hidden;{% if bloqueada %}opacity:0.6;{% endif %}">
+                <h2 class="accordion-header">
+                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#semana{{ semana.id }}" {% if bloqueada %}disabled{% endif %} style="font-weight:700;font-size:1rem;padding:1rem 1.25rem;">
+                        <div style="display:flex;align-items:center;gap:0.75rem;width:100%;">
+                            <div style="width:36px;height:36px;border-radius:50%;background:{% if completada %}var(--bs-success){% elif bloqueada %}#e9ecef{% else %}var(--primary){% endif %};display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.85rem;font-weight:700;flex-shrink:0;">
+                                {% if completada %}<i class="fas fa-check"></i>{% elif bloqueada %}<i class="fas fa-lock"></i>{% else %}{{ semana.numero }}{% endif %}
                             </div>
-                            {% endif %}
+                            <div style="flex:1;">
+                                <div style="font-size:0.95rem;">Semana {{ semana.numero }}: {{ semana.titulo }}</div>
+                                <small style="color:{% if bloqueada %}#adb5bd{% else %}#6c757d{% endif %};font-weight:400;">{{ semana.objetivo }}</small>
+                            </div>
+                            <span class="badge bg-{% if completada %}success{% elif bloqueada %}secondary{% else %}primary{% endif %}" style="font-size:0.7rem;">{{ semana.sesiones|length }} sesiones</span>
                         </div>
+                    </button>
+                </h2>
+                <div id="semana{{ semana.id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}">
+                    <div class="accordion-body" style="padding:0.5rem 1.25rem 1rem;">
+                        {% for sesion in semana.sesiones %}
+                        <div style="padding:0.75rem 0;border-bottom:1px solid #f0f0f0;{% if loop.last %}border-bottom:none;{% endif %}">
+                            <div style="display:flex;align-items:flex-start;gap:0.75rem;">
+                                <div style="width:28px;height:28px;border-radius:50%;background:#e8f0fe;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px;">
+                                    {{ sesion.numero }}
+                                </div>
+                                <div style="flex:1;">
+                                    <strong style="font-size:0.9rem;">Sesión {{ sesion.numero }}: {{ sesion.titulo }}</strong>
+                                    <div style="font-size:0.8rem;color:#6c757d;white-space:pre-line;margin-top:4px;">{{ sesion.contenidos }}</div>
+                                    {% if sesion.actividades %}
+                                    <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:8px;">
+                                        {% for act in sesion.actividades %}
+                                        {% set ult_intento = act.intentos|selectattr('alumno_id', 'equalto', current_user.id)|list|last if act.intentos else none %}
+                                        <span class="badge bg-{% if ult_intento and ult_intento.completado %}success{% elif ult_intento %}warning text-dark{% else %}light text-dark{% endif %}" style="font-size:0.7rem;cursor:pointer;" {% if not bloqueada %}onclick="location.href='{{ url_for('alumno_actividad', actividad_id=act.id) }}'"{% endif %}>
+                                            <i class="fas fa-{% if act.tipo == 'flashcard' %}layer-group{% elif 'multiple' in act.tipo %}list-check{% elif 'drag' in act.tipo %}arrows-alt{% elif 'completar' in act.tipo %}edit{% elif 'relacionar' in act.tipo %}link{% elif 'ordenar' in act.tipo %}sort{% elif 'audio' in act.tipo %}headphones{% elif 'pronunciacion' in act.tipo %}microphone{% elif 'video' in act.tipo or 'speaking' in act.tipo %}camera{% elif 'dictado' in act.tipo %}pen{% elif 'conversacion' in act.tipo %}comments{% else %}puzzle-piece{% endif %} me-1"></i>
+                                            {{ act.titulo }}
+                                            {% if ult_intento and ult_intento.calificacion is not none %}({{ ult_intento.calificacion|int }}%){% endif %}
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% endfor %}
             </div>
-            {% else %}
-            <div class="text-center py-4">
-                <i class="fas fa-film" style="font-size:2rem;color:var(--gray-300);"></i>
-                <p class="text-muted mt-2">No hay clases disponibles aún.</p>
-            </div>
-            {% endif %}
+            {% endfor %}
         </div>
+        {% else %}
+        <div class="dashboard-card">
+            <h5 style="font-weight:700;color:var(--primary);margin-bottom:1rem;"><i class="fas fa-info-circle me-2"></i>Acerca del curso</h5>
+            <p>{{ curso.descripcion_larga }}</p>
+        </div>
+        {% endif %}
     </div>
 
     <div class="col-lg-4">
@@ -92,15 +104,32 @@
                     <span class="badge bg-info"><i class="fas fa-layer-group me-1"></i>{{ inscripcion.grupo_curso.nombre }}</span>
                 </div>
                 {% endif %}
+                {% set total_semanas = semanas|length %}
+                {% set completadas = progreso_semanas.values()|selectattr('completado','equalto',true)|list|length %}
                 <div class="d-flex justify-content-between mb-1">
                     <small>Avance</small>
-                    <small>{{ inscripcion.progreso|int }}%</small>
+                    <small>{{ (completadas / total_semanas * 100)|int if total_semanas else 0 }}%</small>
                 </div>
                 <div class="progress-encl mb-3">
-                    <div class="progress-bar-encl" style="width: {{ inscripcion.progreso }}%;"></div>
+                    <div class="progress-bar-encl" style="width: {{ (completadas / total_semanas * 100)|int if total_semanas else 0 }}%;"></div>
                 </div>
+                <div style="font-size:0.8rem;color:#6c757d;">{{ completadas }} de {{ total_semanas }} semanas completadas</div>
                 {% if inscripcion.completado %}
-                <span class="badge bg-success w-100 py-2"><i class="fas fa-check me-1"></i>Completado</span>
+                <span class="badge bg-success w-100 py-2 mt-2"><i class="fas fa-check me-1"></i>Curso completado</span>
+                <a href="{{ url_for('alumno_generar_certificado', curso_id=curso.id) }}" class="btn btn-encl btn-encl-success w-100 mt-2" style="font-size:0.85rem;"><i class="fas fa-certificate me-1"></i>Obtener certificado</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="dashboard-card mb-4">
+            <h6 style="font-weight:700;color:var(--primary);"><i class="fas fa-certificate me-2"></i>Información del curso</h6>
+            <div class="mt-2" style="font-size:0.85rem;">
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Nivel</span><span>{{ curso.nivel }}</span></div>
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Duración</span><span>{{ curso.duracion_horas }} horas</span></div>
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Semanas</span><span>{{ total_semanas }}</span></div>
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Instructor</span><span>{{ curso.instructor.nombre if curso.instructor else '' }}</span></div>
+                {% if curso.tiene_certificado %}
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Certificado</span><span class="text-success">Sí</span></div>
                 {% endif %}
             </div>
         </div>
@@ -118,37 +147,6 @@
             </div>
             {% else %}
             <p class="text-muted small mt-2">No hay materiales disponibles.</p>
-            {% endif %}
-        </div>
-
-        <div class="dashboard-card mb-4">
-            <h6 style="font-weight:700;color:var(--primary);"><i class="fas fa-tasks me-2"></i>Exámenes</h6>
-            {% if examenes %}
-            <div class="list-group list-group-flush mt-2">
-                {% for ex in examenes %}
-                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                    <div>
-                        <span style="font-size:0.85rem;">{{ ex.titulo }}</span>
-                        <small class="d-block text-muted">{{ ex.preguntas|length }} preguntas · {{ ex.tiempo_limite_minutos }} min</small>
-                    </div>
-                    <a href="{{ url_for('alumno_realizar_examen', examen_id=ex.id) }}" class="btn btn-encl btn-encl-sm btn-encl-primary">Iniciar</a>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="text-muted small mt-2">No hay exámenes disponibles.</p>
-            {% endif %}
-        </div>
-
-        <div class="dashboard-card">
-            <h6 style="font-weight:700;color:var(--primary);"><i class="fas fa-video me-2"></i>Video del instructor</h6>
-            {% if tiene_video %}
-            <p class="text-muted small mt-2">Video de bienvenida de {{ curso.instructor.nombre }} {{ curso.instructor.apellidos }}</p>
-            <button class="btn btn-encl btn-encl-primary btn-encl-sm w-100" onclick="document.getElementById('videoBienvenidaModal')?.classList.add('show');document.getElementById('videoBienvenidaModal')?.style.setProperty('display','block');">
-                <i class="fas fa-play me-1"></i>Ver video
-            </button>
-            {% else %}
-            <p class="text-muted small mt-2">El instructor aún no ha subido su video de bienvenida.</p>
             {% endif %}
         </div>
     </div>
@@ -176,11 +174,10 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 <style>
-.modal-backdrop.show { opacity: 0.8; }
-.accordion-button:not(.collapsed) { background: rgba(13,110,253,0.05); color: var(--primary); }
+.accordion-button:not(.collapsed) { background: rgba(13,110,253,0.05); color: var(--primary); box-shadow: none; }
 .accordion-button:focus { box-shadow: none; }
-.list-group-item { border-left: none; border-right: none; }
-.list-group-item:first-child { border-top: none; }
-.list-group-item:last-child { border-bottom: none; }
+.accordion-button:disabled { background: #f8f9fa; cursor: not-allowed; }
+.accordion-button:disabled .accordion-button::after { display: none; }
+.modal-backdrop.show { opacity: 0.8; }
 </style>
 {% endblock %}

@@ -1,0 +1,245 @@
+{% extends 'dashboard_base.html' %}
+{% block sidebar_menu %}{% include 'instructor/sidebar.html' %}{% endblock %}
+{% block page_title %}<i class="fas fa-tools me-2"></i>Constructor de Actividades{% endblock %}
+{% block page_subtitle %}{{ curso.titulo }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="dashboard-card">
+            <h5 style="font-weight:700;color:var(--primary);"><i class="fas fa-plus-circle me-2"></i>Nueva Actividad</h5>
+            <form method="POST" action="{{ url_for('instructor_crear_actividad') }}" class="mt-3">
+                <input type="hidden" name="sesion_id" id="sesion_id" value="">
+                <div class="mb-2">
+                    <label class="form-label">Sesión destino</label>
+                    <select class="form-select" id="sesion_select" required>
+                        <option value="">Seleccionar semana y sesión</option>
+                        {% for s in semanas %}
+                        {% for ses in s.sesiones %}
+                        <option value="{{ ses.id }}">{{ s.titulo }} → {{ ses.titulo }}</option>
+                        {% endfor %}
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Selecciona primero la sesión donde se publicará la actividad</small>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Tipo de actividad</label>
+                    <select class="form-select" name="tipo" id="tipoSelect" required onchange="cambiarTipo()">
+                        <option value="">Seleccionar tipo</option>
+                        <option value="multiple">Opción múltiple</option>
+                        <option value="verdadero_falso">Verdadero / Falso</option>
+                        <option value="completar">Completar espacios</option>
+                        <option value="relacionar">Relacionar columnas</option>
+                        <option value="ordenar">Ordenar elementos</option>
+                        <option value="flashcard">Flashcard / Vocabulario</option>
+                        <option value="audio">Comprensión auditiva</option>
+                        <option value="pronunciacion">Pronunciación</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Título</label>
+                    <input type="text" class="form-control" name="titulo" required placeholder="Ej: Vocabulary Quiz 1">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Instrucciones</label>
+                    <textarea class="form-control" name="instrucciones" rows="2" placeholder="Give clear instructions..."></textarea>
+                </div>
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="form-label">Calificación mínima (%)</label>
+                        <input type="number" class="form-control" name="calificacion_minima" value="70" min="0" max="100">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Intentos máximos</label>
+                        <input type="number" class="form-control" name="max_intentos" value="3" min="1" max="10">
+                    </div>
+                </div>
+
+                <!-- CONFIGURACIÓN DINÁMICA -->
+                <div id="configFields"></div>
+
+                <button type="submit" class="btn btn-encl btn-encl-primary w-100 mt-2"><i class="fas fa-save me-2"></i>Crear actividad</button>
+            </form>
+        </div>
+
+        <div class="dashboard-card mt-4">
+            <h5 style="font-weight:700;color:var(--primary);"><i class="fas fa-database me-2"></i>Banco de Preguntas</h5>
+            <p class="text-muted small">Guarda preguntas para reutilizarlas después.</p>
+            <form method="POST" action="{{ url_for('instructor_banco_guardar') }}">
+                <input type="hidden" name="curso_id" value="{{ curso.id }}">
+                <div class="mb-2">
+                    <label class="form-label">Tipo</label>
+                    <select class="form-select" name="tipo">
+                        <option value="multiple">Opción múltiple</option>
+                        <option value="verdadero_falso">Verdadero/Falso</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Tema</label>
+                    <input type="text" class="form-control" name="tema" placeholder="Ej: Unit 1">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Pregunta</label>
+                    <textarea class="form-control" name="texto" rows="2" required></textarea>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Opciones (separadas por | )</label>
+                    <input type="text" class="form-control" name="opciones" placeholder="Op A|Op B|Op C|Op D">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Respuesta correcta</label>
+                    <input type="text" class="form-control" name="respuesta" required>
+                </div>
+                <button type="submit" class="btn btn-encl btn-encl-sm btn-encl-primary"><i class="fas fa-save me-1"></i>Guardar</button>
+            </form>
+            {% if preguntas %}
+            <hr>
+            <h6 style="font-weight:600;font-size:0.85rem;">Preguntas guardadas</h6>
+            <div style="max-height:300px;overflow-y:auto;">
+                {% for p in preguntas %}
+                <div style="padding:0.5rem;border:1px solid #eef2f6;border-radius:8px;margin-bottom:0.5rem;font-size:0.85rem;">
+                    <strong>{{ p.texto[:50] }}{% if p.texto|length > 50 %}...{% endif %}</strong>
+                    <small class="d-block text-muted">{{ p.tipo }} · {{ p.tema or 'Sin tema' }}</small>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="dashboard-card">
+            <h5 style="font-weight:700;color:var(--primary);"><i class="fas fa-layer-group me-2"></i>Semanas y Actividades</h5>
+            {% if semanas %}
+            <div class="accordion" id="semanaAccordion">
+                {% for s in semanas %}
+                <div class="accordion-item" style="border:1px solid #eef2f6;margin-bottom:0.5rem;border-radius:8px;overflow:hidden;">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#semana{{ s.id }}" style="font-weight:600;font-size:0.9rem;padding:0.75rem 1rem;">
+                            <i class="fas fa-calendar-week me-2" style="color:var(--primary);"></i>
+                            {{ s.titulo }}
+                            <span class="ms-auto badge bg-primary">{{ s.sesiones|sum(attribute='actividades_count') or 0 }} act.</span>
+                        </button>
+                    </h2>
+                    <div id="semana{{ s.id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" data-bs-parent="#semanaAccordion">
+                        <div class="accordion-body" style="padding:0.5rem 1rem;">
+                            {% for ses in s.sesiones %}
+                            <div class="d-flex align-items-center justify-content-between py-2" style="border-bottom:1px solid #f5f5f5;cursor:pointer;" onclick="document.getElementById('sesion_select').value='{{ ses.id }}';document.getElementById('sesion_id').value='{{ ses.id }}';this.scrollIntoView({behavior:'smooth'});">
+                                <div>
+                                    <strong style="font-size:0.85rem;">{{ ses.titulo }}</strong>
+                                    <small class="text-muted d-block">{{ ses.actividades|length }} actividades</small>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color:var(--primary);font-size:0.8rem;"></i>
+                            </div>
+                            {% if ses.actividades %}
+                            <div style="padding-left:1.5rem;">
+                                {% for act in ses.actividades %}
+                                <div class="d-flex align-items-center gap-2 py-1" style="font-size:0.8rem;">
+                                    <span class="badge bg-{{ 'success' if act.tipo == 'multiple' else 'info' if act.tipo == 'flashcard' else 'warning' if act.tipo == 'audio' else 'secondary' }}">{{ act.tipo|replace('_',' ')|title }}</span>
+                                    <span>{{ act.titulo }}</span>
+                                    <small class="text-muted ms-auto">{{ act.orden }}</small>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-calendar-plus" style="font-size:3rem;color:var(--gray-400);margin-bottom:1rem;display:block;"></i>
+                <p class="text-muted">No hay semanas configuradas. Usa el seed para crearlas.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('sesion_select').addEventListener('change', function(){
+    document.getElementById('sesion_id').value = this.value;
+});
+
+function cambiarTipo() {
+    var tipo = document.getElementById('tipoSelect').value;
+    var container = document.getElementById('configFields');
+    var html = '';
+
+    if (tipo === 'multiple') {
+        html = `
+            <div class="mb-2"><label class="form-label">Pregunta</label>
+                <input type="text" class="form-control" name="pregunta" required placeholder="What is the capital of France?"></div>
+            <div class="mb-2"><label class="form-label">Opciones</label>
+            <div id="opcionesContainer">`;
+        for (var i = 0; i < 4; i++) {
+            html += `<div class="input-group mb-1"><span class="input-group-text">${String.fromCharCode(65 + i)}</span>
+                <input type="text" class="form-control" name="opciones_raw" placeholder="Option ${String.fromCharCode(65 + i)}"></div>`;
+        }
+        html += `</div></div>
+            <div class="mb-2"><label class="form-label">Respuesta correcta</label>
+                <select class="form-select" name="respuesta_idx">
+                    <option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option>
+                </select></div>`;
+    } else if (tipo === 'verdadero_falso') {
+        html = `
+            <div class="mb-2"><label class="form-label">Pregunta</label>
+                <input type="text" class="form-control" name="pregunta" required placeholder="The sky is blue."></div>
+            <div class="mb-2"><label class="form-label">Respuesta correcta</label>
+                <select class="form-select" name="respuesta">
+                    <option value="true">Verdadero</option><option value="false">Falso</option>
+                </select></div>`;
+    } else if (tipo === 'completar') {
+        html = `
+            <div class="mb-2"><label class="form-label">Campos a completar</label>
+            <div id="camposCompletar">`;
+        for (var i = 0; i < 3; i++) {
+            html += `<div class="row g-1 mb-1"><div class="col-6"><input type="text" class="form-control" name="label" placeholder="Label (ej: verbo)"></div>
+                <div class="col-6"><input type="text" class="form-control" name="respuesta" placeholder="Respuesta correcta"></div></div>`;
+        }
+        html += `</div></div>`;
+    } else if (tipo === 'relacionar') {
+        html = `
+            <div class="mb-2"><label class="form-label">Pares</label>
+            <div id="paresContainer">`;
+        for (var i = 0; i < 4; i++) {
+            html += `<div class="row g-1 mb-1"><div class="col-6"><input type="text" class="form-control" name="izquierda" placeholder="Izquierda"></div>
+                <div class="col-6"><input type="text" class="form-control" name="derecha" placeholder="Derecha"></div></div>`;
+        }
+        html += `</div></div>`;
+    } else if (tipo === 'ordenar') {
+        html = `
+            <div class="mb-2"><label class="form-label">Elementos (en orden correcto)</label>
+            <div id="itemsContainer">`;
+        for (var i = 0; i < 5; i++) {
+            html += `<div class="input-group mb-1"><span class="input-group-text">${i + 1}</span>
+                <input type="text" class="form-control" name="items" placeholder="Item ${i + 1}"></div>`;
+        }
+        html += `</div></div>`;
+    } else if (tipo === 'flashcard' || tipo === 'vocabulario') {
+        html = `
+            <div class="mb-2"><label class="form-label">Frontal (término)</label>
+                <input type="text" class="form-control" name="frontal" required placeholder="Hello"></div>
+            <div class="mb-2"><label class="form-label">Reverso (definición)</label>
+                <input type="text" class="form-control" name="reverso" required placeholder="Hola"></div>`;
+    } else if (tipo === 'audio') {
+        html = `
+            <div class="mb-2"><label class="form-label">URL del audio</label>
+                <input type="url" class="form-control" name="audio_url" placeholder="https://example.com/audio.mp3"></div>
+            <div class="mb-2"><label class="form-label">Pregunta</label>
+                <input type="text" class="form-control" name="pregunta" placeholder="What did you hear?"></div>
+            <div class="mb-2"><label class="form-label">Respuesta correcta</label>
+                <input type="text" class="form-control" name="respuesta" placeholder="Hello"></div>`;
+    } else if (tipo === 'pronunciacion') {
+        html = `
+            <div class="mb-2"><label class="form-label">Texto a pronunciar</label>
+                <textarea class="form-control" name="texto" rows="2" placeholder="Repeat this phrase..."></textarea></div>
+            <div class="mb-2"><label class="form-label">Palabra clave</label>
+                <input type="text" class="form-control" name="palabra" placeholder="Hello"></div>`;
+    }
+    container.innerHTML = html;
+}
+</script>
+{% endblock %}
