@@ -529,7 +529,7 @@ def seed():
         curso = Curso.query.filter_by(slug='english-for-opportunity-a1').first()
         if not curso:
             curso = Curso(
-                titulo='English for Opportunity – Nivel A1',
+                titulo='English for Opportunity - Nivel A1',
                 slug='english-for-opportunity-a1',
                 descripcion_corta='Curso de inglés básico (A1) de 12 semanas. Desarrolla habilidades de comunicación oral y escrita para situaciones cotidianas y laborales.',
                 descripcion_larga='Programa diseñado para desarrollar la capacidad de comunicarse en inglés en situaciones cotidianas y laborales, alcanzando un nivel A1 con transición a A2 inicial, priorizando la comunicación oral. Incluye 36 sesiones de 60 minutos con actividades interactivas, ejercicios prácticos y evaluación continua.',
