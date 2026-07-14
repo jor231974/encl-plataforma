@@ -6,11 +6,14 @@ from flask_login import (LoginManager, login_user, logout_user,
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import json
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-@app.template_filter('enumerate')
-def enumerate_filter(iterable):
+@app.template_global('enumerate')
+def enumerate_global(iterable):
     return enumerate(iterable)
 
 @app.template_filter('fromjson')
@@ -377,40 +380,61 @@ def alumno_marcar_video_visto(curso_id):
 @app.route('/alumno/actividad/<int:actividad_id>')
 @login_required
 def alumno_actividad(actividad_id):
+    logger.info(f'actividad route: id={actividad_id}, user={current_user.id}')
     actividad = Actividad.query.get_or_404(actividad_id)
+    if not actividad.sesion or not actividad.sesion.semana or not actividad.sesion.semana.curso:
+        logger.error(f'Actividad {actividad_id}: relaciones rotas')
+        flash('Actividad no disponible (error de configuración)', 'error')
+        return redirect(url_for('alumno_dashboard'))
     sesion = actividad.sesion
     curso = sesion.semana.curso
-    inscripcion = Inscripcion.query.filter_by(alumno_id=current_user.id, curso_id=curso.id).first_or_404()
+    insc = Inscripcion.query.filter_by(alumno_id=current_user.id, curso_id=curso.id).first()
+    if not insc:
+        flash('No estás inscrito a este curso', 'error')
+        return redirect(url_for('alumno_dashboard'))
     intentos = IntentoActividad.query.filter_by(alumno_id=current_user.id, actividad_id=actividad.id).order_by(IntentoActividad.intento_num).all()
     puede_intentar = len(intentos) < actividad.max_intentos
     ultimo_intento = intentos[-1] if intentos else None
-    return render_template('alumno/actividad.html', actividad=actividad, sesion=sesion,
-                         curso=curso, intentos=intentos, puede_intentar=puede_intentar,
-                         ultimo_intento=ultimo_intento, **get_theme_config())
+    try:
+        return render_template('alumno/actividad.html', actividad=actividad, sesion=sesion,
+                             curso=curso, intentos=intentos, puede_intentar=puede_intentar,
+                             ultimo_intento=ultimo_intento, **get_theme_config())
+    except Exception as e:
+        logger.exception(f'Error en template actividad {actividad_id}: {e}')
+        return render_template('500.html', **get_theme_config()), 500
 
 @app.route('/alumno/actividad/<int:actividad_id>/enviar', methods=['POST'])
 @login_required
 def alumno_enviar_actividad(actividad_id):
     actividad = Actividad.query.get_or_404(actividad_id)
+    if not actividad.sesion or not actividad.sesion.semana:
+        return jsonify({'error': 'Actividad mal configurada'}), 400
     curso = actividad.sesion.semana.curso
-    inscripcion = Inscripcion.query.filter_by(alumno_id=current_user.id, curso_id=curso.id).first_or_404()
+    inscripcion = Inscripcion.query.filter_by(alumno_id=current_user.id, curso_id=curso.id).first()
+    if not inscripcion:
+        return jsonify({'error': 'No inscrito'}), 400
     intentos = IntentoActividad.query.filter_by(alumno_id=current_user.id, actividad_id=actividad.id).count()
     if intentos >= actividad.max_intentos:
         return jsonify({'error': 'Límite de intentos alcanzado'}), 400
     respuesta = request.form.get('respuesta') or request.get_data(as_text=True)
+    if not respuesta:
+        return jsonify({'error': 'Respuesta vacía'}), 400
     intento = IntentoActividad(
         alumno_id=current_user.id, actividad_id=actividad.id,
         intento_num=intentos + 1, respuesta=respuesta
     )
-    config = json.loads(actividad.config) if actividad.config else {}
-    calificacion = auto_calificar(actividad.tipo, respuesta, config)
+    config = {}
+    if actividad.config:
+        try:
+            config = json.loads(actividad.config)
+        except (ValueError, TypeError):
+            config = {}
+    try:
+        calificacion = auto_calificar(actividad.tipo, respuesta, config)
+    except Exception:
+        calificacion = 0
     intento.calificacion = calificacion
-    intento.completado = calificacion >= actividad.calificacion_minima
-    if actividad.tiempo_limite_minutos and 'tiempo_inicio' in request.form:
-        elapsed = (datetime.utcnow() - datetime.fromtimestamp(float(request.form['tiempo_inicio']))).total_seconds()
-        if elapsed > actividad.tiempo_limite_minutos * 60:
-            intento.calificacion = 0
-            intento.completado = False
+    intento.completado = calificacion >= (actividad.calificacion_minima or 70)
     db.session.add(intento)
     if intento.completado:
         verificar_progreso_semana(current_user.id, actividad.sesion.semana_id)

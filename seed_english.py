@@ -509,6 +509,7 @@ ACTIVITIES = {
 
 def seed():
     with app.app_context():
+        db.create_all()
         cat = Categoria.query.filter_by(nombre='Idiomas').first()
         if not cat:
             cat = Categoria(nombre='Idiomas', icono='fa-language')
