@@ -109,10 +109,19 @@ class Clase(db.Model):
 
     curso = db.relationship('Curso', backref='clases')
 
+class GrupoCurso(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'), nullable=False)
+    nombre = db.Column(db.String(200), nullable=False)
+    activo = db.Column(db.Boolean, default=True)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    curso = db.relationship('Curso', backref='grupos_curso')
+
 class Inscripcion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     alumno_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'))
+    grupo_curso_id = db.Column(db.Integer, db.ForeignKey('grupo_curso.id'))
     fecha_inscripcion = db.Column(db.DateTime, default=datetime.utcnow)
     progreso = db.Column(db.Float, default=0.0)
     completado = db.Column(db.Boolean, default=False)
@@ -121,6 +130,7 @@ class Inscripcion(db.Model):
 
     alumno = db.relationship('User', backref='inscripciones')
     curso = db.relationship('Curso', backref='inscripciones')
+    grupo_curso = db.relationship('GrupoCurso', backref='inscripciones')
 
 class Examen(db.Model):
     id = db.Column(db.Integer, primary_key=True)

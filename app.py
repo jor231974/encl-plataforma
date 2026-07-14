@@ -37,6 +37,11 @@ with app.app_context():
         db.session.commit()
     except Exception:
         db.session.rollback()
+    try:
+        db.session.execute(text('ALTER TABLE inscripcion ADD COLUMN grupo_curso_id INTEGER REFERENCES grupo_curso(id)'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -644,6 +649,7 @@ def instructor_curso_detalle(curso_id):
     examenes = Examen.query.filter_by(curso_id=curso_id).all()
     horarios = Horario.query.filter_by(curso_id=curso_id, activo=True).all()
     enlaces = EnlaceExterno.query.filter_by(curso_id=curso_id, activo=True).all()
+    grupos_curso = GrupoCurso.query.filter_by(curso_id=curso_id).all()
     grupos = Grupo.query.all()
     clase_ids = [c.id for c in clases]
     asistencias = {}
@@ -655,6 +661,7 @@ def instructor_curso_detalle(curso_id):
     return render_template('instructor/curso_detalle.html', curso=curso,
                          inscripciones=inscripciones, clases=clases, examenes=examenes,
                          horarios=horarios, enlaces=enlaces, grupos=grupos,
+                         grupos_curso=grupos_curso,
                          asistencias=asistencias,
                          **get_theme_config())
 
@@ -789,6 +796,46 @@ def instructor_crear_grupo():
     db.session.commit()
     flash('Grupo creado', 'success')
     return redirect(url_for('instructor_curso_detalle', curso_id=request.form.get('curso_id')))
+
+@app.route('/instructor/grupo-curso/crear', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_crear_grupo_curso():
+    curso_id = request.form.get('curso_id', type=int)
+    nombre = request.form.get('nombre')
+    if not nombre or not curso_id:
+        flash('Nombre del grupo requerido', 'error')
+        return redirect(url_for('instructor_curso_detalle', curso_id=curso_id))
+    grupo = GrupoCurso(curso_id=curso_id, nombre=nombre)
+    db.session.add(grupo)
+    db.session.commit()
+    flash(f'Grupo "{nombre}" creado', 'success')
+    return redirect(url_for('instructor_curso_detalle', curso_id=curso_id))
+
+@app.route('/instructor/grupo-curso/asignar', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_asignar_grupo():
+    inscripcion_id = request.form.get('inscripcion_id', type=int)
+    grupo_id = request.form.get('grupo_id', type=int)
+    insc = Inscripcion.query.get_or_404(inscripcion_id)
+    curso_id = insc.curso_id
+    insc.grupo_curso_id = grupo_id or None
+    db.session.commit()
+    flash('Alumno asignado al grupo', 'success')
+    return redirect(url_for('instructor_curso_detalle', curso_id=curso_id))
+
+@app.route('/instructor/grupo-curso/eliminar/<int:grupo_id>', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_eliminar_grupo_curso(grupo_id):
+    grupo = GrupoCurso.query.get_or_404(grupo_id)
+    curso_id = grupo.curso_id
+    Inscripcion.query.filter_by(grupo_curso_id=grupo_id).update({'grupo_curso_id': None})
+    db.session.delete(grupo)
+    db.session.commit()
+    flash('Grupo eliminado', 'success')
+    return redirect(url_for('instructor_curso_detalle', curso_id=curso_id))
 
 @app.route('/instructor/enlace/crear', methods=['POST'])
 @login_required
