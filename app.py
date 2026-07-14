@@ -434,6 +434,8 @@ def auto_calificar(tipo, respuesta, config):
         correcto = config.get('orden', [])
         dadas = json.loads(respuesta) if isinstance(respuesta, str) else []
         return 100 if dadas == correcto else 0
+    elif tipo in ('flashcard', 'vocabulario'):
+        return 100 if respuesta in ('estudiada', 'vista') else 0
     return 0
 
 def verificar_progreso_semana(alumno_id, semana_id):
