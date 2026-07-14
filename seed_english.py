@@ -572,40 +572,41 @@ def seed():
 
             print('12 semanas y 36 sesiones creadas')
         else:
-            print(f'Curso ya existe (ID {curso.id})')
-            needs_activities = False
-            for sem in CursoSemana.query.filter_by(curso_id=curso.id).all():
-                for ses in SemanaSesion.query.filter_by(semana_id=sem.id).all():
-                    if Actividad.query.filter_by(sesion_id=ses.id).count() == 0:
-                        needs_activities = True
-                        break
-                if needs_activities:
-                    break
-            if needs_activities:
-                print('Agregando actividades faltantes...')
-                for sem in CursoSemana.query.filter_by(curso_id=curso.id).order_by(CursoSemana.orden).all():
-                    for ses in SemanaSesion.query.filter_by(semana_id=sem.id).order_by(SemanaSesion.orden).all():
-                        existing = Actividad.query.filter_by(sesion_id=ses.id).count()
-                        if existing == 0:
-                            acts = ACTIVITIES.get(ses.numero, [])
-                            for i, act_data in enumerate(acts):
-                                config = act_data.get('config', {})
-                                if isinstance(config, list):
-                                    config = {'items': config, 'orden': config[:]}
-                                act = Actividad(
-                                    sesion_id=ses.id,
-                                    tipo=act_data['tipo'],
-                                    titulo=act_data['titulo'],
-                                    instrucciones=act_data.get('instrucciones', ''),
-                                    config=json.dumps(config),
-                                    calificacion_minima=70,
-                                    max_intentos=3,
-                                    orden=i + 1
-                                )
-                                db.session.add(act)
-                print('Actividades agregadas')
-            else:
-                print('Todas las sesiones ya tienen actividades')
+            print(f'Curso ya existe (ID {curso.id}). Actualizando actividades...')
+            # Limpiar actividades previas
+            act_ids = [a.id for a in Actividad.query.join(SemanaSesion).join(CursoSemana).filter(CursoSemana.curso_id == curso.id).all()]
+            if act_ids:
+                IntentoActividad.query.filter(IntentoActividad.actividad_id.in_(act_ids)).delete(synchronize_session=False)
+            ProgresoSemana.query.filter(
+                ProgresoSemana.semana_id.in_(
+                    db.session.query(CursoSemana.id).filter_by(curso_id=curso.id)
+                )
+            ).delete(synchronize_session=False)
+            Actividad.query.filter(Actividad.id.in_(act_ids)).delete(synchronize_session=False) if act_ids else None
+            for insc in Inscripcion.query.filter_by(curso_id=curso.id).all():
+                insc.progreso = 0
+                insc.completado = False
+            db.session.commit()
+            # Recrear actividades
+            for sem in CursoSemana.query.filter_by(curso_id=curso.id).order_by(CursoSemana.orden).all():
+                for ses in SemanaSesion.query.filter_by(semana_id=sem.id).order_by(SemanaSesion.orden).all():
+                    acts = ACTIVITIES.get(ses.numero, [])
+                    for i, act_data in enumerate(acts):
+                        config = act_data.get('config', {})
+                        if isinstance(config, list):
+                            config = {'items': config, 'orden': config[:]}
+                        act = Actividad(
+                            sesion_id=ses.id,
+                            tipo=act_data['tipo'],
+                            titulo=act_data['titulo'],
+                            instrucciones=act_data.get('instrucciones', ''),
+                            config=json.dumps(config),
+                            calificacion_minima=70,
+                            max_intentos=3,
+                            orden=i + 1
+                        )
+                        db.session.add(act)
+            print('Actividades actualizadas')
 
         db.session.commit()
 
