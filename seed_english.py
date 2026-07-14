@@ -7,6 +7,7 @@ import sys, os, json
 sys.path.insert(0, os.path.dirname(__file__) or '.')
 from app import app, db
 from models import *
+from werkzeug.security import generate_password_hash
 
 WEEKS = [
     (1, 'Presentaciones', 'Presentarse, saludar e intercambiar información personal'),
@@ -515,7 +516,6 @@ def seed():
 
         instructor = User.query.filter_by(username='marifer').first()
         if not instructor:
-            from werkzeug.security import generate_password_hash
             instructor = User(
                 username='marifer', email='marifer@encl.edu.mx',
                 password_hash=generate_password_hash('instructor123'),
@@ -606,6 +606,26 @@ def seed():
             else:
                 print('Todas las sesiones ya tienen actividades')
 
+        db.session.commit()
+
+        # Crear alumno de prueba carlos
+        alumno = User.query.filter_by(username='carlos').first()
+        if not alumno:
+            alumno = User(
+                username='carlos', email='carlos@correo.com',
+                password_hash=generate_password_hash('alumno123'),
+                role='alumno', nombre='Carlos', apellidos='García López',
+                activo=True, telefono='5512345678'
+            )
+            db.session.add(alumno)
+            db.session.flush()
+            print('Alumno carlos creado')
+        if curso and alumno:
+            insc = Inscripcion.query.filter_by(alumno_id=alumno.id, curso_id=curso.id).first()
+            if not insc:
+                insc = Inscripcion(alumno_id=alumno.id, curso_id=curso.id, progreso=0)
+                db.session.add(insc)
+                print(f'{alumno.nombre} inscrito al curso')
         db.session.commit()
 
         total_acts = Actividad.query.join(SemanaSesion).join(CursoSemana).filter(CursoSemana.curso_id == curso.id).count()
