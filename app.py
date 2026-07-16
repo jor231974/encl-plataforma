@@ -4,6 +4,7 @@ from flask import (Flask, render_template, redirect, url_for, request,
 from flask_login import (LoginManager, login_user, logout_user,
                          login_required, current_user)
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import json
 import logging
@@ -364,10 +365,11 @@ def alumno_aula(curso_id):
     tiene_video = curso.instructor and curso.instructor.video_bienvenida
     semanas = CursoSemana.query.filter_by(curso_id=curso.id, activo=True).order_by(CursoSemana.orden).all()
     progreso_semanas = {p.semana_id: p for p in ProgresoSemana.query.filter_by(alumno_id=current_user.id).join(CursoSemana).filter(CursoSemana.curso_id == curso.id).all()}
+    recursos = RecursoCurso.query.filter_by(curso_id=curso.id, visible=True, activo=True).order_by(RecursoCurso.fecha_publicacion.desc()).all()
     return render_template('alumno/aula.html', inscripcion=inscripcion, curso=curso,
                          clases=clases, examenes=examenes, materiales=materiales,
                          tiene_video=tiene_video, semanas=semanas,
-                         progreso_semanas=progreso_semanas, **get_theme_config())
+                         progreso_semanas=progreso_semanas, recursos=recursos, **get_theme_config())
 
 @app.route('/alumno/aula/<int:curso_id>/marcar-video-visto', methods=['POST'])
 @login_required
@@ -1003,6 +1005,126 @@ def instructor_crear_enlace():
     db.session.commit()
     flash('Enlace agregado', 'success')
     return redirect(url_for('instructor_curso_detalle', curso_id=enlace.curso_id))
+
+# ==================== RECURSOS DEL CURSO ====================
+
+@app.route('/instructor/recursos/<int:curso_id>')
+@login_required
+@instructor_required
+def instructor_recursos(curso_id):
+    curso = Curso.query.get_or_404(curso_id)
+    if curso.instructor_id != current_user.id and current_user.role not in ('admin', 'superadmin'):
+        flash('Acceso no autorizado', 'error')
+        return redirect(url_for('instructor_dashboard'))
+    recursos = RecursoCurso.query.filter_by(curso_id=curso_id, activo=True).order_by(RecursoCurso.fecha_publicacion.desc()).all()
+    semanas = CursoSemana.query.filter_by(curso_id=curso_id, activo=True).order_by(CursoSemana.orden).all()
+    return render_template('instructor/recursos.html', curso=curso, recursos=recursos, semanas=semanas, **get_theme_config())
+
+@app.route('/instructor/recursos/subir', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_subir_recurso():
+    curso_id = request.form.get('curso_id', type=int)
+    curso = Curso.query.get_or_404(curso_id)
+    if curso.instructor_id != current_user.id and current_user.role not in ('admin', 'superadmin'):
+        flash('Acceso no autorizado', 'error')
+        return redirect(url_for('instructor_dashboard'))
+    archivo = request.files.get('archivo')
+    if not archivo or archivo.filename == '':
+        flash('Selecciona un archivo', 'error')
+        return redirect(url_for('instructor_recursos', curso_id=curso_id))
+    filename = secure_filename(archivo.filename)
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    tipo_map = {
+        'pdf': 'pdf', 'doc': 'word', 'docx': 'word', 'ppt': 'presentation', 'pptx': 'presentation',
+        'xls': 'excel', 'xlsx': 'excel', 'png': 'image', 'jpg': 'image', 'jpeg': 'image',
+        'gif': 'image', 'svg': 'image', 'webp': 'image', 'bmp': 'image',
+        'mp3': 'audio', 'wav': 'audio', 'ogg': 'audio',
+        'mp4': 'video', 'webm': 'video', 'avi': 'video', 'mov': 'video',
+        'zip': 'archive', 'rar': 'archive',
+    }
+    tipo = tipo_map.get(ext, 'other')
+    upload_folder = app.config.get('UPLOAD_FOLDER', os.path.join(os.path.dirname(__file__), 'static', 'uploads'))
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
+    nombre_unico = f'curso_{curso_id}_{int(datetime.utcnow().timestamp())}_{filename}'
+    ruta = os.path.join(upload_folder, nombre_unico)
+    archivo.save(ruta)
+    recurso = RecursoCurso(
+        curso_id=curso_id, titulo=request.form.get('titulo', filename),
+        descripcion=request.form.get('descripcion', ''),
+        archivo_url=nombre_unico, tipo_archivo=tipo,
+        semana_id=request.form.get('semana_id', type=int) or None,
+        visible=request.form.get('visible', '1') == '1'
+    )
+    db.session.add(recurso)
+    db.session.commit()
+    flash(f'Recurso "{recurso.titulo}" subido correctamente', 'success')
+    return redirect(url_for('instructor_recursos', curso_id=curso_id))
+
+@app.route('/instructor/recursos/editar/<int:recurso_id>', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_editar_recurso(recurso_id):
+    recurso = RecursoCurso.query.get_or_404(recurso_id)
+    if recurso.curso.instructor_id != current_user.id and current_user.role not in ('admin', 'superadmin'):
+        flash('Acceso no autorizado', 'error')
+        return redirect(url_for('instructor_dashboard'))
+    recurso.titulo = request.form.get('titulo', recurso.titulo)
+    recurso.descripcion = request.form.get('descripcion', recurso.descripcion or '')
+    recurso.semana_id = request.form.get('semana_id', type=int) or None
+    recurso.visible = request.form.get('visible', '1') == '1'
+    archivo = request.files.get('archivo')
+    if archivo and archivo.filename:
+        filename = secure_filename(archivo.filename)
+        upload_folder = app.config.get('UPLOAD_FOLDER', os.path.join(os.path.dirname(__file__), 'static', 'uploads'))
+        nombre_unico = f'curso_{recurso.curso_id}_{int(datetime.utcnow().timestamp())}_{filename}'
+        ruta = os.path.join(upload_folder, nombre_unico)
+        archivo.save(ruta)
+        # Eliminar archivo anterior
+        if recurso.archivo_url:
+            ruta_vieja = os.path.join(upload_folder, recurso.archivo_url)
+            if os.path.exists(ruta_vieja):
+                try:
+                    os.remove(ruta_vieja)
+                except OSError:
+                    pass
+        recurso.archivo_url = nombre_unico
+        ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+        tipo_map = {'pdf': 'pdf', 'doc': 'word', 'docx': 'word', 'ppt': 'presentation', 'pptx': 'presentation',
+                    'xls': 'excel', 'xlsx': 'excel', 'png': 'image', 'jpg': 'image', 'jpeg': 'image',
+                    'gif': 'image', 'svg': 'image', 'webp': 'image', 'mp3': 'audio', 'wav': 'audio',
+                    'mp4': 'video', 'webm': 'video', 'avi': 'video', 'mov': 'video'}
+        recurso.tipo_archivo = tipo_map.get(ext, 'other')
+    db.session.commit()
+    flash('Recurso actualizado', 'success')
+    return redirect(url_for('instructor_recursos', curso_id=recurso.curso_id))
+
+@app.route('/instructor/recursos/eliminar/<int:recurso_id>', methods=['POST'])
+@login_required
+@instructor_required
+def instructor_eliminar_recurso(recurso_id):
+    recurso = RecursoCurso.query.get_or_404(recurso_id)
+    if recurso.curso.instructor_id != current_user.id and current_user.role not in ('admin', 'superadmin'):
+        flash('Acceso no autorizado', 'error')
+        return redirect(url_for('instructor_dashboard'))
+    upload_folder = app.config.get('UPLOAD_FOLDER', os.path.join(os.path.dirname(__file__), 'static', 'uploads'))
+    if recurso.archivo_url:
+        ruta = os.path.join(upload_folder, recurso.archivo_url)
+        if os.path.exists(ruta):
+            try:
+                os.remove(ruta)
+            except OSError:
+                pass
+    recurso.activo = False
+    db.session.commit()
+    flash('Recurso eliminado', 'success')
+    return redirect(url_for('instructor_recursos', curso_id=recurso.curso_id))
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    upload_folder = app.config.get('UPLOAD_FOLDER', os.path.join(os.path.dirname(__file__), 'static', 'uploads'))
+    return send_from_directory(upload_folder, filename)
 
 @app.route('/instructor/constructor/<int:curso_id>')
 @login_required

@@ -480,3 +480,17 @@ class TerritorialPage(db.Model):
     meta_descripcion = db.Column(db.Text)
 
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+
+class RecursoCurso(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'), nullable=False)
+    titulo = db.Column(db.String(300), nullable=False)
+    descripcion = db.Column(db.Text)
+    archivo_url = db.Column(db.String(500))
+    tipo_archivo = db.Column(db.String(50))
+    semana_id = db.Column(db.Integer, db.ForeignKey('curso_semana.id'), nullable=True)
+    fecha_publicacion = db.Column(db.DateTime, default=datetime.utcnow)
+    visible = db.Column(db.Boolean, default=True)
+    activo = db.Column(db.Boolean, default=True)
+    curso = db.relationship('Curso', backref='recursos')
+    semana = db.relationship('CursoSemana', backref='recursos')

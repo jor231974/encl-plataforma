@@ -43,6 +43,7 @@
     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#horarios"><i class="far fa-calendar me-1"></i>Horarios</a></li>
     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#grupos"><i class="fas fa-layer-group me-1"></i>Grupos</a></li>
     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#enlaces"><i class="fas fa-link me-1"></i>Enlaces</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('instructor_recursos', curso_id=curso.id) }}"><i class="fas fa-folder-open me-1"></i>Recursos</a></li>
     <li class="nav-item"><a class="nav-link" href="{{ url_for('instructor_constructor', curso_id=curso.id) }}"><i class="fas fa-tools me-1"></i>Constructor</a></li>
 </ul>
 
