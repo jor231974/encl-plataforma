@@ -118,7 +118,7 @@
                         <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#semana{{ s.id }}" style="font-weight:600;font-size:0.9rem;padding:0.75rem 1rem;">
                             <i class="fas fa-calendar-week me-2" style="color:var(--primary);"></i>
                             {{ s.titulo }}
-                            <span class="ms-auto badge bg-primary">{{ s.sesiones|sum(attribute='actividades_count') or 0 }} act.</span>
+                            <span class="ms-auto badge bg-primary">{{ s.sesiones|map(attribute='actividades')|map('length')|sum }} act.</span>
                         </button>
                     </h2>
                     <div id="semana{{ s.id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" data-bs-parent="#semanaAccordion">
