@@ -207,6 +207,11 @@ def public_nosotros():
     tc = get_theme_config()
     return render_template('public/nosotros.html', **tc)
 
+@app.route('/aviso-de-privacidad')
+def public_aviso_privacidad():
+    tc = get_theme_config()
+    return render_template('public/aviso_privacidad.html', **tc)
+
 @app.route('/contacto', methods=['GET', 'POST'])
 def public_contacto():
     if request.method == 'POST':
